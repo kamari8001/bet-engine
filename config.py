@@ -14,3 +14,20 @@ EDGE_THRESHOLD = 0.04
 # This is written into the database rules when the database is created, so
 # changing it later also requires updating the database.
 MAX_ADJUSTMENT = 0.03
+
+
+def _load_env(path=Path(__file__).parent / ".env"):
+    """Read KEY=value lines from .env. Keys stay out of the code and out of git."""
+    values = {}
+    if path.exists():
+        for line in path.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, value = line.split("=", 1)
+                values[key.strip()] = value.strip()
+    return values
+
+
+_env = _load_env()
+CFBD_API_KEY = _env.get("CFBD_API_KEY", "")
+ODDS_API_KEY = _env.get("ODDS_API_KEY", "")
