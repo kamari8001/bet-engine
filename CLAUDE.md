@@ -50,6 +50,8 @@ A sports prediction engine for **moneyline betting**.
   - `predictions` (source, probability per outcome, projected score, timestamp, locked flag)
   - `results`
   - `adjustments`
+  - `hist_games` and `hist_odds`: past seasons for backtesting only, kept apart from the live logbook
+- Times: stored in UTC; always shown to me in Eastern time (`*_et` views, `db.fmt_et`).
 - API keys go in a `.env` file that is never committed to git.
 - Keep scripts small and named clearly, e.g., `pull_nfl.py`, `predict.py`, `grade.py`.
 - A simple local page shows the daily slate and lets me enter my picks.
@@ -73,5 +75,15 @@ A sports prediction engine for **moneyline betting**.
 
 Update this section at the end of each session: what's working, what's next, any open problems.
 
-- Current step: Step 0 (setup)
-- Next: Step 2 (database and logbook)
+Last updated 2026-10-14.
+
+- **Working:**
+  - Database and logbook with rules enforced by the database itself (`schema.sql`, `db.py`; `python3 test_db.py` checks them).
+  - Past seasons loaded (`pull_history.py`): NFL from nflverse (games 1999+, moneylines 2006+), college from CFBD (games 2013+, moneylines 2021+, FBS-involved games only). Line timing is unknown, so backtests are a strong hint, not proof.
+  - Live schedule and results (`pull_games.py`): NFL, and college games between two FBS teams. Games with no announced kickoff time are skipped until they have one.
+  - Live odds (`pull_odds.py`): The Odds API, 1 credit per sport per run, refuses below 50 credits. Team names matched via `teams.py`.
+- **Data sources:** nflverse (no key), CFBD (free key, 1,000 calls/month), The Odds API (free key, 500 credits/month). `python3 check_keys.py` tests the keys.
+- **Next:** Step 4, the NFL/college base model: build it, backtest on history, check calibration.
+- **Open items:**
+  - Pulls run by hand for now. Closing lines need a pull shortly before each kickoff, which needs automation. Watch credit use; college Saturdays may push us to the $30 plan.
+  - Results load on the next `pull_games.py` run after games finish. Cancelled or postponed games aren't handled yet.
