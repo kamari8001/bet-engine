@@ -1,16 +1,19 @@
 """Database helpers: create the database and save rows to it.
 
-Run `python3 db.py` to create bet_engine.db (safe to re-run; it won't
-overwrite an existing database).
+Run `python3 db.py` to create bet_engine.db, or to add any new tables and
+views to an existing one. It never deletes or changes existing data.
 """
 
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import config
 
 SCHEMA_PATH = Path(__file__).parent / "schema.sql"
+EXTRA_SCHEMA_PATH = Path(__file__).parent / "schema_extra.sql"
+EASTERN = ZoneInfo("America/New_York")
 
 
 def connect(path=config.DB_PATH):
@@ -29,7 +32,14 @@ def init_db(path=config.DB_PATH):
     conn = connect(path)
     conn.executescript(schema)
     conn.commit()
+    upgrade_db(conn)
     return conn
+
+
+def upgrade_db(conn):
+    """Add backtest tables and Eastern-time views if they're missing."""
+    conn.executescript(EXTRA_SCHEMA_PATH.read_text())
+    conn.commit()
 
 
 def to_utc(dt):
@@ -37,6 +47,19 @@ def to_utc(dt):
     if dt.tzinfo is None:
         raise ValueError("datetime must include a timezone")
     return dt.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def utc_to_eastern(utc_text):
+    """'2026-10-16 00:15:00' (UTC) -> datetime in Eastern time."""
+    dt = datetime.strptime(utc_text, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+    return dt.astimezone(EASTERN)
+
+
+def fmt_et(utc_text):
+    """'2026-10-16 00:15:00' (UTC) -> 'Thu Oct 15, 8:15 PM ET' for display."""
+    et = utc_to_eastern(utc_text)
+    return et.strftime("%a %b ") + str(et.day) + et.strftime(", ") + \
+        et.strftime("%I:%M %p").lstrip("0") + " ET"
 
 
 def _insert(conn, table, **values):
@@ -92,11 +115,19 @@ def lock_started_games(conn):
 
 
 if __name__ == "__main__":
-    conn = init_db()
+    if config.DB_PATH.exists():
+        conn = connect()
+        upgrade_db(conn)
+        print(f"Updated {config.DB_PATH.name} (existing data untouched)")
+    else:
+        conn = init_db()
+        print(f"Created {config.DB_PATH.name}")
     tables = [r[0] for r in conn.execute(
         "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name")]
     triggers = conn.execute(
         "SELECT COUNT(*) FROM sqlite_master WHERE type = 'trigger'").fetchone()[0]
-    print(f"Created {config.DB_PATH.name}")
+    views = [r[0] for r in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type = 'view' ORDER BY name")]
     print(f"Tables: {', '.join(tables)}")
+    print(f"Views: {', '.join(views)}")
     print(f"Protection rules (triggers): {triggers}")

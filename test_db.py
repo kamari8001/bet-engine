@@ -131,6 +131,24 @@ def main():
                    lambda: conn.execute("UPDATE results SET home_score = 28 WHERE game_id = ?",
                                         (soon,)))
 
+    print("\n-- Eastern time display --")
+    check("Thursday night game shows in Eastern",
+          db.fmt_et("2026-10-16 00:15:00") == "Thu Oct 15, 8:15 PM ET",
+          db.fmt_et("2026-10-16 00:15:00"))
+    hours = [now.replace(year=2026, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+             + timedelta(hours=h) for h in range(5 * 365 * 24)]
+    conn.executemany(
+        "INSERT INTO games (sport, league, season, home_team, away_team, start_time_utc, source)"
+        " VALUES ('nfl', 'NFL', 'tz-test', 'A', 'B', ?, 'tz-test')",
+        [(db.to_utc(h),) for h in hours])
+    mismatches = [
+        (r["kickoff_et"], r["start_time_utc"]) for r in conn.execute(
+            "SELECT e.kickoff_et, g.start_time_utc FROM games_et e JOIN games g ON g.id = e.id"
+            " WHERE g.season = 'tz-test'")
+        if r["kickoff_et"] != db.utc_to_eastern(r["start_time_utc"]).strftime("%Y-%m-%d %H:%M") + " ET"]
+    check(f"database Eastern view matches official time-zone rules for all {len(hours):,} "
+          "hours of 2026-2030", not mismatches, f"{len(mismatches)} mismatches" if mismatches else "")
+
     conn.close()
     tmp.cleanup()
     passed = sum(results)
