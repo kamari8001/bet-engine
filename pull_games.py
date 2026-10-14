@@ -1,0 +1,149 @@
+"""Load this season's upcoming games and new final scores into the live tables.
+
+Usage: python3 pull_games.py nfl | ncaaf | all
+
+- New upcoming games are added to `games`.
+- If a kickoff time moved before the game starts, it is updated.
+- Games whose kickoff time hasn't been announced yet are skipped until it is.
+- Final scores for games already in `games` are added to `results`.
+Safe to re-run: nothing is added twice. Prints the next 7 days in Eastern time.
+"""
+
+import csv
+import io
+import json
+import sqlite3
+import sys
+from datetime import datetime, timedelta, timezone
+
+import config
+import db
+from pull_history import CFBD, CURRENT_SEASON, NFLVERSE_GAMES, blank, fetch
+
+
+def nfl_games():
+    """Yield this season's NFL games from nflverse in a common shape."""
+    rows = csv.DictReader(io.StringIO(fetch(NFLVERSE_GAMES).decode()))
+    for r in rows:
+        if r["season"] != str(CURRENT_SEASON):
+            continue
+        kickoff = None
+        if not blank(r["gametime"]):
+            kickoff = datetime.strptime(f"{r['gameday']} {r['gametime']}", "%Y-%m-%d %H:%M") \
+                .replace(tzinfo=db.EASTERN)
+        done = not blank(r["home_score"]) and not blank(r["away_score"])
+        yield dict(external_id=r["game_id"], league="NFL", kickoff=kickoff,
+                   home_team=r["home_team"], away_team=r["away_team"],
+                   neutral_site=r["location"] == "Neutral", live_eligible=True,
+                   home_score=int(r["home_score"]) if done else None,
+                   away_score=int(r["away_score"]) if done else None)
+
+
+def ncaaf_games():
+    """Yield this season's college games from CFBD in a common shape."""
+    if not config.CFBD_API_KEY:
+        raise RuntimeError("CFBD_API_KEY is empty in .env")
+    headers = {"Authorization": f"Bearer {config.CFBD_API_KEY}"}
+    games = json.loads(fetch(f"{CFBD}/games?year={CURRENT_SEASON}&seasonType=both", headers))
+    for g in games:
+        kickoff = None
+        if not g.get("startTimeTBD"):
+            kickoff = datetime.strptime(g["startDate"][:19], "%Y-%m-%dT%H:%M:%S") \
+                .replace(tzinfo=timezone.utc)
+        done = g.get("completed") and g.get("homePoints") is not None
+        yield dict(external_id=str(g["id"]), league="NCAAF", kickoff=kickoff,
+                   home_team=g["homeTeam"], away_team=g["awayTeam"],
+                   neutral_site=bool(g.get("neutralSite")),
+                   # live betting table: only games between two top-division teams
+                   live_eligible=g.get("homeClassification") == "fbs"
+                   and g.get("awayClassification") == "fbs",
+                   home_score=g["homePoints"] if done else None,
+                   away_score=g["awayPoints"] if done else None)
+
+
+SOURCES = {"nfl": ("nflverse", nfl_games), "ncaaf": ("cfbd", ncaaf_games)}
+
+
+def sync(conn, sport):
+    source, loader = SOURCES[sport]
+    now = datetime.now(timezone.utc)
+    added = moved = results = tbd = 0
+    problems = []
+    for g in loader():
+        if not g["live_eligible"]:
+            continue
+        row = conn.execute("SELECT * FROM games WHERE source = ? AND external_id = ?",
+                           (source, g["external_id"])).fetchone()
+        label = f"{g['away_team']} at {g['home_team']}"
+
+        if row is None:
+            if g["home_score"] is not None:
+                continue  # already played before we started tracking it
+            if g["kickoff"] is None:
+                tbd += 1
+                continue
+            if g["kickoff"] <= now:
+                continue  # in progress; too late to log anything
+            db.add_game(conn, sport, g["league"], str(CURRENT_SEASON), g["home_team"],
+                        g["away_team"], g["kickoff"], source=source,
+                        external_id=g["external_id"], neutral_site=g["neutral_site"])
+            added += 1
+            continue
+
+        if (row["home_team"], row["away_team"]) != (g["home_team"], g["away_team"]):
+            problems.append(f"{label}: teams differ from what we stored "
+                            f"({row['away_team']} at {row['home_team']}); not changed")
+            continue
+
+        if g["kickoff"] is not None and db.to_utc(g["kickoff"]) != row["start_time_utc"] \
+                and g["home_score"] is None:
+            try:
+                conn.execute("UPDATE games SET start_time_utc = ? WHERE id = ?",
+                             (db.to_utc(g["kickoff"]), row["id"]))
+                conn.commit()
+                moved += 1
+                print(f"  kickoff moved: {label} {db.fmt_et(row['start_time_utc'])}"
+                      f" -> {db.fmt_et(db.to_utc(g['kickoff']))}")
+            except sqlite3.DatabaseError as e:
+                problems.append(f"{label}: kickoff change refused ({e})")
+
+        if g["home_score"] is not None and not conn.execute(
+                "SELECT 1 FROM results WHERE game_id = ?", (row["id"],)).fetchone():
+            db.add_result(conn, row["id"], "final", source,
+                          home_score=g["home_score"], away_score=g["away_score"])
+            results += 1
+
+    print(f"{sport.upper()}: {added} games added, {moved} kickoff times moved, "
+          f"{results} final scores added, {tbd} skipped (kickoff time not announced yet)")
+    for p in problems:
+        print(f"  PROBLEM: {p}")
+    return not problems
+
+
+def print_slate(conn, sport, days=7):
+    now = datetime.now(timezone.utc)
+    rows = conn.execute(
+        "SELECT * FROM games WHERE sport = ? AND start_time_utc > ? AND start_time_utc <= ?"
+        " ORDER BY start_time_utc, id",
+        (sport, db.to_utc(now), db.to_utc(now + timedelta(days=days)))).fetchall()
+    print(f"\n{sport.upper()} games in the next {days} days ({len(rows)}):")
+    for r in rows:
+        where = " (neutral site)" if r["neutral_site"] else ""
+        print(f"  {db.fmt_et(r['start_time_utc']):<24} {r['away_team']} at {r['home_team']}{where}")
+
+
+def main():
+    sports = list(SOURCES) if sys.argv[1:] == ["all"] else sys.argv[1:]
+    if not sports or any(s not in SOURCES for s in sports):
+        sys.exit(__doc__)
+    conn = db.connect()
+    ok = True
+    for sport in sports:
+        ok = sync(conn, sport) and ok
+    for sport in sports:
+        print_slate(conn, sport)
+    sys.exit(0 if ok else 1)
+
+
+if __name__ == "__main__":
+    main()
