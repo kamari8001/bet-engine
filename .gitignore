@@ -1,0 +1,11 @@
+# Secrets: API keys live here and must never be committed
+.env
+
+# Python clutter
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Mac clutter
+.DS_Store
