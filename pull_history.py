@@ -1,8 +1,9 @@
 """Load past NFL and college football seasons into the backtest tables.
 
-Usage: python3 pull_history.py nfl | ncaaf | all
+Usage: python3 pull_history.py nfl | ncaaf | all  [--current]
 
 Safe to re-run: each run replaces that sport's history with a fresh copy.
+--current refreshes only this season (fast, few API calls); use it before predicting.
 Only completed games are loaded. If anything fails, nothing is saved.
 """
 
@@ -66,9 +67,11 @@ def nfl_team_efficiency(seasons):
     return out
 
 
-def load_nfl(conn):
+def load_nfl(conn, only_season=None):
     print("Downloading NFL games from nflverse...")
     rows = list(csv.DictReader(io.StringIO(fetch(NFLVERSE_GAMES).decode())))
+    if only_season:
+        rows = [r for r in rows if int(r["season"]) == only_season]
     seasons = sorted({int(r["season"]) for r in rows if not blank(r["home_score"])})
     print(f"Downloading NFL weekly team stats {seasons[0]}-{seasons[-1]}...")
     eff = nfl_team_efficiency(seasons)
@@ -116,11 +119,11 @@ def load_nfl(conn):
                 source="nflverse")
 
 
-def load_ncaaf(conn):
+def load_ncaaf(conn, only_season=None):
     if not config.CFBD_API_KEY:
         raise RuntimeError("CFBD_API_KEY is empty in .env")
     headers = {"Authorization": f"Bearer {config.CFBD_API_KEY}"}
-    for year in range(CFBD_FIRST_SEASON, CURRENT_SEASON + 1):
+    for year in [only_season] if only_season else range(CFBD_FIRST_SEASON, CURRENT_SEASON + 1):
         print(f"Downloading college {year} from CFBD...")
         games = json.loads(fetch(f"{CFBD}/games?year={year}&seasonType=both", headers))
         lines = json.loads(fetch(f"{CFBD}/lines?year={year}&seasonType=both", headers))
@@ -159,11 +162,12 @@ def load_ncaaf(conn):
                     source="cfbd")
 
 
-def load_ncaaf_team_seasons(conn):
+def load_ncaaf_team_seasons(conn, only_season=None):
     """Talent, returning production, and last season's SP+ for every team-season."""
     headers = {"Authorization": f"Bearer {config.CFBD_API_KEY}"}
-    conn.execute("DELETE FROM hist_team_season WHERE sport = 'ncaaf'")
-    for year in range(CFBD_FIRST_SEASON, CURRENT_SEASON + 1):
+    years = [only_season] if only_season else list(range(CFBD_FIRST_SEASON, CURRENT_SEASON + 1))
+    conn.execute(f"DELETE FROM hist_team_season WHERE sport = 'ncaaf' AND season IN ({','.join('?' * len(years))})", years)
+    for year in years:
         print(f"Downloading college {year} preseason team data from CFBD...")
         teams = {}
         for t in json.loads(fetch(f"{CFBD}/talent?year={year}", headers)):
@@ -198,7 +202,9 @@ LOADERS = {"nfl": load_nfl, "ncaaf": load_ncaaf}
 
 
 def main():
-    sports = list(LOADERS) if sys.argv[1:] == ["all"] else sys.argv[1:]
+    args = [a for a in sys.argv[1:] if a != "--current"]
+    only = CURRENT_SEASON if "--current" in sys.argv[1:] else None
+    sports = list(LOADERS) if args == ["all"] else args
     if not sports or any(s not in LOADERS for s in sports):
         sys.exit(__doc__)
     conn = db.connect()
@@ -206,10 +212,13 @@ def main():
     for sport in sports:
         try:
             conn.execute("BEGIN")
-            conn.execute("DELETE FROM hist_games WHERE sport = ?", (sport,))
-            LOADERS[sport](conn)
+            if only:
+                conn.execute("DELETE FROM hist_games WHERE sport = ? AND season = ?", (sport, only))
+            else:
+                conn.execute("DELETE FROM hist_games WHERE sport = ?", (sport,))
+            LOADERS[sport](conn, only)
             if sport == "ncaaf":
-                load_ncaaf_team_seasons(conn)
+                load_ncaaf_team_seasons(conn, only)
             conn.commit()
         except Exception as e:
             conn.rollback()
