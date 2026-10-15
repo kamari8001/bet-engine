@@ -116,6 +116,13 @@ def add_adjustment(conn, game_id, base_prediction_id, d_home, d_away, reason,
                    d_draw=d_draw, d_away=d_away, reason=reason, source_url=source_url)
 
 
+def add_lineup_fact(conn, game_id, team, role, player_name, status, source_url, reason,
+                    player_id=None):
+    return _insert(conn, "lineup_facts", game_id=game_id, team=team, role=role,
+                   player_name=player_name, player_id=player_id, status=status,
+                   source_url=source_url, reason=reason)
+
+
 def add_result(conn, game_id, status, source, home_score=None, away_score=None):
     return _insert(conn, "results", game_id=game_id, status=status, source=source,
                    home_score=home_score, away_score=away_score)

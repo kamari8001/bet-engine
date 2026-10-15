@@ -118,3 +118,50 @@ SELECT a.id, a.game_id, a.base_prediction_id,
                 THEN '-4 hours' ELSE '-5 hours' END) || ' ET' AS created_et,
        a.d_home, a.d_draw, a.d_away, a.reason, a.source_url
 FROM adjustments a;
+
+
+------------------------------------------------------------------------
+-- lineup_facts: starters Claude confirmed from the news, with a source.
+-- These are facts fed into the formula (rule 3), not probability guesses.
+-- Same protections as the logbook: saved before kickoff, never changed.
+------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS lineup_facts (
+    id           INTEGER PRIMARY KEY,
+    game_id      INTEGER NOT NULL REFERENCES games(id),
+    team         TEXT NOT NULL,
+    role         TEXT NOT NULL CHECK (role IN ('QB')),
+    player_name  TEXT NOT NULL CHECK (length(trim(player_name)) > 0),
+    player_id    TEXT,              -- nflverse id when the player has started before
+    status       TEXT NOT NULL CHECK (status IN ('confirmed', 'expected')),
+    source_url   TEXT NOT NULL CHECK (source_url LIKE 'http://_%' OR source_url LIKE 'https://_%'),
+    reason       TEXT NOT NULL CHECK (length(trim(reason)) > 0),
+    created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TRIGGER IF NOT EXISTS lineup_facts_must_be_current
+BEFORE INSERT ON lineup_facts
+WHEN abs(julianday(NEW.created_at) - julianday('now')) * 86400 > 5
+BEGIN
+    SELECT RAISE(ABORT, 'lineup facts must be stamped with the current time (no backdating)');
+END;
+
+CREATE TRIGGER IF NOT EXISTS lineup_facts_before_kickoff
+BEFORE INSERT ON lineup_facts
+WHEN datetime('now') >= (SELECT start_time_utc FROM games WHERE id = NEW.game_id)
+BEGIN
+    SELECT RAISE(ABORT, 'kickoff has passed: lineup facts must be logged before the game starts');
+END;
+
+CREATE TRIGGER IF NOT EXISTS lineup_facts_team_in_game
+BEFORE INSERT ON lineup_facts
+WHEN NOT EXISTS (SELECT 1 FROM games WHERE id = NEW.game_id
+                 AND NEW.team IN (home_team, away_team))
+BEGIN
+    SELECT RAISE(ABORT, 'that team is not playing in this game');
+END;
+
+CREATE TRIGGER IF NOT EXISTS lineup_facts_no_update BEFORE UPDATE ON lineup_facts
+BEGIN SELECT RAISE(ABORT, 'lineup facts can never be changed; add a new one instead'); END;
+
+CREATE TRIGGER IF NOT EXISTS lineup_facts_no_delete BEFORE DELETE ON lineup_facts
+BEGIN SELECT RAISE(ABORT, 'lineup facts can never be deleted'); END;

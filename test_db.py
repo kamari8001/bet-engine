@@ -97,6 +97,19 @@ def main():
               lambda: db.add_adjustment(conn, future, engine_id, -0.01, 0.01,
                                         "test: second injury", "https://example.com/y"))
 
+    print("\n-- Confirmed starters (lineup facts) --")
+    fact = lambda **kw: db.add_lineup_fact(conn, **dict(dict(
+        game_id=future, team="Test Home", role="QB", player_name="Test Passer",
+        status="confirmed", source_url="https://example.com/test-news",
+        reason="test: named starter"), **kw))
+    expect_ok("save a confirmed starter with a source", lambda: fact())
+    expect_blocked("starter with no source link", lambda: fact(source_url=""))
+    expect_blocked("starter with no reason", lambda: fact(reason=" "))
+    expect_blocked("starter for a team not in the game", lambda: fact(team="Some Other Team"))
+    expect_blocked("edit a starter fact",
+                   lambda: conn.execute("UPDATE lineup_facts SET player_name = 'X'"))
+    expect_blocked("delete a starter fact", lambda: conn.execute("DELETE FROM lineup_facts"))
+
     print("\n-- The past can't be edited --")
     early_id = db.add_prediction(conn, soon, "engine", 0.55, 0.45)
     expect_blocked("save a result before kickoff",
@@ -105,6 +118,9 @@ def main():
     time.sleep(4)
     expect_blocked("new prediction after kickoff",
                    lambda: db.add_prediction(conn, soon, "me", 0.7, 0.3))
+    expect_blocked("starter fact after kickoff",
+                   lambda: db.add_lineup_fact(conn, soon, "Test Home B", "QB", "Late Passer",
+                                              "confirmed", "https://example.com/x", "test"))
     expect_blocked("new odds after kickoff",
                    lambda: db.add_odds(conn, soon, "testbook", -110, -110, "test"))
     expect_blocked("edit a prediction's probability",
