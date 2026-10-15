@@ -16,7 +16,8 @@ EXTRA_SCHEMA_PATH = Path(__file__).parent / "schema_extra.sql"
 EASTERN = ZoneInfo("America/New_York")
 
 
-def connect(path=config.DB_PATH):
+def connect(path=None):
+    path = path or config.DB_PATH
     conn = sqlite3.connect(str(path))
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")

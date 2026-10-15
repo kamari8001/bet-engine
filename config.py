@@ -1,9 +1,11 @@
 """Settings for the bet engine. Change numbers here, not inside other scripts."""
 
+import os
 from pathlib import Path
 
-# The single SQLite database file, kept in this folder.
-DB_PATH = Path(__file__).parent / "bet_engine.db"
+# The single SQLite database file, kept in this folder. BET_ENGINE_DB can point
+# scripts at a throwaway copy for testing.
+DB_PATH = Path(os.environ.get("BET_ENGINE_DB") or Path(__file__).parent / "bet_engine.db")
 
 # A game is flagged as a bet when engine probability minus no-vig market
 # probability is at least this much. 0.04 = 4 percentage points.

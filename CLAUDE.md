@@ -34,6 +34,7 @@ A sports prediction engine for **moneyline betting**.
    - stay within a set maximum per game,
    - record the reason and the source link,
    - be stored separately from the base model output.
+   - Confirmed starters are facts, not adjustments: Claude records them with a source (`news.py qb`, `lineup_facts` table) and the formula turns them into a probability (the `claude` prediction). The cap applies to judgment adjustments (`news.py adjust`).
 5. **No fake data.** Never invent, placeholder, or estimate data and present it as real. If a source fails, stop and tell me.
 6. **Track the closing line.** Store the moneyline at prediction time and the final pregame (closing) moneyline for every game.
 7. **Grade everything.** After games finish, compute for each source by sport: Brier score, log loss, calibration, win/loss on flagged bets, and closing-line value.
@@ -86,7 +87,10 @@ Last updated 2026-10-15.
   - Base models (`model.py`, `combiner.py`, settings in `model_params.json`): NFL v2 (team ratings + starting-QB ratings + rest), college v2 (team ratings + CFBD preseason talent, returning production, last season's SP+). `backtest.py` tunes, compares ideas (`ablate`), and runs the one-time final exam.
   - Final exams run 2026-10-15 (see `backtest_results/criteria.md`): both sports work and trail the market; neither made money on flagged bets (NFL -10.7%, college -3.8%). NFL also narrowly failed calibration. Flagged bets are paper only, Low confidence, until live results prove an edge.
   - Tested and rejected (code kept, switched off): NFL efficiency (EPA) ratings, coach reset, early-season learning, travel; CFBD published Elo; QB/team-combo market bias.
-- **Next:** `predict.py` to log engine predictions before kickoff, Claude's news step (confirm starting QBs first), edge finder with confidence, and grading.
+  - Models refit on all seasons through 2025 for live use (`*-v2-refit`); judged on live results only.
+  - Live predictions (`predict.py`): logs `engine` and `claude` rows before kickoff (new row only on a 1+ point move or starter change), prints the slate with best price at my books (`config.MY_BOOKS`: FanDuel, DraftKings, Polymarket). Stops if past results are missing; no flags on odds older than 3 hours. `news.py` records confirmed QBs and capped adjustments; `my_pick.py` logs my picks.
+  - Routine: `pull_games.py all` -> `pull_odds.py all` -> `pull_history.py all --current` -> `predict.py nfl|ncaaf` -> Claude checks news (`news.py`) -> `predict.py` again.
+- **Next:** grading (Brier, log loss, calibration, flagged W/L, closing-line value by source), confidence ratings, automation (timed odds pulls for closing lines), slate page.
 - **Open items:**
   - Pulls run by hand for now. Closing lines need a pull shortly before each kickoff, which needs automation. Watch credit use; college Saturdays may push us to the $30 plan.
   - Results load on the next `pull_games.py` run after games finish. Cancelled or postponed games aren't handled yet.
