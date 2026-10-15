@@ -37,4 +37,23 @@ closing line.
 
 ## Results
 
-(Filled in after the runs.)
+Run 2026-10-15. Full numbers in `final_runs.jsonl`.
+
+| Test | NFL v2 (2023-2025, 855 games) | College v2 (2021-2025, 4,546 games) |
+|---|---|---|
+| 1. Works at all | PASS: log loss 0.632 vs baseline 0.689 | PASS: 0.504 vs 0.659 |
+| 2. Honest percentages | **FAIL** (narrowly): the 20-30% bucket (55 games) predicted 25.6%, home won 34.5%, off by 8.9 | PASS: worst bucket (0-10%, 115 games) off by 5.3 |
+| 3. Vs. market (same games) | model 0.632 vs market 0.608 | model 0.557 vs market 0.535 (3,933 games) |
+| 4. Made money? | **FAIL**: 524 bets, 197-326-1, -55.9 units, -10.7% | **FAIL**: 2,256 bets, 1063-1193, -86.0 units, -3.8% |
+
+**NFL test 2, bug check:** no bug found. The calibration correction was fit on
+2019-2022, when home teams won only 50-52% in three of four seasons (2020 had
+empty stadiums), so it lowered home-team probabilities. In 2023-2025 home
+teams won 54.9% against an average prediction of 52.3%. Without the
+correction the model would have overshot instead (57.3%). Home-field size in
+the NFL moves around from year to year; that's a modeling limit, not a code
+error, so nothing is changed and the fail stands.
+
+**Verdict:** both sports continue to live logging and grading, with flagged
+bets shown as Low confidence, paper only. Neither has evidence of an edge
+over the market from the base model alone.
