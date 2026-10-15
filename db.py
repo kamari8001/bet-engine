@@ -41,6 +41,9 @@ HIST_GAMES_NEW_COLUMNS = {
     "home_starter_id": "TEXT", "home_starter_name": "TEXT",
     "away_starter_id": "TEXT", "away_starter_name": "TEXT",
     "home_rest_days": "INTEGER", "away_rest_days": "INTEGER",
+    "home_coach": "TEXT", "away_coach": "TEXT",
+    "home_off_epa": "REAL", "home_off_plays": "INTEGER",
+    "away_off_epa": "REAL", "away_off_plays": "INTEGER",
 }
 
 

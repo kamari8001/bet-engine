@@ -10,6 +10,7 @@ import csv
 import io
 import json
 import sys
+import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 
@@ -17,6 +18,10 @@ import config
 import db
 
 NFLVERSE_GAMES = "https://github.com/nflverse/nfldata/raw/master/data/games.csv"
+NFLVERSE_TEAM_WEEK = ("https://github.com/nflverse/nflverse-data/releases/download/"
+                      "stats_team/stats_team_week_{season}.csv")
+# The team stats files use today's abbreviations for franchises that moved.
+NFL_FRANCHISE = {"SD": "LAC", "OAK": "LV", "STL": "LA"}
 CFBD = "https://api.collegefootballdata.com"
 CFBD_FIRST_SEASON = 2013
 CURRENT_SEASON = 2026
@@ -45,9 +50,28 @@ def insert_odds(conn, **o):
     conn.execute(f"INSERT INTO hist_odds ({cols}) VALUES ({marks})", list(o.values()))
 
 
+def nfl_team_efficiency(seasons):
+    """{(game_id, team): (offense EPA, offensive plays)} from nflverse weekly team stats."""
+    out = {}
+    for season in seasons:
+        try:
+            raw = fetch(NFLVERSE_TEAM_WEEK.format(season=season)).decode()
+        except urllib.error.HTTPError as e:
+            raise RuntimeError(f"team stats for {season} unavailable (HTTP {e.code})")
+        for r in csv.DictReader(io.StringIO(raw)):
+            num = lambda k: float(r[k]) if not blank(r[k]) else 0.0
+            epa = num("passing_epa") + num("rushing_epa")
+            plays = int(num("attempts") + num("sacks_suffered") + num("carries"))
+            out[(r["game_id"], r["team"])] = (epa, plays)
+    return out
+
+
 def load_nfl(conn):
     print("Downloading NFL games from nflverse...")
     rows = list(csv.DictReader(io.StringIO(fetch(NFLVERSE_GAMES).decode())))
+    seasons = sorted({int(r["season"]) for r in rows if not blank(r["home_score"])})
+    print(f"Downloading NFL weekly team stats {seasons[0]}-{seasons[-1]}...")
+    eff = nfl_team_efficiency(seasons)
     for r in rows:
         if blank(r["home_score"]) or blank(r["away_score"]):
             continue  # not played yet
@@ -58,6 +82,8 @@ def load_nfl(conn):
                 .replace(tzinfo=db.EASTERN)
             kickoff_et = et.strftime("%Y-%m-%d %H:%M")
             kickoff_utc = db.to_utc(et)
+        home_eff = eff.get((r["game_id"], NFL_FRANCHISE.get(r["home_team"], r["home_team"])))
+        away_eff = eff.get((r["game_id"], NFL_FRANCHISE.get(r["away_team"], r["away_team"])))
         game_id = insert_game(
             conn, sport="nfl", season=int(r["season"]), week=int(r["week"]),
             season_type="regular" if r["game_type"] == "REG" else "postseason",
@@ -71,6 +97,12 @@ def load_nfl(conn):
             away_starter_name=None if blank(r["away_qb_name"]) else r["away_qb_name"],
             home_rest_days=None if blank(r["home_rest"]) else int(r["home_rest"]),
             away_rest_days=None if blank(r["away_rest"]) else int(r["away_rest"]),
+            home_coach=None if blank(r["home_coach"]) else r["home_coach"],
+            away_coach=None if blank(r["away_coach"]) else r["away_coach"],
+            home_off_epa=home_eff[0] if home_eff else None,
+            home_off_plays=home_eff[1] if home_eff else None,
+            away_off_epa=away_eff[0] if away_eff else None,
+            away_off_plays=away_eff[1] if away_eff else None,
             source="nflverse", external_id=r["game_id"])
         has_ml = not blank(r["home_moneyline"]) and not blank(r["away_moneyline"])
         if has_ml or not blank(r["spread_line"]) or not blank(r["total_line"]):

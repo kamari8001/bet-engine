@@ -70,3 +70,14 @@ class TeamNames:
         if self.sport == "nfl":
             return NFL.get(odds_api_name)
         return self.college.get(normalize(odds_api_name))
+
+
+# Each NFL team's home time zone, as hours behind UTC in standard time.
+# Uses the abbreviation of the era (STL was Central, SD and OAK Pacific).
+NFL_HOME_TZ = {
+    **{t: -5 for t in ("ATL", "BAL", "BUF", "CAR", "CIN", "CLE", "DET", "IND", "JAX",
+                       "MIA", "NE", "NYG", "NYJ", "PHI", "PIT", "TB", "WAS")},
+    **{t: -6 for t in ("CHI", "DAL", "GB", "HOU", "KC", "MIN", "NO", "TEN", "STL")},
+    **{t: -7 for t in ("DEN", "ARI")},
+    **{t: -8 for t in ("LA", "LAC", "LV", "SEA", "SF", "SD", "OAK")},
+}

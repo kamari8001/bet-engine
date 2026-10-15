@@ -31,6 +31,12 @@ CREATE TABLE IF NOT EXISTS hist_games (
     away_starter_name TEXT,
     home_rest_days    INTEGER,       -- days since the team's previous game
     away_rest_days    INTEGER,
+    home_coach        TEXT,          -- head coach (NFL)
+    away_coach        TEXT,
+    home_off_epa      REAL,          -- offense expected points added, whole game (NFL)
+    home_off_plays    INTEGER,       -- offensive plays: passes + sacks + runs
+    away_off_epa      REAL,
+    away_off_plays    INTEGER,
     source         TEXT NOT NULL,
     external_id    TEXT NOT NULL,
     imported_at    TEXT NOT NULL DEFAULT (datetime('now')),

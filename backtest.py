@@ -4,6 +4,7 @@ Usage:
   python3 backtest.py tune  nfl|ncaaf   pick settings on the tune seasons, fit the
                                         calibration on the check seasons, save them
   python3 backtest.py check nfl|ncaaf   report on tune and check seasons (saved settings)
+  python3 backtest.py ablate nfl        tune each new idea alone and together, compare
   python3 backtest.py final nfl|ncaaf   the final exam on seasons never used for tuning.
                                         Every run is recorded in backtest_results/.
 
@@ -112,9 +113,9 @@ def period_log_loss(games, preds, period):
 
 # ---------- tuning ----------
 
-def tune(games, sport):
-    params = dict(model.DEFAULT_PARAMS[sport])
-    names = TUNED + TUNED_EXTRA[sport]
+def tune(games, sport, names=None, start=None):
+    params = dict(start or model.DEFAULT_PARAMS[sport])
+    names = names or TUNED + TUNED_EXTRA[sport]
     period = PERIODS[sport]["tune"]
 
     def score(p):
@@ -138,6 +139,39 @@ def tune(games, sport):
                         best, params, improved = s, trial, True
         print(f"  after step size {factors}: log loss {best:.4f}")
     return {k: round(v, 5) for k, v in params.items()}
+
+
+# ---------- testing ideas one at a time ----------
+
+NFL_V3_FEATURES = {
+    "#1 efficiency (EPA) ratings": ["epa_w", "epa_k"],
+    "#2 new-coach reset": ["coach_regress"],
+    "#3 early-season learning": ["early_boost"],
+    "#4 travel / time zones": ["travel_coef", "early_west"],
+}
+
+
+def ablate(games, sport):
+    """Tune v2 plus each new idea alone, then all together; score on check seasons."""
+    base = dict(model.load_params(sport)["ratings"])
+    base_names = TUNED + TUNED_EXTRA[sport]
+    check = PERIODS[sport]["check"]
+    variants = [("v2 (none of the new ideas)", [])] + [(k, v) for k, v in NFL_V3_FEATURES.items()] \
+        + [("all four together", sum(NFL_V3_FEATURES.values(), []))]
+    results = []
+    for label, feats in variants:
+        print(f"\n--- tuning: {label} ---")
+        start = dict(base, **{f: model.NFL_V3_START[f] for f in feats})
+        params = tune(games, sport, base_names + feats, start) if feats else base
+        preds, _ = model.walk_forward(games, params, sport)
+        rows = [(preds[g["id"]][2], int(g["home_score"] > g["away_score"]))
+                for g in games if in_period(g, check) and g["home_score"] != g["away_score"]]
+        results.append((label, period_log_loss(games, preds, PERIODS[sport]["tune"]),
+                        log_loss(rows), brier(rows), {f: params[f] for f in feats}))
+    print("\n===== Each idea on the check seasons (before calibration; lower is better) =====")
+    print(f"{'variant':<30} {'tune LL':>8} {'check LL':>9} {'check Brier':>12}   tuned settings")
+    for label, tl, cl, cb, fp in results:
+        print(f"{label:<30} {tl:8.4f} {cl:9.4f} {cb:12.4f}   {json.dumps(fp)}")
 
 
 # ---------- reporting ----------
@@ -230,12 +264,16 @@ def report(games, preds, market, sport, period_name, cal):
 # ---------- main ----------
 
 def main():
-    if len(sys.argv) != 3 or sys.argv[1] not in ("tune", "check", "final") or sys.argv[2] not in PERIODS:
+    if len(sys.argv) != 3 or sys.argv[1] not in ("tune", "check", "final", "ablate") or sys.argv[2] not in PERIODS:
         sys.exit(__doc__)
     mode, sport = sys.argv[1], sys.argv[2]
     conn = db.connect()
     games = model.load_games(conn, sport)
     market = market_by_game(conn, sport)
+
+    if mode == "ablate":
+        ablate(games, sport)
+        return
 
     if mode == "tune":
         ratings = tune(games, sport)
