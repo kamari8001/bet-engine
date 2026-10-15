@@ -233,7 +233,7 @@ def load_games(conn, sport):
         "SELECT id, season, game_date_et, kickoff_et, kickoff_utc, home_team, away_team,"
         " home_division, away_division, home_score, away_score, neutral_site,"
         " home_starter_id, away_starter_id, home_rest_days, away_rest_days,"
-        " home_coach, away_coach, home_off_epa, away_off_epa"
+        " home_coach, away_coach, home_off_epa, away_off_epa, home_pub_elo, away_pub_elo"
         " FROM hist_games WHERE sport = ?"
         " ORDER BY game_date_et, coalesce(kickoff_utc, ''), id", (sport,))]
 

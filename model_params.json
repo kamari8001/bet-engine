@@ -29,16 +29,35 @@
     ]
   },
   "ncaaf": {
-    "version": "ncaaf-v1-20261015",
+    "version": "ncaaf-v2-20261015",
     "ratings": {
       "k": 0.14616,
       "hfa_start": 0.08704,
-      "hfa_rate": 0.00071,
+      "hfa_rate": 0.00072,
       "regress": 0.06046,
       "cap": 58.17065,
       "sigma": 17.12,
       "new_team": 13.66176,
       "avg_rate": 0.005
+    },
+    "combiner": {
+      "features": [
+        "margin",
+        "home",
+        "margin_early",
+        "talent_early",
+        "sp_early",
+        "ret_early"
+      ],
+      "coef": [
+        0.16319,
+        0.98285,
+        -0.09114,
+        -0.23824,
+        0.20738,
+        0.2386,
+        1.43586
+      ]
     },
     "calibration": {
       "a": 1.0,

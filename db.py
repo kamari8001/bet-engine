@@ -44,6 +44,7 @@ HIST_GAMES_NEW_COLUMNS = {
     "home_coach": "TEXT", "away_coach": "TEXT",
     "home_off_epa": "REAL", "home_off_plays": "INTEGER",
     "away_off_epa": "REAL", "away_off_plays": "INTEGER",
+    "home_pub_elo": "REAL", "away_pub_elo": "REAL",
 }
 
 

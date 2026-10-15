@@ -5,6 +5,7 @@ Usage:
                                         calibration on the check seasons, save them
   python3 backtest.py check nfl|ncaaf   report on tune and check seasons (saved settings)
   python3 backtest.py ablate nfl        tune each new idea alone and together, compare
+  python3 backtest.py ablate ncaaf      compare combiner inputs (published ratings etc.)
   python3 backtest.py final nfl|ncaaf   the final exam on seasons never used for tuning.
                                         Every run is recorded in backtest_results/.
 
@@ -18,6 +19,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import combiner
 import config
 import db
 import model
@@ -28,6 +30,9 @@ PERIODS = {
     "ncaaf": {"tune": (2014, 2018), "check": (2019, 2020), "final": (2021, 2025)},
 }
 TUNED = ["k", "hfa_start", "hfa_rate", "regress", "cap", "sigma"]
+# Which combiner inputs each sport uses (None = our model alone). Chosen with
+# `backtest.py ablate`, judged on the check seasons.
+COMBINER_SET = {"nfl": None, "ncaaf": "ours + preseason data"}
 TUNED_EXTRA = {"nfl": ["qb_k", "new_qb", "qb_regress", "rest_coef"], "ncaaf": ["new_team"]}
 RESULTS_DIR = Path(__file__).parent / "backtest_results"
 
@@ -151,6 +156,33 @@ NFL_V3_FEATURES = {
 }
 
 
+def combiner_rows(conn, games, preds, sport, period):
+    team_seasons = combiner.load_team_seasons(conn, sport)
+    played = combiner.games_played_before(games)
+    return [(combiner.features(g, preds[g["id"]][0] - preds[g["id"]][1], played[g["id"]], team_seasons),
+             int(g["home_score"] > g["away_score"]))
+            for g in games if in_period(g, period) and g["home_score"] != g["away_score"]]
+
+
+def ablate_combiner(conn, games, sport):
+    """Fit each combiner input set on the tune seasons; score on check seasons."""
+    params = model.load_params(sport)["ratings"]
+    preds, _ = model.walk_forward(games, params, sport)
+    tune_rows = combiner_rows(conn, games, preds, sport, PERIODS[sport]["tune"])
+    check_rows = combiner_rows(conn, games, preds, sport, PERIODS[sport]["check"])
+    raw = [(preds[g["id"]][2], int(g["home_score"] > g["away_score"])) for g in games
+           if in_period(g, PERIODS[sport]["check"]) and g["home_score"] != g["away_score"]]
+    print(f"\n===== {sport.upper()} combiner inputs, fit on tune seasons, scored on check seasons =====")
+    print(f"{'inputs':<28} {'tune LL':>8} {'check LL':>9} {'check Brier':>12}   weights")
+    print(f"{'our model as is':<28} {'':>8} {log_loss(raw):9.4f} {brier(raw):12.4f}")
+    for label, names in combiner.FEATURE_SETS.items():
+        comb = combiner.fit(tune_rows, names)
+        score = lambda rows: [(combiner.probability(comb, f), y) for f, y in rows]
+        print(f"{label:<28} {log_loss(score(tune_rows)):8.4f} {log_loss(score(check_rows)):9.4f} "
+              f"{brier(score(check_rows)):12.4f}   "
+              + ", ".join(f"{n} {c:+.2f}" for n, c in zip(["const"] + names, comb["coef"])))
+
+
 def ablate(games, sport):
     """Tune v2 plus each new idea alone, then all together; score on check seasons."""
     base = dict(model.load_params(sport)["ratings"])
@@ -272,12 +304,22 @@ def main():
     market = market_by_game(conn, sport)
 
     if mode == "ablate":
-        ablate(games, sport)
+        if sport == "ncaaf":
+            ablate_combiner(conn, games, sport)
+        else:
+            ablate(games, sport)
         return
 
     if mode == "tune":
         ratings = tune(games, sport)
         preds, _ = model.walk_forward(games, ratings, sport)
+        comb = None
+        if COMBINER_SET[sport]:
+            names = combiner.FEATURE_SETS[COMBINER_SET[sport]]
+            comb = combiner.fit(combiner_rows(conn, games, preds, sport, PERIODS[sport]["tune"]), names)
+            print(f"\nCombiner ({COMBINER_SET[sport]}) fit on tune seasons: "
+                  + ", ".join(f"{n} {c:+.3f}" for n, c in zip(["const"] + names, comb["coef"])))
+            preds = combiner.apply(conn, games, preds, comb, sport, ratings["sigma"])
         check = PERIODS[sport]["check"]
         check_rows = [(preds[g["id"]][2], int(g["home_score"] > g["away_score"]))
                       for g in games if in_period(g, check) and g["home_score"] != g["away_score"]]
@@ -292,7 +334,7 @@ def main():
         saved = json.loads(model.PARAMS_PATH.read_text()) if model.PARAMS_PATH.exists() else {}
         number = int(saved[sport]["version"].split("-v")[1].split("-")[0]) + 1 if sport in saved else 1
         saved[sport] = {"version": f"{sport}-v{number}-{datetime.now(timezone.utc):%Y%m%d}",
-                        "ratings": ratings, "calibration": cal,
+                        "ratings": ratings, "combiner": comb, "calibration": cal,
                         "tune_seasons": PERIODS[sport]["tune"], "check_seasons": check}
         model.PARAMS_PATH.write_text(json.dumps(saved, indent=2) + "\n")
         print(f"Saved settings to {model.PARAMS_PATH.name} as {saved[sport]['version']}:")
@@ -301,6 +343,8 @@ def main():
     params = model.load_params(sport)
     cal = params.get("calibration", {"a": 1.0, "b": 0.0})
     preds, _ = model.walk_forward(games, params["ratings"], sport)
+    if params.get("combiner"):
+        preds = combiner.apply(conn, games, preds, params["combiner"], sport, params["ratings"]["sigma"])
 
     if mode in ("tune", "check"):
         report(games, preds, market, sport, "tune", cal)
@@ -319,7 +363,8 @@ def main():
     with log_path.open("a") as f:
         f.write(json.dumps({"sport": sport, "version": params["version"],
                             "run_at_utc": db.to_utc(datetime.now(timezone.utc)),
-                            "ratings": params["ratings"], "calibration": cal,
+                            "ratings": params["ratings"], "combiner": params.get("combiner"),
+                            "calibration": cal,
                             "result": result}) + "\n")
     print(f"\nRecorded in {log_path.relative_to(Path(__file__).parent)}")
 

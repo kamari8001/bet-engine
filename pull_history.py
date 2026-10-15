@@ -145,6 +145,7 @@ def load_ncaaf(conn):
                 away_division=g.get("awayClassification"),
                 home_score=g["homePoints"], away_score=g["awayPoints"],
                 neutral_site=int(bool(g.get("neutralSite"))),
+                home_pub_elo=g.get("homePregameElo"), away_pub_elo=g.get("awayPregameElo"),
                 source="cfbd", external_id=str(g["id"]))
             for line in lines_by_game.get(g["id"], []):
                 has_ml = line.get("homeMoneyline") is not None and line.get("awayMoneyline") is not None
@@ -156,6 +157,28 @@ def load_ncaaf(conn):
                     away_ml=int(line["awayMoneyline"]) if has_ml else None,
                     home_spread=line.get("spread"), total=line.get("overUnder"),
                     source="cfbd")
+
+
+def load_ncaaf_team_seasons(conn):
+    """Talent, returning production, and last season's SP+ for every team-season."""
+    headers = {"Authorization": f"Bearer {config.CFBD_API_KEY}"}
+    conn.execute("DELETE FROM hist_team_season WHERE sport = 'ncaaf'")
+    for year in range(CFBD_FIRST_SEASON, CURRENT_SEASON + 1):
+        print(f"Downloading college {year} preseason team data from CFBD...")
+        teams = {}
+        for t in json.loads(fetch(f"{CFBD}/talent?year={year}", headers)):
+            teams.setdefault(t["team"], {})["talent"] = float(t["talent"])
+        for t in json.loads(fetch(f"{CFBD}/player/returning?year={year}", headers)):
+            if t.get("percentPPA") is not None:
+                teams.setdefault(t["team"], {})["returning_pct"] = t["percentPPA"]
+        for t in json.loads(fetch(f"{CFBD}/ratings/sp?year={year - 1}", headers)):
+            if t.get("team") and t.get("rating") is not None and t["team"] != "nationalAverages":
+                teams.setdefault(t["team"], {})["prev_sp"] = t["rating"]
+        for team, v in teams.items():
+            conn.execute(
+                "INSERT INTO hist_team_season (sport, season, team, talent, returning_pct, prev_sp, source)"
+                " VALUES ('ncaaf', ?, ?, ?, ?, ?, 'cfbd')",
+                (year, team, v.get("talent"), v.get("returning_pct"), v.get("prev_sp")))
 
 
 def summarize(conn, sport):
@@ -185,6 +208,8 @@ def main():
             conn.execute("BEGIN")
             conn.execute("DELETE FROM hist_games WHERE sport = ?", (sport,))
             LOADERS[sport](conn)
+            if sport == "ncaaf":
+                load_ncaaf_team_seasons(conn)
             conn.commit()
         except Exception as e:
             conn.rollback()

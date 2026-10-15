@@ -37,10 +37,25 @@ CREATE TABLE IF NOT EXISTS hist_games (
     home_off_plays    INTEGER,       -- offensive plays: passes + sacks + runs
     away_off_epa      REAL,
     away_off_plays    INTEGER,
+    home_pub_elo      REAL,          -- published pregame Elo (college: CFBD)
+    away_pub_elo      REAL,
     source         TEXT NOT NULL,
     external_id    TEXT NOT NULL,
     imported_at    TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE (source, external_id)
+);
+
+-- Preseason team information published by outside sources (college: CFBD).
+-- All of it is known before the season starts, so using it has no hindsight.
+CREATE TABLE IF NOT EXISTS hist_team_season (
+    sport          TEXT NOT NULL,
+    season         INTEGER NOT NULL,
+    team           TEXT NOT NULL,
+    talent         REAL,      -- roster talent composite (recruiting-based)
+    returning_pct  REAL,      -- share of last season's production that returns (0-1)
+    prev_sp        REAL,      -- previous season's final SP+ rating
+    source         TEXT NOT NULL,
+    PRIMARY KEY (sport, season, team)
 );
 
 -- Past lines. Timing is 'unknown' because the sources don't say whether
