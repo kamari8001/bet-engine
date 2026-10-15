@@ -1,43 +1,41 @@
 {
   "nfl": {
-    "version": "nfl-v2-20261015",
+    "version": "nfl-v2-refit-20261015",
     "ratings": {
-      "k": 0.0658,
-      "hfa_start": 2.70872,
-      "hfa_rate": 2e-05,
-      "regress": 0.39704,
+      "k": 0.06317,
+      "hfa_start": 1.01577,
+      "hfa_rate": 0.002,
+      "regress": 0.40784,
       "cap": 16.8525,
       "sigma": 13.5,
       "new_team": 0.0,
       "avg_rate": 0.005,
-      "qb_k": 0.03488,
-      "new_qb": -5.464,
+      "qb_k": 0.04153,
+      "new_qb": -5.08152,
       "qb_regress": 0.00037,
-      "rest_coef": 0.26534
+      "rest_coef": 0.21294
     },
+    "combiner": null,
     "calibration": {
-      "a": 0.9471,
-      "b": -0.2112
+      "a": 1.0,
+      "b": 0.0
     },
-    "tune_seasons": [
+    "fit_seasons": [
       2006,
-      2018
+      2025
     ],
-    "check_seasons": [
-      2019,
-      2022
-    ]
+    "note": "Refit on all seasons after the final exam; judged on live results only."
   },
   "ncaaf": {
-    "version": "ncaaf-v2-20261015",
+    "version": "ncaaf-v2-refit-20261015",
     "ratings": {
       "k": 0.14616,
-      "hfa_start": 0.08704,
-      "hfa_rate": 0.00072,
-      "regress": 0.06046,
+      "hfa_start": 0.04352,
+      "hfa_rate": 0.00082,
+      "regress": 0.09206,
       "cap": 58.17065,
       "sigma": 17.12,
-      "new_team": 13.66176,
+      "new_team": 14.61808,
       "avg_rate": 0.005
     },
     "combiner": {
@@ -50,26 +48,23 @@
         "ret_early"
       ],
       "coef": [
-        0.16319,
-        0.98285,
-        -0.09114,
-        -0.23824,
-        0.20738,
-        0.2386,
-        1.43586
+        0.07963,
+        1.00294,
+        0.00643,
+        -0.15138,
+        0.17661,
+        0.02271,
+        1.01121
       ]
     },
     "calibration": {
       "a": 1.0,
       "b": 0.0
     },
-    "tune_seasons": [
+    "fit_seasons": [
       2014,
-      2018
+      2025
     ],
-    "check_seasons": [
-      2019,
-      2020
-    ]
+    "note": "Refit on all seasons after the final exam; judged on live results only."
   }
 }

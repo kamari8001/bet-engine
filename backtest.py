@@ -6,6 +6,7 @@ Usage:
   python3 backtest.py check nfl|ncaaf   report on tune and check seasons (saved settings)
   python3 backtest.py ablate nfl        tune each new idea alone and together, compare
   python3 backtest.py ablate ncaaf      compare combiner inputs (published ratings etc.)
+  python3 backtest.py refit nfl|ncaaf   after the final exam: refit on all seasons for live use
   python3 backtest.py final nfl|ncaaf   the final exam on seasons never used for tuning.
                                         Every run is recorded in backtest_results/.
 
@@ -26,8 +27,8 @@ import model
 from odds_math import decimal_odds, no_vig
 
 PERIODS = {
-    "nfl":   {"tune": (2006, 2018), "check": (2019, 2022), "final": (2023, 2025)},
-    "ncaaf": {"tune": (2014, 2018), "check": (2019, 2020), "final": (2021, 2025)},
+    "nfl":   {"tune": (2006, 2018), "check": (2019, 2022), "final": (2023, 2025), "all": (2006, 2025)},
+    "ncaaf": {"tune": (2014, 2018), "check": (2019, 2020), "final": (2021, 2025), "all": (2014, 2025)},
 }
 TUNED = ["k", "hfa_start", "hfa_rate", "regress", "cap", "sigma"]
 # Which combiner inputs each sport uses (None = our model alone). Chosen with
@@ -118,17 +119,17 @@ def period_log_loss(games, preds, period):
 
 # ---------- tuning ----------
 
-def tune(games, sport, names=None, start=None):
+def tune(games, sport, names=None, start=None, period_name="tune"):
     params = dict(start or model.DEFAULT_PARAMS[sport])
     names = names or TUNED + TUNED_EXTRA[sport]
-    period = PERIODS[sport]["tune"]
+    period = PERIODS[sport][period_name]
 
     def score(p):
         preds, _ = model.walk_forward(games, p, sport)
         return period_log_loss(games, preds, period)
 
     best = score(params)
-    print(f"Starting log loss on tune seasons: {best:.4f}")
+    print(f"Starting log loss on {period_name} seasons: {best:.4f}")
     for factors in ([0.5, 0.75, 1.33, 2.0], [0.85, 0.93, 1.07, 1.18], [0.96, 1.04]):
         improved = True
         while improved:
@@ -293,10 +294,38 @@ def report(games, preds, market, sport, period_name, cal):
     return out
 
 
+def refit(conn, games, market, sport):
+    """After the final exam: refit the same design on every season, for live use.
+    No seasons are left untouched, so this version is judged on live results only.
+    No separate calibration correction: sigma is tuned on all seasons instead."""
+    old = model.load_params(sport)
+    ratings = tune(games, sport, start=old["ratings"], period_name="all")
+    preds, _ = model.walk_forward(games, ratings, sport)
+    comb = None
+    if old.get("combiner"):
+        names = old["combiner"]["features"]
+        comb = combiner.fit(combiner_rows(conn, games, preds, sport, PERIODS[sport]["all"]), names)
+        print(f"\nCombiner refit on all seasons: "
+              + ", ".join(f"{n} {c:+.3f}" for n, c in zip(["const"] + names, comb["coef"])))
+        preds = combiner.apply(conn, games, preds, comb, sport, ratings["sigma"])
+    cal = {"a": 1.0, "b": 0.0}
+    base_version = old["version"].rsplit("-", 1)[0].replace("-refit", "")
+    saved = json.loads(model.PARAMS_PATH.read_text())
+    saved[sport] = {"version": f"{base_version}-refit-{datetime.now(timezone.utc):%Y%m%d}",
+                    "ratings": ratings, "combiner": comb, "calibration": cal,
+                    "fit_seasons": PERIODS[sport]["all"],
+                    "note": "Refit on all seasons after the final exam; judged on live results only."}
+    model.PARAMS_PATH.write_text(json.dumps(saved, indent=2) + "\n")
+    print(f"Saved settings to {model.PARAMS_PATH.name} as {saved[sport]['version']}:")
+    print("  " + json.dumps(ratings))
+    print("\n(In-sample report below: these seasons were used for fitting, so it is NOT a test.)")
+    report(games, preds, market, sport, "all", cal)
+
+
 # ---------- main ----------
 
 def main():
-    if len(sys.argv) != 3 or sys.argv[1] not in ("tune", "check", "final", "ablate") or sys.argv[2] not in PERIODS:
+    if len(sys.argv) != 3 or sys.argv[1] not in ("tune", "check", "final", "ablate", "refit") or sys.argv[2] not in PERIODS:
         sys.exit(__doc__)
     mode, sport = sys.argv[1], sys.argv[2]
     conn = db.connect()
@@ -308,6 +337,10 @@ def main():
             ablate_combiner(conn, games, sport)
         else:
             ablate(games, sport)
+        return
+
+    if mode == "refit":
+        refit(conn, games, market, sport)
         return
 
     if mode == "tune":
