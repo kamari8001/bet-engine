@@ -75,7 +75,7 @@ A sports prediction engine for **moneyline betting**.
 
 Update this section at the end of each session: what's working, what's next, any open problems.
 
-Last updated 2026-10-14.
+Last updated 2026-10-15.
 
 - **Working:**
   - Database and logbook with rules enforced by the database itself (`schema.sql`, `db.py`; `python3 test_db.py` checks them).
@@ -83,7 +83,12 @@ Last updated 2026-10-14.
   - Live schedule and results (`pull_games.py`): NFL, and college games between two FBS teams. Games with no announced kickoff time are skipped until they have one.
   - Live odds (`pull_odds.py`): The Odds API, 1 credit per sport per run, refuses below 50 credits. Team names matched via `teams.py`.
 - **Data sources:** nflverse (no key), CFBD (free key, 1,000 calls/month), The Odds API (free key, 500 credits/month). `python3 check_keys.py` tests the keys.
-- **Next:** Step 4, the NFL/college base model: build it, backtest on history, check calibration.
+  - Base models (`model.py`, `combiner.py`, settings in `model_params.json`): NFL v2 (team ratings + starting-QB ratings + rest), college v2 (team ratings + CFBD preseason talent, returning production, last season's SP+). `backtest.py` tunes, compares ideas (`ablate`), and runs the one-time final exam.
+  - Final exams run 2026-10-15 (see `backtest_results/criteria.md`): both sports work and trail the market; neither made money on flagged bets (NFL -10.7%, college -3.8%). NFL also narrowly failed calibration. Flagged bets are paper only, Low confidence, until live results prove an edge.
+  - Tested and rejected (code kept, switched off): NFL efficiency (EPA) ratings, coach reset, early-season learning, travel; CFBD published Elo; QB/team-combo market bias.
+- **Next:** `predict.py` to log engine predictions before kickoff, Claude's news step (confirm starting QBs first), edge finder with confidence, and grading.
 - **Open items:**
   - Pulls run by hand for now. Closing lines need a pull shortly before each kickoff, which needs automation. Watch credit use; college Saturdays may push us to the $30 plan.
   - Results load on the next `pull_games.py` run after games finish. Cancelled or postponed games aren't handled yet.
+  - Starting QBs from nflverse for upcoming games may be stale; must be confirmed from news before logging NFL predictions.
+  - The 3-point cap on Claude's adjustments is too small for a starting-QB change; revisit when building the news step.
