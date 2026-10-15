@@ -65,6 +65,12 @@ def load_nfl(conn):
             home_team=r["home_team"], away_team=r["away_team"],
             home_score=int(r["home_score"]), away_score=int(r["away_score"]),
             neutral_site=int(r["location"] == "Neutral"),
+            home_starter_id=None if blank(r["home_qb_id"]) else r["home_qb_id"],
+            home_starter_name=None if blank(r["home_qb_name"]) else r["home_qb_name"],
+            away_starter_id=None if blank(r["away_qb_id"]) else r["away_qb_id"],
+            away_starter_name=None if blank(r["away_qb_name"]) else r["away_qb_name"],
+            home_rest_days=None if blank(r["home_rest"]) else int(r["home_rest"]),
+            away_rest_days=None if blank(r["away_rest"]) else int(r["away_rest"]),
             source="nflverse", external_id=r["game_id"])
         has_ml = not blank(r["home_moneyline"]) and not blank(r["away_moneyline"])
         if has_ml or not blank(r["spread_line"]) or not blank(r["total_line"]):

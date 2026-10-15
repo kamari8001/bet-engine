@@ -36,9 +36,21 @@ def init_db(path=config.DB_PATH):
     return conn
 
 
+# Columns added to hist_games after it was first created.
+HIST_GAMES_NEW_COLUMNS = {
+    "home_starter_id": "TEXT", "home_starter_name": "TEXT",
+    "away_starter_id": "TEXT", "away_starter_name": "TEXT",
+    "home_rest_days": "INTEGER", "away_rest_days": "INTEGER",
+}
+
+
 def upgrade_db(conn):
-    """Add backtest tables and Eastern-time views if they're missing."""
+    """Add backtest tables, new columns, and Eastern-time views if they're missing."""
     conn.executescript(EXTRA_SCHEMA_PATH.read_text())
+    have = {r["name"] for r in conn.execute("PRAGMA table_info(hist_games)")}
+    for col, kind in HIST_GAMES_NEW_COLUMNS.items():
+        if col not in have:
+            conn.execute(f"ALTER TABLE hist_games ADD COLUMN {col} {kind}")
     conn.commit()
 
 

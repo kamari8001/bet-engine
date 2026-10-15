@@ -27,7 +27,7 @@ PERIODS = {
     "ncaaf": {"tune": (2014, 2018), "check": (2019, 2020), "final": (2021, 2025)},
 }
 TUNED = ["k", "hfa_start", "hfa_rate", "regress", "cap", "sigma"]
-TUNED_COLLEGE_ONLY = ["new_team"]
+TUNED_EXTRA = {"nfl": ["qb_k", "new_qb", "qb_regress", "rest_coef"], "ncaaf": ["new_team"]}
 RESULTS_DIR = Path(__file__).parent / "backtest_results"
 
 
@@ -114,7 +114,7 @@ def period_log_loss(games, preds, period):
 
 def tune(games, sport):
     params = dict(model.DEFAULT_PARAMS[sport])
-    names = TUNED + (TUNED_COLLEGE_ONLY if sport == "ncaaf" else [])
+    names = TUNED + TUNED_EXTRA[sport]
     period = PERIODS[sport]["tune"]
 
     def score(p):
@@ -252,7 +252,8 @@ def main():
             cal = {"a": 1.0, "b": 0.0}
             print("  Improvement too small to be worth it; no calibration correction applied.")
         saved = json.loads(model.PARAMS_PATH.read_text()) if model.PARAMS_PATH.exists() else {}
-        saved[sport] = {"version": f"{sport}-v1-{datetime.now(timezone.utc):%Y%m%d}",
+        number = int(saved[sport]["version"].split("-v")[1].split("-")[0]) + 1 if sport in saved else 1
+        saved[sport] = {"version": f"{sport}-v{number}-{datetime.now(timezone.utc):%Y%m%d}",
                         "ratings": ratings, "calibration": cal,
                         "tune_seasons": PERIODS[sport]["tune"], "check_seasons": check}
         model.PARAMS_PATH.write_text(json.dumps(saved, indent=2) + "\n")

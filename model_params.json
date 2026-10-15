@@ -1,19 +1,23 @@
 {
   "nfl": {
-    "version": "nfl-v1-20261015",
+    "version": "nfl-v2-20261015",
     "ratings": {
-      "k": 0.07078,
-      "hfa_start": 2.36985,
-      "hfa_rate": 3e-05,
-      "regress": 0.3815,
-      "cap": 28.6897,
-      "sigma": 12.4416,
+      "k": 0.0658,
+      "hfa_start": 2.70872,
+      "hfa_rate": 2e-05,
+      "regress": 0.39704,
+      "cap": 16.8525,
+      "sigma": 13.5,
       "new_team": 0.0,
-      "avg_rate": 0.005
+      "avg_rate": 0.005,
+      "qb_k": 0.03488,
+      "new_qb": -5.464,
+      "qb_regress": 0.00037,
+      "rest_coef": 0.26534
     },
     "calibration": {
-      "a": 0.939,
-      "b": -0.1884
+      "a": 0.9471,
+      "b": -0.2112
     },
     "tune_seasons": [
       2006,

@@ -25,6 +25,12 @@ CREATE TABLE IF NOT EXISTS hist_games (
     home_score     INTEGER NOT NULL CHECK (home_score >= 0),
     away_score     INTEGER NOT NULL CHECK (away_score >= 0),
     neutral_site   INTEGER NOT NULL CHECK (neutral_site IN (0, 1)),
+    home_starter_id   TEXT,          -- starting QB (NFL); empty if unknown
+    home_starter_name TEXT,
+    away_starter_id   TEXT,
+    away_starter_name TEXT,
+    home_rest_days    INTEGER,       -- days since the team's previous game
+    away_rest_days    INTEGER,
     source         TEXT NOT NULL,
     external_id    TEXT NOT NULL,
     imported_at    TEXT NOT NULL DEFAULT (datetime('now')),
