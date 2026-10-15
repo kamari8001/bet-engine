@@ -90,9 +90,11 @@ Last updated 2026-10-15.
   - Models refit on all seasons through 2025 for live use (`*-v2-refit`); judged on live results only.
   - Live predictions (`predict.py`): logs `engine` and `claude` rows before kickoff (new row only on a 1+ point move or starter change), prints the slate with best price at my books (`config.MY_BOOKS`: FanDuel, DraftKings, Polymarket). Stops if past results are missing; no flags on odds older than 3 hours. `news.py` records confirmed QBs and capped adjustments; `my_pick.py` logs my picks.
   - Routine: `pull_games.py all` -> `pull_odds.py all` -> `pull_history.py all --current` -> `predict.py nfl|ncaaf` -> Claude checks news (`news.py`) -> `predict.py` again.
-- **Next:** grading (Brier, log loss, calibration, flagged W/L, closing-line value by source), confidence ratings, automation (timed odds pulls for closing lines), slate page.
+  - Grading (`grade.py nfl|ncaaf`): per source (engine, claude, me) plus the market benchmark: Brier, log loss, calibration, flagged-bet W/L and units at my books, closing-line value. Run after `pull_games.py` loads results.
+  - First live logs 2026-10-15: 14 NFL + 59 college engine predictions; claude row for SEA at DEN (Darnold expected; nflverse wrongly listed Lock).
+- **Next:** recheck Sunday NFL starters Saturday (after Friday injury reports) and log claude rows; game-time QB decisions Sunday morning. Then confidence ratings, automation (timed odds pulls for closing lines), slate page.
 - **Open items:**
   - Pulls run by hand for now. Closing lines need a pull shortly before each kickoff, which needs automation. Watch credit use; college Saturdays may push us to the $30 plan.
   - Results load on the next `pull_games.py` run after games finish. Cancelled or postponed games aren't handled yet.
-  - Starting QBs from nflverse for upcoming games may be stale; must be confirmed from news before logging NFL predictions.
+  - nflverse's upcoming starters appear to be last week's starter, so they lag injuries and returns; confirm from news before kickoff.
   - The 3-point cap on Claude's adjustments is too small for a starting-QB change; revisit when building the news step.
