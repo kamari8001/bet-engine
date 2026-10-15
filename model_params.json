@@ -1,0 +1,52 @@
+{
+  "nfl": {
+    "version": "nfl-v1-20261015",
+    "ratings": {
+      "k": 0.07078,
+      "hfa_start": 2.36985,
+      "hfa_rate": 3e-05,
+      "regress": 0.3815,
+      "cap": 28.6897,
+      "sigma": 12.4416,
+      "new_team": 0.0,
+      "avg_rate": 0.005
+    },
+    "calibration": {
+      "a": 0.939,
+      "b": -0.1884
+    },
+    "tune_seasons": [
+      2006,
+      2018
+    ],
+    "check_seasons": [
+      2019,
+      2022
+    ]
+  },
+  "ncaaf": {
+    "version": "ncaaf-v1-20261015",
+    "ratings": {
+      "k": 0.14616,
+      "hfa_start": 0.08704,
+      "hfa_rate": 0.00071,
+      "regress": 0.06046,
+      "cap": 58.17065,
+      "sigma": 17.12,
+      "new_team": 13.66176,
+      "avg_rate": 0.005
+    },
+    "calibration": {
+      "a": 1.0,
+      "b": 0.0
+    },
+    "tune_seasons": [
+      2014,
+      2018
+    ],
+    "check_seasons": [
+      2019,
+      2020
+    ]
+  }
+}
