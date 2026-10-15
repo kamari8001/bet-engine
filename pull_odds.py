@@ -2,7 +2,7 @@
 
 Usage: python3 pull_odds.py nfl | ncaaf | all
 
-Costs 1 credit per sport. Refuses to run when fewer than MIN_CREDITS remain.
+Costs 1 credit per sport (up to 10 bookmakers, listed in config.ODDS_BOOKMAKERS). Refuses to run when fewer than MIN_CREDITS remain.
 Every price is saved with the time it was pulled. Games that can't be matched
 to our schedule with certainty are listed and nothing is saved for them.
 """
@@ -57,7 +57,8 @@ def find_game(conn, sport, home, away, kickoff):
 def pull(conn, sport):
     names = TeamNames(sport)
     events, headers = odds_api(f"/sports/{SPORT_KEYS[sport]}/odds",
-                               regions="us", markets="h2h", oddsFormat="american")
+                               bookmakers=",".join(config.ODDS_BOOKMAKERS),
+                               markets="h2h", oddsFormat="american")
     now = datetime.now(timezone.utc)
     saved_games = saved_rows = started = untracked = 0
     problems, warnings = [], []

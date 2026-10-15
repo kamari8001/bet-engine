@@ -31,3 +31,9 @@ def _load_env(path=Path(__file__).parent / ".env"):
 _env = _load_env()
 CFBD_API_KEY = _env.get("CFBD_API_KEY", "")
 ODDS_API_KEY = _env.get("ODDS_API_KEY", "")
+
+# Odds API bookmakers pulled each run. Up to 10 cost 1 credit per sport.
+# All of them feed the no-vig market probability; MY_BOOKS are where you bet.
+ODDS_BOOKMAKERS = ["fanduel", "draftkings", "polymarket", "polymarket_us", "betmgm",
+                   "betus", "betrivers", "bovada", "lowvig", "betonlineag"]
+MY_BOOKS = ["FanDuel", "DraftKings", "Polymarket", "Polymarket (US)"]
