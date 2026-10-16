@@ -76,7 +76,7 @@ A sports prediction engine for **moneyline betting**.
 
 Update this section at the end of each session: what's working, what's next, any open problems.
 
-Last updated 2026-10-15.
+Last updated 2026-10-16.
 
 - **Working:**
   - Database and logbook with rules enforced by the database itself (`schema.sql`, `db.py`; `python3 test_db.py` checks them).
@@ -92,7 +92,10 @@ Last updated 2026-10-15.
   - Routine: `pull_games.py all` -> `pull_odds.py all` -> `pull_history.py all --current` -> `predict.py nfl|ncaaf` -> Claude checks news (`news.py`) -> `predict.py` again.
   - Grading (`grade.py nfl|ncaaf`): per source (engine, claude, me) plus the market benchmark: Brier, log loss, calibration, flagged-bet W/L and units at my books, closing-line value. Run after `pull_games.py` loads results.
   - First live logs 2026-10-15: 14 NFL + 59 college engine predictions; claude row for SEA at DEN (Darnold expected; nflverse wrongly listed Lock).
-- **Next:** recheck Sunday NFL starters Saturday (after Friday injury reports) and log claude rows; game-time QB decisions Sunday morning. Then confidence ratings, automation (timed odds pulls for closing lines), slate page.
+  - Automation (`auto.py`, run every 10 min by launchd: `automation/com.betengine.auto.plist`): morning routine 9 AM ET, odds + predictions 20-30 min before each kickoff window (closing lines), results + grades 3 AM. Logs in `logs/auto.log`; failures send a Mac notification and stop. `python3 auto.py --status` shows what's done and coming. Needs the Mac awake (plugged in, no auto-sleep, lid open).
+  - Scheduled Claude NFL QB checks (desktop app, Auto mode; QB facts only, no adjustments): Sat 10 AM (next 2 days), Sun 11 AM, Thu/Mon 5 PM. Run only while the Claude app is open.
+  - `show_picks.py` shows each source's current pick side by side; `grade.py` includes head-to-head on shared games.
+- **Next:** confidence ratings (Low/Medium/High with reasons), slate page, then shadow mode (champion vs. challenger) for testing model ideas live.
 - **Open items:**
   - Pulls run by hand for now. Closing lines need a pull shortly before each kickoff, which needs automation. Watch credit use; college Saturdays may push us to the $30 plan.
   - Results load on the next `pull_games.py` run after games finish. Cancelled or postponed games aren't handled yet.
