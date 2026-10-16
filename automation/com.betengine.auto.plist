@@ -8,17 +8,17 @@
     <key>ProgramArguments</key>
     <array>
         <string>/usr/bin/python3</string>
-        <string>/Users/talalkolt/Documents/bet-engine/auto.py</string>
+        <string>/Users/talalkolt/bet-engine/auto.py</string>
     </array>
     <key>WorkingDirectory</key>
-    <string>/Users/talalkolt/Documents/bet-engine</string>
+    <string>/Users/talalkolt/bet-engine</string>
     <key>StartInterval</key>
     <integer>600</integer>
     <key>RunAtLoad</key>
     <true/>
     <key>StandardOutPath</key>
-    <string>/Users/talalkolt/Documents/bet-engine/logs/launchd.out</string>
+    <string>/Users/talalkolt/bet-engine/logs/launchd.out</string>
     <key>StandardErrorPath</key>
-    <string>/Users/talalkolt/Documents/bet-engine/logs/launchd.err</string>
+    <string>/Users/talalkolt/bet-engine/logs/launchd.err</string>
 </dict>
 </plist>
