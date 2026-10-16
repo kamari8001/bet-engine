@@ -55,6 +55,7 @@ A sports prediction engine for **moneyline betting**.
 - Times: stored in UTC; always shown to me in Eastern time (`*_et` views, `db.fmt_et`).
 - API keys go in a `.env` file that is never committed to git.
 - Keep scripts small and named clearly, e.g., `pull_nfl.py`, `predict.py`, `grade.py`.
+- `COMMANDS.md` lists every terminal command. Whenever a command is added, removed, or changed, update it in the same commit.
 - A simple local page shows the daily slate and lets me enter my picks.
 
 ## Edge and confidence
