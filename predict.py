@@ -28,6 +28,7 @@ import combiner
 import config
 import db
 import model
+from cautions import game_warnings
 from odds_math import decimal_odds, fair_moneyline, no_vig
 from pull_history import CURRENT_SEASON, NFLVERSE_GAMES, blank, fetch
 
@@ -266,13 +267,14 @@ def main():
                                        version, {"adjustment_ids": [a["id"] for a in adjust],
                                                  "adjustment_total": shift, "fact_sources": sources})
             counts[status] += 1
-        print_game(g, eng_row, cl_row, mkt, now)
+        print_game(conn, g, eng_row, cl_row, mkt, now)
 
     print(f"\nPredictions: {counts['logged']} logged, {counts['unchanged']} unchanged (no new row needed).")
 
 
-def print_game(g, eng, cl, mkt, now):
+def print_game(conn, g, eng, cl, mkt, now):
     final = cl or eng
+    warnings = game_warnings(conn, g, final, mkt, now)
     p = final["p_home"]
     print(f"{db.fmt_et(g['start_time_utc'])}  {g['away_team']} at {g['home_team']}"
           + ("  (neutral site)" if g["neutral_site"] else ""))
@@ -287,7 +289,8 @@ def print_game(g, eng, cl, mkt, now):
         line += f"   claude {cl['p_away']:.1%} / {cl['p_home']:.1%}"
     print(line + f"   fair ML {fair_moneyline(1 - p):+d} / {fair_moneyline(p):+d}")
     if not mkt:
-        print("    no odds yet")
+        for w in warnings:
+            print(f"    ! {w}")
         return
     age = now - parse_utc(mkt["captured_at"])
     stale = age > ODDS_MAX_AGE
@@ -301,6 +304,8 @@ def print_game(g, eng, cl, mkt, now):
         ev = f", expected profit ${100 * (prob * decimal_odds(best[0]) - 1):+.0f} per $100" if best else ""
         flag = "  << FLAG (low confidence, paper only)" if edge >= config.EDGE_THRESHOLD and not stale and best else ""
         print(f"    {team:<22} edge {edge:+.1%}   {price}{ev}{flag}")
+    for w in warnings:
+        print(f"    ! {w}")
 
 
 if __name__ == "__main__":

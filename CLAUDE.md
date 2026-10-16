@@ -63,7 +63,7 @@ A sports prediction engine for **moneyline betting**.
 - **Fair probability:** convert the book's odds to implied probabilities and remove the vig before comparing.
 - **Edge:** engine probability minus the no-vig market probability.
 - **Flagged bets:** only games where the edge is at or above the threshold in `config` (start at 4 percentage points).
-- **Confidence:** combine edge size with data quality (confirmed lineups, sample size, league data depth). Show it as Low, Medium, or High, with the reason.
+- **Confidence:** for now, show specific warnings per game (unconfirmed starters, stale odds, few books, early season, very large edges; `cautions.py`). Edge size is not a confidence signal; in backtests, larger edges were more often model error. After a sport has 200+ graded games, add a Low / Medium / High rating based on which situations have actually beaten the closing line, with the reason.
 
 ## Daily routine (once automation is set up)
 
@@ -96,7 +96,8 @@ Last updated 2026-10-16.
   - Automation (`auto.py`, run every 10 min by launchd: `automation/com.betengine.auto.plist`): morning routine 9 AM ET, odds + predictions 20-30 min before each kickoff window (closing lines), results + grades 3 AM, and a catch-up odds pull right after the Mac wakes if games start within 2 hours and odds are 2+ hours old. Logs in `logs/auto.log`; failures send a Mac notification and stop. `python3 auto.py --status` shows what's done and coming. Works best with the Mac awake (plugged in, no auto-sleep, lid open), especially Sunday 12:30-8:30 PM ET, Saturday afternoons/evenings, and Thu/Mon evenings; while asleep, closing lines for those windows fall back to the last earlier pull (graded as approximate).
   - Scheduled Claude NFL QB checks (desktop app, Auto mode; QB facts only, no adjustments): Sat 10 AM (next 2 days), Sun 11 AM, Thu/Mon 5 PM. Run only while the Claude app is open.
   - `show_picks.py` shows each source's current pick side by side; `grade.py` includes head-to-head on shared games.
-- **Next:** confidence ratings (Low/Medium/High with reasons), slate page, then shadow mode (champion vs. challenger) for testing model ideas live.
+  - Per-game warnings (`cautions.py`) in `predict.py` and `show_picks.py`.
+- **Next:** slate page, then shadow mode (champion vs. challenger) for testing model ideas live. Evidence-based Low/Medium/High confidence after 200 graded games per sport.
 - **Open items:**
   - Pulls run by hand for now. Closing lines need a pull shortly before each kickoff, which needs automation. Watch credit use; college Saturdays may push us to the $30 plan.
   - Results load on the next `pull_games.py` run after games finish. Cancelled or postponed games aren't handled yet.
