@@ -11,6 +11,9 @@ Tasks (all times Eastern):
   windows  20-30 min before each kickoff window: odds for that sport, then predictions
            (a window = games starting within 30 minutes of the first one)
   night    3:00 AM   results -> grades
+  catch-up right after the Mac wakes (no run for 20+ min): if games start within
+           2 hours and our latest odds for that sport are 2+ hours old, pull now
+           (the normal 20-30 min pull still happens later if the Mac stays awake)
 Every step's output goes to logs/auto.log. If a step fails, the rest of that
 task is skipped and a Mac notification says so (rule 5: stop, don't guess).
 """
@@ -32,6 +35,9 @@ LOCK_PATH = LOG_DIR / "auto.lock"
 MORNING_HOUR, NIGHT_HOUR = 9, 3
 WINDOW_GAP = timedelta(minutes=30)          # games this close together share one pull
 PULL_BEFORE = (timedelta(minutes=5), timedelta(minutes=30))  # pull when first kickoff is this far away
+CATCHUP_AHEAD = timedelta(hours=2)          # look this far ahead after waking
+CATCHUP_STALE = timedelta(hours=2)          # ...and pull if odds are older than this
+WOKE_GAP = timedelta(minutes=20)            # a gap this long between runs = Mac was asleep
 LOW_CREDITS_WARN = 150                       # notify below this
 COLLEGE_WINDOWS_MIN_CREDITS = 100            # below this, skip college pre-kickoff pulls
 SPORTS = ("nfl", "ncaaf")
@@ -106,7 +112,13 @@ def kickoff_windows(conn, sport, start, end):
     return [(db.to_utc(t), n) for t, n in windows if start <= t <= end]
 
 
-def due_tasks(conn, state, et):
+def latest_odds_time(conn, sport):
+    r = conn.execute("SELECT MAX(o.captured_at) FROM odds o JOIN games g ON g.id = o.game_id"
+                     " WHERE g.sport = ?", (sport,)).fetchone()[0]
+    return datetime.strptime(r, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc) if r else None
+
+
+def due_tasks(conn, state, et, woke=False):
     """List of (task name, state key, steps) that should run now."""
     tasks = []
     today = et.strftime("%Y-%m-%d")
@@ -121,6 +133,16 @@ def due_tasks(conn, state, et):
             if key not in state["windows"]:
                 tasks.append((f"{sport.upper()} closing odds ({n} game(s) from {db.fmt_et(first)})",
                               ("windows", key), [["pull_odds.py", sport], ["predict.py", sport]]))
+        if woke:
+            last = latest_odds_time(conn, sport)
+            if last is None or utc - last >= CATCHUP_STALE:
+                for first, n in kickoff_windows(conn, sport, utc + PULL_BEFORE[1], utc + CATCHUP_AHEAD):
+                    key = f"{sport}|{first}|catchup"
+                    if key not in state["windows"]:
+                        tasks.append((f"{sport.upper()} catch-up odds after wake ({n} game(s) from "
+                                      f"{db.fmt_et(first)})", ("windows", key),
+                                      [["pull_odds.py", sport], ["predict.py", sport]]))
+                        break  # one pull covers every game of the sport
     return tasks
 
 
@@ -158,7 +180,14 @@ def main():
         log("previous run still going; skipping this one")
         return
 
-    tasks = due_tasks(conn, state, now_et())
+    now = datetime.now(timezone.utc)
+    last_run = state.get("last_run")
+    woke = last_run is None or now - datetime.strptime(last_run, "%Y-%m-%d %H:%M:%S").replace(
+        tzinfo=timezone.utc) > WOKE_GAP
+    if not dry:
+        state["last_run"] = db.to_utc(now)
+        save_state(state)
+    tasks = due_tasks(conn, state, now_et(), woke)
     if not tasks:
         if dry:
             print("Nothing due right now.")
