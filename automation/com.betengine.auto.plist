@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Runs auto.py every 10 minutes while you're logged in. See auto.py for what it does. -->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.betengine.auto</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/Users/talalkolt/Documents/bet-engine/auto.py</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/talalkolt/Documents/bet-engine</string>
+    <key>StartInterval</key>
+    <integer>600</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/talalkolt/Documents/bet-engine/logs/launchd.out</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/talalkolt/Documents/bet-engine/logs/launchd.err</string>
+</dict>
+</plist>
