@@ -126,8 +126,7 @@ def print_head_to_head(per_game):
             cells.append(f"{src} {brier:.4f} / {ll:.4f}")
         lines.append(f"  {a} vs {b}, on the {len(common)} game(s) both picked:  " + "   ".join(cells))
     if lines:
-        print("
-Head-to-head (Brier / log loss on the same games; lower is better):")
+        print("\nHead-to-head (Brier / log loss on the same games; lower is better):")
         print("\n".join(lines))
 
 
