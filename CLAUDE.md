@@ -97,7 +97,8 @@ Last updated 2026-10-16.
   - Scheduled Claude NFL QB checks (desktop app, Auto mode; QB facts only, no adjustments): Sat 10 AM (next 2 days), Sun 11 AM, Thu/Mon 5 PM. Run only while the Claude app is open.
   - `show_picks.py` shows each source's current pick side by side; `grade.py` includes head-to-head on shared games.
   - Per-game warnings (`cautions.py`) in `predict.py` and `show_picks.py`.
-- **Next:** slate page, then shadow mode (champion vs. challenger) for testing model ideas live. Evidence-based Low/Medium/High confidence after 200 graded games per sport.
+  - Slate page (`slate.py`, http://localhost:8765, this Mac only): upcoming games with every source's pick, market, fair ML, best price at my books, edges, warnings, pick entry (same rules as `my_pick.py`), and scorecards.
+- **Next:** shadow mode (champion vs. challenger) for testing model ideas live. Evidence-based Low/Medium/High confidence after 200 graded games per sport.
 - **Open items:**
   - Pulls run by hand for now. Closing lines need a pull shortly before each kickoff, which needs automation. Watch credit use; college Saturdays may push us to the $30 plan.
   - Results load on the next `pull_games.py` run after games finish. Cancelled or postponed games aren't handled yet.
