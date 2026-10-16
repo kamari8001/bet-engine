@@ -77,7 +77,7 @@ def grade(conn, sport, season):
             continue  # ties: moneyline pushes, left out of scoring
         y = int(g["home_score"] > g["away_score"])
         close, minutes = closing(conn, g)
-        if close and minutes > CLOSE_WARN_MIN:
+        if close and minutes > CLOSE_WARN_MIN and any(graded_prediction(conn, g, s) for s in SOURCES):
             approx_close += 1
         for source in SOURCES:
             pred = graded_prediction(conn, g, source)
