@@ -71,6 +71,7 @@ def grade(conn, sport, season):
         " WHERE g.sport = ? AND g.season = ? AND r.status = 'final' ORDER BY g.start_time_utc",
         (sport, str(season))).fetchall()
     stats = {s: {"rows": [], "bets": [], "clv": []} for s in SOURCES + ("market",)}
+    stats["per_game"] = []   # [{"y": 0/1, source: P(home), "market": P(home)}] for head-to-head
     approx_close = 0
     for g in games:
         if g["home_score"] == g["away_score"]:
@@ -79,12 +80,15 @@ def grade(conn, sport, season):
         close, minutes = closing(conn, g)
         if close and minutes > CLOSE_WARN_MIN and any(graded_prediction(conn, g, s) for s in SOURCES):
             approx_close += 1
+        game_probs = {"y": y}
+        stats["per_game"].append(game_probs)
         for source in SOURCES:
             pred = graded_prediction(conn, g, source)
             if pred is None:
                 continue
             p = pred["p_home"]
             stats[source]["rows"].append((p, y))
+            game_probs[source] = p
             snap = conn.execute("SELECT captured_at FROM odds WHERE id = ?", (pred["odds_id"],)).fetchone() \
                 if pred["odds_id"] else None
             mkt = market_at(conn, g["id"], snap["captured_at"]) if snap else None
@@ -92,6 +96,7 @@ def grade(conn, sport, season):
                 continue
             if source == "engine":
                 stats["market"]["rows"].append((mkt["p_home"], y))
+                game_probs["market"] = mkt["p_home"]
             # flagged bets
             for side, edge, won in (("home", p - mkt["p_home"], y == 1), ("away", mkt["p_home"] - p, y == 0)):
                 if edge >= config.EDGE_THRESHOLD and mkt["best"][side] is not None:
@@ -104,6 +109,26 @@ def grade(conn, sport, season):
                 at_close = close["p_home"] if side_home else 1 - close["p_home"]
                 stats[source]["clv"].append(at_close - then)
     return games, stats, approx_close
+
+
+def print_head_to_head(per_game):
+    """Fair comparison: each pair scored only on the games both predicted."""
+    pairs = [("me", "engine"), ("claude", "engine"), ("me", "claude")]
+    lines = []
+    for a, b in pairs:
+        common = [g for g in per_game if a in g and b in g and "market" in g]
+        if not common:
+            continue
+        cells = []
+        for src in (a, b, "market"):
+            brier = sum((g[src] - g["y"]) ** 2 for g in common) / len(common)
+            ll = sum(log_loss(g[src], g["y"]) for g in common) / len(common)
+            cells.append(f"{src} {brier:.4f} / {ll:.4f}")
+        lines.append(f"  {a} vs {b}, on the {len(common)} game(s) both picked:  " + "   ".join(cells))
+    if lines:
+        print("
+Head-to-head (Brier / log loss on the same games; lower is better):")
+        print("\n".join(lines))
 
 
 def print_scorecard(sport, season, games, stats, approx_close):
@@ -143,6 +168,8 @@ def print_scorecard(sport, season, games, stats, approx_close):
             if b:
                 print(f"   {lo:2d}-{lo + 10:3d}%  {len(b):4d} games  predicted {sum(p for p, _ in b) / len(b):6.1%}"
                       f"  home won {sum(y for _, y in b) / len(b):6.1%}")
+
+    print_head_to_head(stats["per_game"])
 
     graded = len(stats["engine"]["rows"])
     print(f"\nRule 8: {graded} graded games this season "
