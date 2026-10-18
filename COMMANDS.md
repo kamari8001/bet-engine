@@ -51,6 +51,14 @@ Typical order: `pull_games` → `pull_odds` → `pull_history --current` → `pr
 | `python3 news.py check <id> <team> "<Name>" "<link>" "<reason>"` | Records that the news supports the QB the model already assumes ("verified"). Refused if the name doesn't match; use `qb` then. |
 | `python3 news.py adjust <id> <points> "<link>" "<reason>"` | Judgment adjustment for the home team, e.g. `1.5` or `-2`. Capped at 3 points per game. |
 
+## Cancelled or postponed games
+
+| Command | What it does |
+|---|---|
+| `python3 game_status.py cancel <id> "<link>" "<reason>"` | Marks a game cancelled: never graded, stops blocking predictions |
+| `python3 game_status.py postpone <id> "YYYY-MM-DD HH:MM" "<link>" "<reason>"` | Moves a kickoff later (Eastern time). Can't move earlier than a logged prediction. |
+| `python3 game_status.py list` | Every schedule change recorded |
+
 ## Checks and setup
 
 | Command | What it does |

@@ -61,7 +61,9 @@ def check_history_current(conn, sport):
                           for g in missing)
         sys.exit(f"STOP: {len(missing)} finished game(s) have no result in the history yet:\n{lines}\n"
                  f"Run `python3 pull_history.py {sport} --current` and try again. If the source "
-                 "hasn't posted them, ratings would be stale, so nothing was logged.")
+                 "hasn't posted them, ratings would be stale, so nothing was logged.\n"
+                 "If a game was cancelled or postponed: `python3 game_status.py cancel <id> <link> <reason>` "
+                 "or `python3 game_status.py postpone <id> \"YYYY-MM-DD HH:MM\" <link> <reason>`.")
 
 
 # ---------- inputs for upcoming games ----------
@@ -224,6 +226,7 @@ def main():
     now = utc_now()
     games = conn.execute(
         "SELECT * FROM games WHERE sport = ? AND start_time_utc > ? AND start_time_utc <= ?"
+        " AND NOT EXISTS (SELECT 1 FROM results r WHERE r.game_id = games.id)"
         " ORDER BY start_time_utc, id",
         (sport, db.to_utc(now), db.to_utc(now + timedelta(days=days)))).fetchall()
     if not games:

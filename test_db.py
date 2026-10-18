@@ -123,6 +123,12 @@ def main():
 
     print("\n-- The past can't be edited --")
     early_id = db.add_prediction(conn, soon, "engine", 0.55, 0.45)
+    # A second game kicking off at the same moment, to be postponed after its start
+    ppd = db.add_game(conn, "nfl", "NFL", "test", "Test Home P", "Test Away P",
+                      now + timedelta(seconds=3), source="test")
+    db.add_prediction(conn, ppd, "engine", 0.5, 0.5)
+    cxl = db.add_game(conn, "nfl", "NFL", "test", "Test Home X", "Test Away X",
+                      now + timedelta(days=2), source="test")
     expect_blocked("save a result before kickoff",
                    lambda: db.add_result(conn, soon, "final", "test", 21, 17))
     print("      (waiting 4 seconds for the test game to kick off...)")
@@ -142,9 +148,31 @@ def main():
                                         " WHERE id = ?", (early_id,)))
     expect_blocked("delete a prediction",
                    lambda: conn.execute("DELETE FROM predictions WHERE id = ?", (early_id,)))
-    expect_blocked("move kickoff time after the game started",
-                   lambda: conn.execute("UPDATE games SET start_time_utc = '2099-01-01 00:00:00'"
+    expect_blocked("move kickoff EARLIER after the game started",
+                   lambda: conn.execute("UPDATE games SET start_time_utc = '2000-01-01 00:00:00'"
                                         " WHERE id = ?", (soon,)))
+
+    print("\n-- Postponed and cancelled games --")
+    expect_ok("postpone a game LATER after its original kickoff (no result yet)",
+              lambda: db.move_kickoff(conn, ppd, now + timedelta(days=1), "test", "test: weather postponement"))
+    check("the move is recorded in schedule_changes",
+          conn.execute("SELECT COUNT(*) FROM schedule_changes WHERE game_id = ? AND kind = 'moved'",
+                       (ppd,)).fetchone()[0] == 1)
+    expect_ok("predictions allowed again before the new kickoff",
+              lambda: db.add_prediction(conn, ppd, "engine", 0.52, 0.48))
+    expect_blocked("move a kickoff earlier than an existing prediction",
+                   lambda: db.move_kickoff(conn, ppd, now - timedelta(days=1), "test", "test"))
+    expect_ok("cancel a game before kickoff",
+              lambda: db.cancel_game(conn, cxl, "https://example.com/test", "test: cancelled"))
+    expect_blocked("a final result for a game not yet started",
+                   lambda: db.add_result(conn, ppd, "final", "test", 1, 0))
+    expect_blocked("a second result for a cancelled game",
+                   lambda: db.add_result(conn, cxl, "final", "test", 1, 0))
+    expect_blocked("move a cancelled game's kickoff",
+                   lambda: db.move_kickoff(conn, cxl, now + timedelta(days=9), "test", "test"))
+    expect_blocked("edit a schedule change",
+                   lambda: conn.execute("UPDATE schedule_changes SET reason = 'x'"))
+    expect_blocked("delete a schedule change", lambda: conn.execute("DELETE FROM schedule_changes"))
     expect_blocked("correction with no note",
                    lambda: db.add_prediction(conn, soon, "engine", 0.5, 0.5, corrects_id=early_id))
     expect_ok("correction with a note (kept for the record, never graded)",
@@ -157,6 +185,8 @@ def main():
                                         (early_id,)))
     expect_ok("save the final result after kickoff",
               lambda: db.add_result(conn, soon, "final", "test", 21, 17))
+    expect_blocked("move kickoff after a final result",
+                   lambda: db.move_kickoff(conn, soon, now + timedelta(days=5), "test", "test"))
     expect_blocked("change a final result",
                    lambda: conn.execute("UPDATE results SET home_score = 28 WHERE game_id = ?",
                                         (soon,)))

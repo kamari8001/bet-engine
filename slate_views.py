@@ -203,7 +203,9 @@ def card(v):
                    f'<th>fair</th><th>best price</th><th>edge</th><th>per $100</th></tr>{prices}</table></div>'
                    if prices else "")
 
-    if v["started"]:
+    if v.get("cancelled"):
+        form = '<div class="locked">Game cancelled: nothing on it is graded.</div>'
+    elif v["started"]:
         form = '<div class="locked">Game has started: picks are locked.</div>'
     else:
         form = f"""<form class="pick" method="post" action="/pick">
@@ -214,7 +216,7 @@ def card(v):
 
     front = f"""<div class="face front">
 <div class="matchup">{away}<span class="at">at</span>{home}</div>
-<div class="sub2"><span class="time">{esc(v['kickoff'])}{' &middot; ' + ' &middot; '.join(sub) if sub else ''}</span>{badge}</div>
+<div class="sub2"><span class="time">{'<b style="color:var(--bad)">CANCELLED</b> &middot; ' if v.get('cancelled') else ''}{esc(v['kickoff'])}{' &middot; ' + ' &middot; '.join(sub) if sub else ''}</span>{badge}</div>
 <table class="picks"><tr><th>source</th><th class="l">pick</th><th>win %</th><th>vs market</th></tr>{rows}</table>
 {prices_html}{form}<div class="hint">click card for details &#8635;</div></div>"""
 

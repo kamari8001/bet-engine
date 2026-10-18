@@ -68,7 +68,7 @@ def sync(conn, sport):
     source, loader = SOURCES[sport]
     now = datetime.now(timezone.utc)
     added = moved = results = tbd = 0
-    problems = []
+    problems, notes = [], []
     for g in loader():
         if not g["live_eligible"]:
             continue
@@ -97,10 +97,20 @@ def sync(conn, sport):
 
         if g["kickoff"] is not None and db.to_utc(g["kickoff"]) != row["start_time_utc"] \
                 and g["home_score"] is None:
+            old_start = datetime.strptime(row["start_time_utc"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+            if old_start <= now and g["kickoff"] <= now:
+                # Already underway by both times: a feed correction, not a postponement. Leave it.
+                notes.append(f"{label}: source changed the kickoff of a game already underway; not moved")
+                continue
+            manual = conn.execute("SELECT 1 FROM schedule_changes WHERE game_id = ? AND source <> ?",
+                                  (row["id"], source)).fetchone()
+            if manual and db.to_utc(g["kickoff"]) < row["start_time_utc"]:
+                # A postponement was recorded by hand; don't let a lagging feed undo it.
+                notes.append(f"{label}: feed still shows {db.fmt_et(db.to_utc(g['kickoff']))}; keeping the "
+                                f"manually recorded kickoff {db.fmt_et(row['start_time_utc'])}")
+                continue
             try:
-                conn.execute("UPDATE games SET start_time_utc = ? WHERE id = ?",
-                             (db.to_utc(g["kickoff"]), row["id"]))
-                conn.commit()
+                db.move_kickoff(conn, row["id"], g["kickoff"], source, "data feed changed the kickoff time")
                 moved += 1
                 print(f"  kickoff moved: {label} {db.fmt_et(row['start_time_utc'])}"
                       f" -> {db.fmt_et(db.to_utc(g['kickoff']))}")
@@ -115,6 +125,8 @@ def sync(conn, sport):
 
     print(f"{sport.upper()}: {added} games added, {moved} kickoff times moved, "
           f"{results} final scores added, {tbd} skipped (kickoff time not announced yet)")
+    for n in notes:
+        print(f"  NOTE: {n}")
     for p in problems:
         print(f"  PROBLEM: {p}")
     return not problems

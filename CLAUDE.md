@@ -102,6 +102,6 @@ Last updated 2026-10-16.
 - **Next:** shadow mode (champion vs. challenger) for testing model ideas live. Evidence-based Low/Medium/High confidence after 200 graded games per sport.
 - **Open items:**
   - Pulls run by hand for now. Closing lines need a pull shortly before each kickoff, which needs automation. Watch credit use; college Saturdays may push us to the $30 plan.
-  - Results load on the next `pull_games.py` run after games finish. Cancelled or postponed games aren't handled yet.
+  - Results load on the next `pull_games.py` run after games finish. Cancelled/postponed games: `game_status.py` (feeds rarely flag them); kickoffs can move later, never earlier than a logged prediction; every change is logged in `schedule_changes`.
   - nflverse's upcoming starters appear to be last week's starter, so they lag injuries and returns; confirm from news before kickoff.
   - The 3-point cap on Claude's adjustments is too small for a starting-QB change; revisit when building the news step.

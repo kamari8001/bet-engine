@@ -112,6 +112,8 @@ def game_view(conn, g, now, college):
         "neutral": bool(g["neutral_site"]), "market": None, "picks": [], "prices": [],
         "warnings": game_warnings(conn, g, final, mkt, now), "projected": None, "qbs": None, "rest": None,
         "my_pick": None, "books": [], "movement": None, "odds_time": None,
+        "cancelled": conn.execute("SELECT 1 FROM results WHERE game_id = ? AND status = 'cancelled'",
+                                  (g["id"],)).fetchone() is not None,
     }
     m_home = mkt["p_home"] if mkt else None
     if mkt:

@@ -210,3 +210,59 @@ BEGIN SELECT RAISE(ABORT, 'QB checks can never be changed; add a new one instead
 
 CREATE TRIGGER IF NOT EXISTS qb_checks_no_delete BEFORE DELETE ON qb_checks
 BEGIN SELECT RAISE(ABORT, 'QB checks can never be deleted'); END;
+
+
+------------------------------------------------------------------------
+-- Postponed and cancelled games (added 2026-10-18).
+-- Kickoff times may move LATER (even after the original time has passed,
+-- for a postponement), never earlier than a logged prediction, and never once
+-- a result exists. Every logged prediction stays before kickoff either way.
+-- A cancellation is a result row with status 'cancelled' and may be recorded
+-- before kickoff; a 'final' result still needs the game to have started.
+------------------------------------------------------------------------
+DROP TRIGGER IF EXISTS games_no_kickoff_change_after_start;
+DROP TRIGGER IF EXISTS results_after_kickoff;
+
+CREATE TRIGGER IF NOT EXISTS games_kickoff_change_rules
+BEFORE UPDATE OF start_time_utc ON games
+WHEN NEW.start_time_utc IS NOT OLD.start_time_utc
+ AND (EXISTS (SELECT 1 FROM results WHERE game_id = OLD.id)
+      OR (OLD.start_time_utc <= datetime('now') AND NEW.start_time_utc < OLD.start_time_utc)
+      OR NEW.start_time_utc <= (SELECT MAX(created_at) FROM predictions WHERE game_id = OLD.id))
+BEGIN
+    SELECT RAISE(ABORT, 'kickoff can only move later than every logged prediction, never earlier after the start, and not once a result exists');
+END;
+
+CREATE TRIGGER IF NOT EXISTS results_final_after_kickoff
+BEFORE INSERT ON results
+WHEN NEW.status = 'final'
+ AND datetime('now') < (SELECT start_time_utc FROM games WHERE id = NEW.game_id)
+BEGIN
+    SELECT RAISE(ABORT, 'a final result cannot be saved before the game starts');
+END;
+
+-- Every kickoff move or cancellation, with where it came from. Add-only.
+CREATE TABLE IF NOT EXISTS schedule_changes (
+    id             INTEGER PRIMARY KEY,
+    game_id        INTEGER NOT NULL REFERENCES games(id),
+    kind           TEXT NOT NULL CHECK (kind IN ('moved', 'cancelled')),
+    old_start_utc  TEXT NOT NULL,
+    new_start_utc  TEXT,
+    source         TEXT NOT NULL CHECK (length(trim(source)) > 0),   -- a link, or the data feed's name
+    reason         TEXT NOT NULL CHECK (length(trim(reason)) > 0),
+    created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+    CHECK ((kind = 'moved') = (new_start_utc IS NOT NULL))
+);
+
+CREATE TRIGGER IF NOT EXISTS schedule_changes_must_be_current
+BEFORE INSERT ON schedule_changes
+WHEN abs(julianday(NEW.created_at) - julianday('now')) * 86400 > 5
+BEGIN
+    SELECT RAISE(ABORT, 'schedule changes must be stamped with the current time');
+END;
+
+CREATE TRIGGER IF NOT EXISTS schedule_changes_no_update BEFORE UPDATE ON schedule_changes
+BEGIN SELECT RAISE(ABORT, 'schedule changes can never be changed'); END;
+
+CREATE TRIGGER IF NOT EXISTS schedule_changes_no_delete BEFORE DELETE ON schedule_changes
+BEGIN SELECT RAISE(ABORT, 'schedule changes can never be deleted'); END;

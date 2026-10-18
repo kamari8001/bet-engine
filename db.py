@@ -129,6 +129,26 @@ def add_qb_check(conn, game_id, team, player_name, source_url, reason, player_id
                    player_id=player_id, source_url=source_url, reason=reason)
 
 
+def move_kickoff(conn, game_id, new_start, source, reason):
+    """Move a game's kickoff (later only, per the database rules) and record why."""
+    old = conn.execute("SELECT start_time_utc FROM games WHERE id = ?", (game_id,)).fetchone()[0]
+    new = to_utc(new_start)
+    with conn:
+        conn.execute("UPDATE games SET start_time_utc = ? WHERE id = ?", (new, game_id))
+        conn.execute("INSERT INTO schedule_changes (game_id, kind, old_start_utc, new_start_utc, source, reason)"
+                     " VALUES (?, 'moved', ?, ?, ?, ?)", (game_id, old, new, source, reason))
+    return old, new
+
+
+def cancel_game(conn, game_id, source, reason):
+    """Record a cancellation: a 'cancelled' result (never graded) plus a schedule-change note."""
+    old = conn.execute("SELECT start_time_utc FROM games WHERE id = ?", (game_id,)).fetchone()[0]
+    with conn:
+        conn.execute("INSERT INTO results (game_id, status, source) VALUES (?, 'cancelled', ?)", (game_id, source))
+        conn.execute("INSERT INTO schedule_changes (game_id, kind, old_start_utc, source, reason)"
+                     " VALUES (?, 'cancelled', ?, ?, ?)", (game_id, old, source, reason))
+
+
 def add_result(conn, game_id, status, source, home_score=None, away_score=None):
     return _insert(conn, "results", game_id=game_id, status=status, source=source,
                    home_score=home_score, away_score=away_score)

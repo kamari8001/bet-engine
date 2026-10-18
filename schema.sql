@@ -32,17 +32,7 @@ CREATE TABLE games (
     UNIQUE (source, external_id)
 );
 
--- Kickoff time can't change once the original kickoff has passed, and can't
--- be moved earlier than a prediction that was already logged.
-CREATE TRIGGER games_no_kickoff_change_after_start
-BEFORE UPDATE OF start_time_utc ON games
-WHEN NEW.start_time_utc IS NOT OLD.start_time_utc
- AND (OLD.start_time_utc <= datetime('now')
-      OR NEW.start_time_utc <= (SELECT MAX(created_at) FROM predictions
-                                WHERE game_id = OLD.id))
-BEGIN
-    SELECT RAISE(ABORT, 'kickoff time cannot change after the game started or before existing predictions');
-END;
+-- Kickoff-time rules live in schema_extra.sql (games_kickoff_change_rules).
 
 -- Once a game has predictions, its sport and teams are fixed.
 CREATE TRIGGER games_no_identity_change_after_predictions
@@ -303,12 +293,7 @@ CREATE TABLE results (
         OR (status = 'cancelled' AND home_score IS NULL AND away_score IS NULL))
 );
 
-CREATE TRIGGER results_after_kickoff
-BEFORE INSERT ON results
-WHEN datetime('now') < (SELECT start_time_utc FROM games WHERE id = NEW.game_id)
-BEGIN
-    SELECT RAISE(ABORT, 'a result cannot be saved before the game starts');
-END;
+-- "Final results only after kickoff" lives in schema_extra.sql (results_final_after_kickoff).
 
 CREATE TRIGGER results_no_update BEFORE UPDATE ON results
 BEGIN SELECT RAISE(ABORT, 'results can never be changed'); END;
