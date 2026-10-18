@@ -1,4 +1,6 @@
-# Bet Engine: Project Rules
+# Kamari's Prediction Engine: Project Rules
+
+(Project folder: `bet-engine`.)
 
 Read this file at the start of every session and follow it.
 
@@ -41,6 +43,7 @@ A sports prediction engine for **moneyline betting**.
 8. **Blending waits for evidence.** Don't weight sources by track record until a sport has at least 200 graded games. Before that, the final probability is the base model plus Claude's bounded adjustments.
 9. **One sport at a time.** A sport isn't "done" until it has data, a backtested and calibrated model, an edge finder, and grading working.
 10. **Commit after each working step.** Use git with a clear message so we can always undo.
+11. **Version every release.** The app version lives in `version.py` (MAJOR.MINOR.PATCH: MAJOR = anything that changes the probabilities, i.e. a new model version or sport; MINOR = new features; PATCH = fixes and polish). When a change is user-visible, bump the version, add a `CHANGELOG.md` entry in plain English, and tag the commit (`git tag -a vX.Y.Z`). Model versions stay in `model_params.json` and on every prediction.
 
 ## Technical defaults
 

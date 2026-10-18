@@ -72,7 +72,7 @@ def log(msg):
 def notify(msg):
     log(f"NOTIFY: {msg}")
     safe = msg.replace('"', "'")
-    subprocess.run(["osascript", "-e", f'display notification "{safe}" with title "Bet Engine"'],
+    subprocess.run(["osascript", "-e", f'display notification "{safe}" with title "Kamari\'s Prediction Engine"'],
                    capture_output=True)
 
 

@@ -207,7 +207,7 @@ def slate(conn, sport, now, days, college):
 
 # ---------- live ----------
 
-def live(conn, now, college):
+def live(conn, now, college, sport=None):
     """Games from 8 hours ago through the end of today (Eastern), with live scores and picks.
     Returns (groups {"in": [...], "post": [...], "pre": [...]}, error message or None)."""
     import live_scores
@@ -215,8 +215,9 @@ def live(conn, now, college):
     today_end = now.astimezone(db.EASTERN).replace(hour=23, minute=59, second=59)
     games = conn.execute(
         "SELECT g.*, r.status AS result_status FROM games g LEFT JOIN results r ON r.game_id = g.id"
-        " WHERE g.start_time_utc >= ? AND g.start_time_utc <= ? ORDER BY g.start_time_utc, g.id",
-        (db.to_utc(now - timedelta(hours=8)), db.to_utc(today_end))).fetchall()
+        " WHERE g.start_time_utc >= ? AND g.start_time_utc <= ? AND (? IS NULL OR g.sport = ?)"
+        " ORDER BY g.start_time_utc, g.id",
+        (db.to_utc(now - timedelta(hours=8)), db.to_utc(today_end), sport, sport)).fetchall()
     boards, error = {}, None
     for sport in {g["sport"] for g in games}:
         try:

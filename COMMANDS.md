@@ -1,4 +1,4 @@
-# Bet Engine commands
+# Kamari's Prediction Engine: commands
 
 Run everything from the project folder. If a terminal starts somewhere else:
 
@@ -102,3 +102,4 @@ Challengers and the promotion bar are fixed in `backtest_results/shadow_challeng
 |---|---|
 | `git log --oneline -10` | The last 10 saved steps |
 | `git status` | Whether anything changed since the last save |
+| `git tag -l` | Every released version (see `CHANGELOG.md` for what each changed) |

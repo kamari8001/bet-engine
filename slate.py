@@ -80,11 +80,12 @@ class Handler(BaseHTTPRequestHandler):
                 groups = slate_data.slate(conn, sport, now, days, college)
                 self._send(slate_views.slate_page(sport, days, groups, msg))
             elif url.path == "/live":
-                groups, error = slate_data.live(conn, now, college)
+                groups, error = slate_data.live(conn, now, college, sport)
                 if q.get("fragment"):
                     self._send(slate_views.live_fragment(groups, error))
                 else:
-                    self._send(slate_views.live_page(groups, error))
+                    counts = {s: len(slate_data.live(conn, now, college, s)[0]["in"]) for s in SPORTS}
+                    self._send(slate_views.live_page(groups, error, sport, counts))
             elif url.path == "/mine":
                 self._send(slate_views.mine_page(*slate_data.my_picks(conn, now, college)))
             elif url.path == "/scorecard":

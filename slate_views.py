@@ -5,6 +5,7 @@ import json
 
 import config
 import db
+from version import APP_NAME, APP_VERSION, model_versions
 
 esc = html.escape
 SOURCE_LABEL = {"engine": "Engine", "claude": "Claude", "me": "You", "market": "Market"}
@@ -19,7 +20,9 @@ body { margin:0; background:var(--bg); color:var(--text);
        font:14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
 header { position:sticky; top:0; z-index:20; background:rgba(14,17,22,.96); border-bottom:1px solid var(--line);
          padding:12px 20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
-header h1 { font-size:16px; margin:0 6px 0 0; }
+header h1 { font-size:16px; margin:0 6px 0 0; white-space:nowrap; }
+header h1 .ver { font-size:11px; font-weight:500; color:var(--muted); border:1px solid var(--line); border-radius:999px;
+                 padding:1px 7px; margin-left:4px; vertical-align:middle; cursor:help; }
 nav a { color:var(--muted); text-decoration:none; padding:6px 10px; border-radius:6px; }
 nav a.on { color:var(--text); background:var(--card); border:1px solid var(--line); }
 .note { color:var(--muted); font-size:12px; }
@@ -122,7 +125,8 @@ a { color:var(--accent); }
 .lrow { display:flex; justify-content:space-between; align-items:center; padding:3px 0; font-size:15px; }
 .lscore { font-size:20px; font-weight:600; color:var(--soft); font-variant-numeric:tabular-nums; }
 .lscore.lead { color:var(--text); }
-.ball { color:var(--flag); font-size:10px; margin-left:4px; }
+.lteam { display:inline-flex; align-items:center; gap:6px; }
+.ball { color:var(--flag); font-size:10px; line-height:1; display:inline-flex; align-items:center; }
 .lcard .picks { margin-top:8px; }
 .lcard .picks td { height:28px; padding:3px 6px; }
 .lcard .picks tr.me td { background:rgba(88,166,255,.08); }
@@ -149,11 +153,13 @@ def page(title, active, body, msg=None, scripts=""):
                                 ("mine", "/mine", "My picks"),
                                 ("score", "/scorecard?sport=nfl", "Scorecard")))
     banner = f'<div class="msg {msg[0]}">{esc(msg[1])}</div>' if msg else ""
+    mv = model_versions()
+    models = "models: " + ", ".join(f"{'NFL' if k == 'nfl' else 'College'} {v}" for k, v in mv.items())
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><title>{esc(title)}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>{esc(title)} &middot; {esc(APP_NAME)}</title>
 <style>{CSS}</style></head><body>
-<header><h1>Bet Engine</h1><nav>{tabs}</nav>
-<span class="note">All flags are low confidence, paper only</span></header>
+<header><h1>{esc(APP_NAME)} <span class="ver" title="{esc(models)}">v{APP_VERSION}</span></h1><nav>{tabs}</nav>
+<span class="note">{esc(models)} &middot; all flags are low confidence, paper only</span></header>
 <main>{banner}{body}</main><script>{JS}{scripts}</script></body></html>"""
 
 
@@ -321,7 +327,7 @@ def live_card(v):
             and info["state"] == "in" else ""
         score = v["live"][f"{side}_score"] if a is not None else ""
         lead = a is not None and ((side == "home" and h > a) or (side == "away" and a > h))
-        return (f'<div class="lrow"><span>{team(v[side], v[side + "_logo"])}{ball}</span>'
+        return (f'<div class="lrow"><span class="lteam">{team(v[side], v[side + "_logo"])}{ball}</span>'
                 f'<span class="lscore{" lead" if lead else ""}">{score}</span></div>')
 
     picks = ""
@@ -350,7 +356,7 @@ def live_fragment(groups, error):
 
 LIVE_JS = """
 setInterval(function () {
-  fetch('/live?fragment=1').then(function (r) { return r.text(); }).then(function (h) {
+  fetch('/live?fragment=1&sport=' + (new URLSearchParams(location.search).get('sport') || 'nfl')).then(function (r) { return r.text(); }).then(function (h) {
     document.getElementById('live').innerHTML = h;
     document.getElementById('upd').textContent = new Date().toLocaleTimeString([], {hour: 'numeric', minute: '2-digit', second: '2-digit'});
   });
@@ -358,8 +364,12 @@ setInterval(function () {
 """
 
 
-def live_page(groups, error):
-    intro = ("<p class='note'>Scores from ESPN, refreshed every minute while this tab is open (last update "
+def live_page(groups, error, sport, counts):
+    toggle = ('<div class="toggle">' + "".join(
+        f'<a class="{"on" if sport == k else ""}" href="/live?sport={k}">{n}'
+        f'{f" <span class=note>({counts[k]} live)</span>" if counts.get(k) else ""}</a>'
+        for k, n in (("nfl", "NFL"), ("ncaaf", "College"))) + "</div>")
+    intro = toggle + ("<p class='note'>Scores from ESPN, refreshed every minute while this tab is open (last update "
              "<span id='upd'>now</span>). Display only: official results still come from nflverse and CFBD. "
              "Picks are the ones logged before kickoff.</p>")
     return page("Live", "live", intro + f'<div id="live">{live_fragment(groups, error)}</div>', scripts=LIVE_JS)
