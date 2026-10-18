@@ -4,14 +4,21 @@ scorecard. Dark theme. Runs only on this Mac.
 
 Usage: python3 slate.py [--port 8765] [--no-open]
 Then open http://localhost:8765 (it opens automatically). Ctrl+C stops it.
+Normally it runs in the background instead (automation/com.betengine.slate.plist).
+It restarts itself whenever one of the project's .py files changes, so code
+updates show up without restarting it by hand.
 
 The page only reads the database, except for logging your picks (same rules
 as my_pick.py). Odds and engine predictions come from automation / predict.py.
 Data: slate_data.py. HTML: slate_views.py.
 """
 
+import os
 import sys
+import threading
+import time
 import urllib.parse
+from pathlib import Path
 import webbrowser
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -22,6 +29,27 @@ import slate_views
 from my_pick import PickError, log_pick
 
 SPORTS = ("nfl", "ncaaf")
+HERE = Path(__file__).parent
+
+
+def code_snapshot():
+    return {p: p.stat().st_mtime for p in HERE.glob("*.py")}
+
+
+def restart_on_code_change(server):
+    """Every 2 seconds, check the project's .py files; if any changed, restart this
+    program in place (same command, same port) so the page runs the new code."""
+    before = code_snapshot()
+    while True:
+        time.sleep(2)
+        try:
+            now = code_snapshot()
+        except FileNotFoundError:
+            continue  # a file is mid-save; check again next time
+        if now != before:
+            print("Code changed: restarting the slate page...", flush=True)
+            server.server_close()
+            os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -85,7 +113,8 @@ def main():
     port = int(a[a.index("--port") + 1]) if "--port" in a else 8765
     server = ThreadingHTTPServer(("127.0.0.1", port), Handler)   # this Mac only
     url = f"http://localhost:{port}"
-    print(f"Slate page running at {url}  (Ctrl+C to stop)")
+    print(f"Slate page running at {url}  (Ctrl+C to stop)", flush=True)
+    threading.Thread(target=restart_on_code_change, args=(server,), daemon=True).start()
     if "--no-open" not in a:
         webbrowser.open(url)
     try:

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Keeps the slate page (slate.py) running at http://localhost:8765 while you're logged in. -->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.betengine.slate</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/Users/talalkolt/bet-engine/slate.py</string>
+        <string>--no-open</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/talalkolt/bet-engine</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/talalkolt/bet-engine/logs/slate.out</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/talalkolt/bet-engine/logs/slate.err</string>
+</dict>
+</plist>

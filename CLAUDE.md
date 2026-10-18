@@ -98,6 +98,7 @@ Last updated 2026-10-16.
   - Scheduled Claude NFL QB checks (desktop app, Auto mode; QB facts only, no adjustments): Sat 10 AM (next 2 days), Sun 11 AM, Sun 3 PM (late games, after their inactives), Thu/Mon 5 PM. Run only while the Claude app is open. Scheduled tasks are tied to the folder they were created in: if the project folder ever moves, recreate them from a session in the new folder (the 2026-10-16 move silently broke the first set; those are paused and marked OLD).
   - `show_picks.py` shows each source's current pick side by side; `grade.py` includes head-to-head on shared games.
   - Per-game warnings (`cautions.py`) in `predict.py` and `show_picks.py`.
+  - Slate page runs in the background (launchd `automation/com.betengine.slate.plist`, logs `logs/slate.*`) and restarts itself when any project .py file changes.
   - Slate page (`slate.py` server, `slate_data.py` data, `slate_views.py` HTML; http://localhost:8765, this Mac only, dark theme): flip cards per game (front: each source's pick in words with logos, prices at my books, flags, pick entry with the same rules as `my_pick.py`, warning badge; back: warnings, odds by book, line movement, last-5 form, QBs, rest), a My picks page (upcoming / in progress / finished), and a visual scorecard (stat tiles, head-to-head, calibration chart). Logos: ESPN (NFL), CFBD (college, cached weekly in `cache/`).
 - **Next:** shadow mode (champion vs. challenger) for testing model ideas live. Evidence-based Low/Medium/High confidence after 200 graded games per sport.
 - **Open items:**

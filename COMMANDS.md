@@ -12,7 +12,7 @@ cd ~/bet-engine
 
 | Command | What it does |
 |---|---|
-| `python3 slate.py` | **The slate page** (dark theme): flip cards for every game (front: each source's pick, prices at your books, pick box; back: warnings, odds by book, line movement, form), a My picks page, and a visual scorecard. Ctrl+C stops it; restart it after code changes. |
+| http://localhost:8765 | **The slate page** (dark theme), always running in the background: flip cards for every game (front: each source's pick, prices at your books, pick box; back: warnings, odds by book, line movement, form), a My picks page, and a visual scorecard. It restarts itself after code changes. |
 | `python3 show_picks.py nfl` | Every source's current pick side by side (engine, claude, you, market). Add `--days 3` to change how far ahead it looks. |
 | `python3 my_pick.py list nfl` | Upcoming games with their id numbers |
 | `python3 my_pick.py 3 CHI 60` | Log your pick: game 3, Chicago, 60% to win. College teams use the full name in quotes, e.g. `"Ohio State"`. |
@@ -41,6 +41,10 @@ Typical order: `pull_games` → `pull_odds` → `pull_history --current` → `pr
 | `tail -20 logs/auto.log` | Last 20 lines of the automation log |
 | `launchctl bootout gui/$(id -u)/com.betengine.auto` | **Turn the background job off** |
 | `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.betengine.auto.plist` | **Turn it back on** |
+| `launchctl bootout gui/$(id -u)/com.betengine.slate` | **Turn the background slate page off** |
+| `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.betengine.slate.plist` | **Turn it back on** |
+| `python3 slate.py` | Run the slate page by hand instead (only if the background one is off; Ctrl+C stops it) |
+| `tail -20 logs/slate.err` | Slate page errors, if the page won't load |
 
 ## News (mostly Claude's, but you can use them)
 
