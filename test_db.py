@@ -137,6 +137,14 @@ def main():
     expect_blocked("shadow probabilities that don't add to 100%", lambda: shadow_pred(0.6, 0.5))
     expect_blocked("edit a shadow prediction", lambda: conn.execute("UPDATE shadow_predictions SET p_home = 0.9"))
 
+    print("\n-- College news reviews (0-point adjustments) --")
+    expect_ok("record a 'reviewed, nothing material' check (0 points)",
+              lambda: db.add_adjustment(conn, future, engine_id, 0.0, 0.0, "test: news checked, nothing material",
+                                        "https://example.com/review"))
+    expect_blocked("a review with no source", lambda: db.add_adjustment(conn, future, engine_id, 0.0, 0.0, "x", ""))
+    expect_blocked("the cap still applies after a review (total would be 4 > 3)",
+                   lambda: db.add_adjustment(conn, future, engine_id, -0.01, 0.01, "test", "https://example.com/x"))
+
     print("\n-- The past can't be edited --")
     early_id = db.add_prediction(conn, soon, "engine", 0.55, 0.45)
     # A second game kicking off at the same moment, to be postponed after its start

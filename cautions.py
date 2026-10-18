@@ -84,6 +84,9 @@ def game_warnings(conn, g, pred, mkt, now=None):
             edge = abs(pred["p_home"] - mkt["p_home"])
             if edge >= LARGE_EDGE:
                 out.append(f"edge of {edge * 100:.0f} pts: in backtests, edges this big were usually model error")
+            if g["sport"] == "ncaaf" and edge >= 0.04 and not conn.execute(
+                    "SELECT 1 FROM adjustments WHERE game_id = ?", (g["id"],)).fetchone():
+                out.append("news not checked for this game (the model can't see college injuries)")
 
     # Early season: ratings still settling
     for side in ("away", "home"):

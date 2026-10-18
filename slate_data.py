@@ -187,6 +187,9 @@ def game_view(conn, g, now, college):
                             "away_now": whole(1 - last[1]), "home_then": whole(first[1]),
                             "home_now": whole(last[1]), "pts": round(abs(moved)),
                             "toward": home if moved > 0 else away}
+    view["news"] = [{"points": round(a["d_home"] * 100, 1), "reason": a["reason"], "source": a["source_url"],
+                     "time": db.fmt_et(a["created_at"])}
+                    for a in conn.execute("SELECT * FROM adjustments WHERE game_id = ? ORDER BY created_at", (g["id"],))]
     view["form"] = {side: team_form(conn, g["sport"], g[f"{side}_team"], g["start_time_utc"])
                     for side in ("away", "home")}
     return view

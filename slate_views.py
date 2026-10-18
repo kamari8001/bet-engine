@@ -257,9 +257,16 @@ def card(v):
     warn_html = ("".join(f"<li>{esc(w)}</li>" for w in v["warnings"]))
     warn_html = (f'<div class="section"><h4>Warnings</h4><ul class="warns">{warn_html}</ul></div>' if warn_html
                  else '<div class="section"><h4>Warnings</h4><div class="note">none</div></div>')
+    news_items = ""
+    for n in v.get("news", []):
+        what = "reviewed, no change" if n["points"] == 0 else f'{esc(v["home"])} {n["points"]:+.1f} pts'
+        news_items += (f'<div class="kv"><span>{esc(n["time"])}: {what}</span>'
+                       f'<span><a href="{esc(n["source"])}" target="_blank" rel="noopener">source</a></span></div>'
+                       f'<div class="note" style="padding:0 0 4px">{esc(n["reason"])}</div>')
+    news_html = f'<div class="section"><h4>News check</h4>{news_items}</div>' if news_items else ""
     back = f"""<div class="face back">
 <div class="top"><div class="matchup">{away}<span class="at">at</span>{home}</div><span class="time">{esc(v['kickoff'])}</span></div>
-{warn_html}{books_html}{move_html}{form_html}{extra_html}<div class="hint">click to flip back &#8634;</div></div>"""
+{warn_html}{news_html}{books_html}{move_html}{form_html}{extra_html}<div class="hint">click to flip back &#8634;</div></div>"""
     return f'<div class="card" id="g{v["id"]}"><div class="inner">{front}{back}</div></div>'
 
 

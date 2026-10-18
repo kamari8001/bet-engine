@@ -53,6 +53,8 @@ Typical order: `pull_games` → `pull_odds` → `pull_history --current` → `pr
 | `python3 news.py games nfl` | Upcoming games with ids, plus starters already recorded |
 | `python3 news.py qb <id> <team> "<Name>" confirmed "<link>" "<reason>"` | Record a starting QB (NFL). Use `expected` instead of `confirmed` if it's not official. |
 | `python3 news.py check <id> <team> "<Name>" "<link>" "<reason>"` | Records that the news supports the QB the model already assumes ("verified"). Refused if the name doesn't match; use `qb` then. |
+| `python3 news.py targets ncaaf [hours]` | College games that need a news check (engine vs market 4+ points apart, not yet reviewed) |
+| `python3 news.py reviewed <id> "<link>" "<reason>"` | Records "news checked, nothing material" (a 0-point adjustment; logs a claude prediction) |
 | `python3 news.py adjust <id> <points> "<link>" "<reason>"` | Judgment adjustment for the home team, e.g. `1.5` or `-2`. Capped at 3 points per game. |
 
 ## Cancelled or postponed games
