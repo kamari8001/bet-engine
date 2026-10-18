@@ -63,6 +63,15 @@ Typical order: `pull_games` → `pull_odds` → `pull_history --current` → `pr
 | `python3 game_status.py postpone <id> "YYYY-MM-DD HH:MM" "<link>" "<reason>"` | Moves a kickoff later (Eastern time). Can't move earlier than a logged prediction. |
 | `python3 game_status.py list` | Every schedule change recorded |
 
+## Shadow mode (paper tests of challengers)
+
+| Command | What it does |
+|---|---|
+| `python3 shadow.py report` | Each challenger's record and whether it's eligible for promotion (also on the Scorecard tab) |
+| `python3 shadow.py log all` | Logs every challenger for upcoming games (automation does this after each prediction run) |
+
+Challengers and the promotion bar are fixed in `backtest_results/shadow_challengers.md`.
+
 ## Checks and setup
 
 | Command | What it does |

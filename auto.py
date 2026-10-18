@@ -44,7 +44,8 @@ COLLEGE_WINDOWS_MIN_CREDITS = 100            # below this, skip college pre-kick
 SPORTS = ("nfl", "ncaaf")
 
 MORNING = [["pull_games.py", "all"], ["pull_history.py", "all", "--current"], ["pull_odds.py", "all"],
-           ["predict.py", "nfl"], ["predict.py", "ncaaf"], ["grade.py", "nfl"], ["grade.py", "ncaaf"]]
+           ["predict.py", "nfl"], ["predict.py", "ncaaf"], ["shadow.py", "log", "all"],
+           ["grade.py", "nfl"], ["grade.py", "ncaaf"]]
 NIGHT = [["pull_games.py", "all"], ["grade.py", "nfl"], ["grade.py", "ncaaf"]]
 
 
@@ -143,7 +144,8 @@ def due_tasks(conn, state, et, woke=False):
             key = f"{sport}|{first}"
             if key not in state["windows"]:
                 tasks.append((f"{sport.upper()} closing odds ({n} game(s) from {db.fmt_et(first)})",
-                              ("windows", key), [["pull_odds.py", sport], ["predict.py", sport]]))
+                              ("windows", key), [["pull_odds.py", sport], ["predict.py", sport],
+                                                     ["shadow.py", "log", sport]]))
         if woke:
             last = latest_odds_time(conn, sport)
             if last is None or utc - last >= CATCHUP_STALE:
@@ -152,7 +154,8 @@ def due_tasks(conn, state, et, woke=False):
                     if key not in state["windows"]:
                         tasks.append((f"{sport.upper()} catch-up odds after wake ({n} game(s) from "
                                       f"{db.fmt_et(first)})", ("windows", key),
-                                      [["pull_odds.py", sport], ["predict.py", sport]]))
+                                      [["pull_odds.py", sport], ["predict.py", sport],
+                                       ["shadow.py", "log", sport]]))
                         break  # one pull covers every game of the sport
     return tasks
 

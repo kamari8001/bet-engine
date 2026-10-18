@@ -121,6 +121,22 @@ def main():
     expect_blocked("edit a check", lambda: conn.execute("UPDATE qb_checks SET player_name = 'X'"))
     expect_blocked("delete a check", lambda: conn.execute("DELETE FROM qb_checks"))
 
+    print("\n-- Shadow challengers --")
+    shadow_bet = lambda **kw: conn.execute(
+        "INSERT INTO shadow_bets (challenger, game_id, side, team, price_ml, book, market_p, odds_captured_at)"
+        " VALUES (:challenger, :game_id, 'home', 'Test Home', -150, 'FanDuel', 0.58, datetime('now'))",
+        dict(dict(challenger="test_rule_v1", game_id=future), **kw))
+    expect_ok("log a shadow bet before kickoff", lambda: shadow_bet())
+    expect_blocked("a second bet by the same challenger on the same game", lambda: shadow_bet())
+    expect_blocked("edit a shadow bet", lambda: conn.execute("UPDATE shadow_bets SET price_ml = 200"))
+    expect_blocked("delete a shadow bet", lambda: conn.execute("DELETE FROM shadow_bets"))
+    shadow_pred = lambda p_home, p_away: conn.execute(
+        "INSERT INTO shadow_predictions (challenger, game_id, p_home, p_away) VALUES ('test_model_v1', ?, ?, ?)",
+        (future, p_home, p_away))
+    expect_ok("log a shadow prediction before kickoff", lambda: shadow_pred(0.6, 0.4))
+    expect_blocked("shadow probabilities that don't add to 100%", lambda: shadow_pred(0.6, 0.5))
+    expect_blocked("edit a shadow prediction", lambda: conn.execute("UPDATE shadow_predictions SET p_home = 0.9"))
+
     print("\n-- The past can't be edited --")
     early_id = db.add_prediction(conn, soon, "engine", 0.55, 0.45)
     # A second game kicking off at the same moment, to be postponed after its start
@@ -141,6 +157,8 @@ def main():
     expect_blocked("QB check after kickoff",
                    lambda: db.add_qb_check(conn, soon, "Test Home B", "Late QB",
                                            "https://example.com/x", "test"))
+    expect_blocked("shadow bet after kickoff",
+                   lambda: shadow_bet(game_id=soon, challenger="late_v1"))
     expect_blocked("new odds after kickoff",
                    lambda: db.add_odds(conn, soon, "testbook", -110, -110, "test"))
     expect_blocked("edit a prediction's probability",

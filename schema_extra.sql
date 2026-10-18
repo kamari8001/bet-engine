@@ -266,3 +266,62 @@ BEGIN SELECT RAISE(ABORT, 'schedule changes can never be changed'); END;
 
 CREATE TRIGGER IF NOT EXISTS schedule_changes_no_delete BEFORE DELETE ON schedule_changes
 BEGIN SELECT RAISE(ABORT, 'schedule changes can never be deleted'); END;
+
+
+------------------------------------------------------------------------
+-- Shadow mode: challengers logged before kickoff, kept apart from the real
+-- logbook (see backtest_results/shadow_challengers.md). Add-only.
+------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS shadow_predictions (
+    id          INTEGER PRIMARY KEY,
+    challenger  TEXT NOT NULL,
+    game_id     INTEGER NOT NULL REFERENCES games(id),
+    p_home      REAL NOT NULL CHECK (p_home BETWEEN 0 AND 1),
+    p_away      REAL NOT NULL CHECK (p_away BETWEEN 0 AND 1),
+    odds_id     INTEGER REFERENCES odds(id),
+    note        TEXT,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    CHECK (abs(p_home + p_away - 1) < 1e-6)
+);
+
+CREATE TABLE IF NOT EXISTS shadow_bets (
+    id              INTEGER PRIMARY KEY,
+    challenger      TEXT NOT NULL,
+    game_id         INTEGER NOT NULL REFERENCES games(id),
+    side            TEXT NOT NULL CHECK (side IN ('home', 'away')),
+    team            TEXT NOT NULL,
+    price_ml        INTEGER CHECK (price_ml IS NULL OR price_ml >= 100 OR price_ml <= -100),  -- best at my books
+    book            TEXT,
+    market_p        REAL NOT NULL CHECK (market_p BETWEEN 0 AND 1),   -- no-vig chance for that side then
+    odds_captured_at TEXT NOT NULL,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (challenger, game_id)
+);
+
+CREATE TRIGGER IF NOT EXISTS shadow_predictions_current BEFORE INSERT ON shadow_predictions
+WHEN abs(julianday(NEW.created_at) - julianday('now')) * 86400 > 5
+BEGIN SELECT RAISE(ABORT, 'shadow predictions must be stamped with the current time'); END;
+
+CREATE TRIGGER IF NOT EXISTS shadow_predictions_before_kickoff BEFORE INSERT ON shadow_predictions
+WHEN datetime('now') >= (SELECT start_time_utc FROM games WHERE id = NEW.game_id)
+BEGIN SELECT RAISE(ABORT, 'kickoff has passed: shadow predictions must be logged before the game starts'); END;
+
+CREATE TRIGGER IF NOT EXISTS shadow_predictions_no_update BEFORE UPDATE ON shadow_predictions
+BEGIN SELECT RAISE(ABORT, 'shadow predictions can never be changed'); END;
+
+CREATE TRIGGER IF NOT EXISTS shadow_predictions_no_delete BEFORE DELETE ON shadow_predictions
+BEGIN SELECT RAISE(ABORT, 'shadow predictions can never be deleted'); END;
+
+CREATE TRIGGER IF NOT EXISTS shadow_bets_current BEFORE INSERT ON shadow_bets
+WHEN abs(julianday(NEW.created_at) - julianday('now')) * 86400 > 5
+BEGIN SELECT RAISE(ABORT, 'shadow bets must be stamped with the current time'); END;
+
+CREATE TRIGGER IF NOT EXISTS shadow_bets_before_kickoff BEFORE INSERT ON shadow_bets
+WHEN datetime('now') >= (SELECT start_time_utc FROM games WHERE id = NEW.game_id)
+BEGIN SELECT RAISE(ABORT, 'kickoff has passed: shadow bets must be logged before the game starts'); END;
+
+CREATE TRIGGER IF NOT EXISTS shadow_bets_no_update BEFORE UPDATE ON shadow_bets
+BEGIN SELECT RAISE(ABORT, 'shadow bets can never be changed'); END;
+
+CREATE TRIGGER IF NOT EXISTS shadow_bets_no_delete BEFORE DELETE ON shadow_bets
+BEGIN SELECT RAISE(ABORT, 'shadow bets can never be deleted'); END;

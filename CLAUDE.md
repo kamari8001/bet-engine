@@ -100,7 +100,9 @@ Last updated 2026-10-16.
   - Per-game warnings (`cautions.py`) in `predict.py` and `show_picks.py`.
   - Slate page runs in the background (launchd `automation/com.betengine.slate.plist`, logs `logs/slate.*`) and restarts itself when any project .py file changes.
   - Slate page (`slate.py` server, `slate_data.py` data, `slate_views.py` HTML; http://localhost:8765, this Mac only, dark theme): flip cards per game (front: each source's pick in words with logos, prices at my books, flags, pick entry with the same rules as `my_pick.py`, warning badge; back: warnings, odds by book, line movement, last-5 form, QBs, rest), a My picks page (upcoming / in progress / finished), and a visual scorecard (stat tiles, head-to-head, calibration chart). Logos: ESPN (NFL), CFBD (college, cached weekly in `cache/`).
-- **Next:** shadow mode (champion vs. challenger) for testing model ideas live. Evidence-based Low/Medium/High confidence after 200 graded games per sport.
+  - Shadow mode (`shadow.py`, tables `shadow_predictions` / `shadow_bets`): pre-registered challengers (`backtest_results/shadow_challengers.md`) log before kickoff, apart from the real logbook; scorecard on the Scorecard tab and `shadow.py report`. Started 2026-10-18 with `nfl_after_blowout_loss_v1`, `nfl_back_popular_v1`, `market_anchor_v1`. Never edit a challenger; make a new version. Eligible challengers wait for Talal's decision.
+  - Market-pattern tests (`market_patterns.py`, `backtest_results/market_patterns_plan.md`): no pre-registered pattern beat the closing line.
+- **Next:** college news step (capped judgment adjustments); basketball postponed by Talal. Evidence-based Low/Medium/High confidence after 200 graded games per sport.
 - **Open items:**
   - Pulls run by hand for now. Closing lines need a pull shortly before each kickoff, which needs automation. Watch credit use; college Saturdays may push us to the $30 plan.
   - Results load on the next `pull_games.py` run after games finish. Cancelled/postponed games: `game_status.py` (feeds rarely flag them); kickoffs can move later, never earlier than a logged prediction; every change is logged in `schedule_changes`.

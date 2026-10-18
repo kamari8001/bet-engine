@@ -299,5 +299,6 @@ def scorecard(conn, sport):
             for src in (a, b, "market"):
                 row[src] = sum((x[src] - x["y"]) ** 2 for x in common) / len(common)
             h2h.append(row)
+    import shadow
     return {"finished": len(games), "approx": approx, "tiles": tiles, "h2h": h2h,
-            "graded": len(stats["engine"]["rows"])}
+            "graded": len(stats["engine"]["rows"]), "shadow": shadow.report_data(conn, sport)}

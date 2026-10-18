@@ -457,5 +457,31 @@ def scorecard_page(sport, sc):
              f'<th>games</th><th>predicted</th><th>won</th></tr>{table_rows}</table></details></div>')
     rule8 = (f'<p class="note">Rule 8: {sc["graded"]} graded games this season; '
              f'{"enough" if sc["graded"] >= 200 else str(200 - sc["graded"]) + " more needed"} before weighting sources by track record.</p>')
-    body = switch + tiles + approx + h2h_html + chart + rule8
+    shadow_rows = ""
+    for r in sc.get("shadow", []):
+        status = '<span class="ok">eligible</span>' if r["eligible"] else '<span class="note">not yet</span>'
+        if r["type"] == "rule":
+            if r["graded"]:
+                z = "&ndash;" if r["z"] is None else f'{r["z"]:+.2f}'
+                clv = "&ndash;" if r["clv"] is None else f'{r["clv"] * 100:+.1f} pts'
+                res = (f'{r["w"]}-{r["l"]}{"-" + str(r["push"]) if r["push"] else ""}, '
+                       f'<span class="{"ok" if r["units"] > 0 else "bad"}">{r["units"]:+.1f}u ({r["roi"]:+.0%})</span>, '
+                       f'z {z}, CLV {clv}')
+            else:
+                res = f'{r["logged"]} bet(s) logged, none graded yet'
+        else:
+            if r["graded"]:
+                f = lambda x: "&ndash;" if x is None else f"{x * 100:+.1f} pts"
+                res = (f'{r["graded"]} games: log loss {r["ll_ch"]:.3f} vs engine {r["ll_eng"]:.3f}, '
+                       f'CLV {f(r["clv_ch"])} vs {f(r["clv_eng"])}')
+            else:
+                res = "no graded games yet"
+        shadow_rows += (f'<tr><td><b>{esc(r["name"])}</b><div class="note">{esc(r["about"])} ({r["type"]})</div></td>'
+                        f'<td class="l">{res}</td><td>{status}<div class="note">{esc(r["bar"])}</div></td></tr>')
+    shadow_html = (f'<div class="panel"><h2>Shadow challengers (paper tests, kept out of the slate)</h2>'
+                   f'<table><tr><th>challenger</th><th class="l">record so far</th><th>promotion</th></tr>{shadow_rows}</table>'
+                   f'<div class="note" style="margin-top:6px">Definitions and the bar are fixed in '
+                   f'backtest_results/shadow_challengers.md. Eligible means you decide; it never switches on by itself.</div></div>'
+                   ) if shadow_rows else ""
+    body = switch + tiles + approx + h2h_html + chart + shadow_html + rule8
     return page(f"{label} scorecard", "score", body, scripts=CHART_JS)
