@@ -20,6 +20,7 @@ task is skipped and a Mac notification says so (rule 5: stop, don't guess).
 
 import fcntl
 import json
+import socket
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
@@ -45,6 +46,16 @@ SPORTS = ("nfl", "ncaaf")
 MORNING = [["pull_games.py", "all"], ["pull_history.py", "all", "--current"], ["pull_odds.py", "all"],
            ["predict.py", "nfl"], ["predict.py", "ncaaf"], ["grade.py", "nfl"], ["grade.py", "ncaaf"]]
 NIGHT = [["pull_games.py", "all"], ["grade.py", "nfl"], ["grade.py", "ncaaf"]]
+
+
+def online():
+    """True if the internet is reachable. A sleeping Mac wakes briefly every ~15 min
+    for maintenance without network; runs then should do nothing and leave no trace."""
+    try:
+        socket.create_connection(("api.the-odds-api.com", 443), timeout=5).close()
+        return True
+    except OSError:
+        return False
 
 
 def now_et():
@@ -180,6 +191,10 @@ def main():
         log("previous run still going; skipping this one")
         return
 
+    if not online():
+        # Don't record this run, so the next run with internet still counts as "just woke"
+        log("no internet (Mac probably in a brief maintenance wake); doing nothing")
+        return
     now = datetime.now(timezone.utc)
     last_run = state.get("last_run")
     woke = last_run is None or now - datetime.strptime(last_run, "%Y-%m-%d %H:%M:%S").replace(
