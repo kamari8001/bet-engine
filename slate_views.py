@@ -57,7 +57,9 @@ th:first-child, td:first-child, th.l, td.l { text-align:left; }
 .picks td.src { color:var(--soft); width:72px; border-left:3px solid transparent; padding-left:8px; }
 .picks tr.dis td.src { border-left-color:var(--flag); }
 .picks tr.mkt td { color:var(--muted); }
-.picks .pct { font-weight:600; }
+.picks td.pct { font-weight:600; width:64px; }
+.picks td.l { padding-left:14px; }
+.logo.sm { flex:0 0 16px; }
 .section { margin-top:12px; }
 .section h4 { margin:0 0 4px; font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
 form.pick { display:flex; gap:8px; margin-top:12px; align-items:center; flex-wrap:wrap; cursor:auto; }
@@ -161,17 +163,18 @@ def card(v):
     rows = ""
     for p in v["picks"]:
         if p["team"] is None:
-            rows += f'<tr><td class="src">{SOURCE_LABEL[p["source"]]}</td><td class="neg">no pick</td><td></td></tr>'
+            rows += (f'<tr><td class="src">{SOURCE_LABEL[p["source"]]}</td><td class="l neg">no pick</td>'
+                     f'<td></td><td></td></tr>')
             continue
         edge = "" if p["edge"] is None else f'<span class="{"pos" if p["edge"] > 0 else "neg"}">{signed(p["edge"])} pts</span>'
         title = ' title="Picks a different team than the market"' if p["disagrees"] else ""
         rows += (f'<tr class="{"dis" if p["disagrees"] else ""}"{title}><td class="src">{SOURCE_LABEL[p["source"]]}</td>'
-                 f'<td>{team(p["team"], logos[p["team"]], True)} <span class="pct">{p["pct"]}%</span></td>'
-                 f'<td>{edge}</td></tr>')
+                 f'<td class="l">{team(p["team"], logos[p["team"]], True)}</td>'
+                 f'<td class="pct">{p["pct"]}%</td><td>{edge}</td></tr>')
     m = v["market"]
     if m:
-        rows += (f'<tr class="mkt"><td class="src">Market</td><td>{team(m["team"], logos[m["team"]], True)} '
-                 f'<span class="pct">{m["pct"]}%</span></td><td>no vig</td></tr>')
+        rows += (f'<tr class="mkt"><td class="src">Market</td><td class="l">{team(m["team"], logos[m["team"]], True)}</td>'
+                 f'<td class="pct">{m["pct"]}%</td><td>no vig</td></tr>')
 
     prices = ""
     for pr in v["prices"]:
@@ -201,7 +204,7 @@ def card(v):
 <div class="top"><div class="matchup">{away}<span class="at">at</span>{home}</div>
 <div style="display:flex;gap:8px;align-items:center">{badge}<span class="time">{esc(v['kickoff'])}</span></div></div>
 <div class="sub">{' &middot; '.join(sub)}</div>
-<table class="picks"><tr><th>source</th><th>pick</th><th>vs market</th></tr>{rows}</table>
+<table class="picks"><tr><th>source</th><th class="l">pick</th><th>win %</th><th>vs market</th></tr>{rows}</table>
 {prices_html}{form}<div class="hint">click card for details &#8635;</div></div>"""
 
     # back
