@@ -11,7 +11,7 @@ from pathlib import Path
 import config
 import db
 import grade
-from cautions import game_warnings
+from cautions import game_warnings, qb_status
 from odds_math import decimal_odds, fair_moneyline, no_vig
 from predict import ODDS_MAX_AGE, latest_odds, parse_utc
 from pull_history import CURRENT_SEASON
@@ -157,13 +157,14 @@ def game_view(conn, g, now, college):
         if final["proj_home_score"] is not None:
             view["projected"] = (round(final["proj_away_score"]), round(final["proj_home_score"]))
         inp = json.loads(final["note"] or "{}").get("inputs", {})
-        if inp.get("away_starter_name") or inp.get("home_starter_name"):
-            def qb(side):
-                status = inp.get(f"{side}_starter_status") or ""
-                tag = ("confirmed" if status.startswith("confirmed") else "per news" if "Claude" in status
-                       else "assumed" if "assumed" in status else "nflverse listing")
-                return {"name": inp.get(f"{side}_starter_name") or "?", "tag": tag}
-            view["qbs"] = {"away": qb("away"), "home": qb("home")}
+        qbs = qb_status(conn, g, final)
+        if qbs:
+            label = {"confirmed": "confirmed", "expected": "per news", "verified": "checked",
+                     "assumed": "assumed", "listed": "nflverse listing, not checked"}
+            view["qbs"] = {side: ({"name": qbs[side]["name"],
+                                   "tag": label[qbs[side]["kind"]] + (f", {qbs[side]['time']}" if qbs[side]["time"] else "")}
+                                  if side in qbs else {"name": "?", "tag": "unknown"})
+                           for side in ("away", "home")}
         if inp.get("away_rest_days") is not None:
             view["rest"] = (inp["away_rest_days"], inp.get("home_rest_days"))
 

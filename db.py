@@ -124,6 +124,11 @@ def add_lineup_fact(conn, game_id, team, role, player_name, status, source_url, 
                    source_url=source_url, reason=reason)
 
 
+def add_qb_check(conn, game_id, team, player_name, source_url, reason, player_id=None):
+    return _insert(conn, "qb_checks", game_id=game_id, team=team, player_name=player_name,
+                   player_id=player_id, source_url=source_url, reason=reason)
+
+
 def add_result(conn, game_id, status, source, home_score=None, away_score=None):
     return _insert(conn, "results", game_id=game_id, status=status, source=source,
                    home_score=home_score, away_score=away_score)

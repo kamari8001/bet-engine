@@ -34,7 +34,7 @@ A sports prediction engine for **moneyline betting**.
    - stay within a set maximum per game,
    - record the reason and the source link,
    - be stored separately from the base model output.
-   - Confirmed starters are facts, not adjustments: Claude records them with a source (`news.py qb`, `lineup_facts` table) and the formula turns them into a probability (the `claude` prediction). The cap applies to judgment adjustments (`news.py adjust`).
+   - Confirmed starters are facts, not adjustments: Claude records them with a source (`news.py qb`, `lineup_facts` table) and the formula turns them into a probability (the `claude` prediction). The cap applies to judgment adjustments (`news.py adjust`). When the news supports the starter the model already assumes, Claude records a verified check (`news.py check`, `qb_checks` table, source required); it also produces a `claude` prediction (equal to the engine's), so Claude is graded on every game it reviewed, not only the ones it changed.
 5. **No fake data.** Never invent, placeholder, or estimate data and present it as real. If a source fails, stop and tell me.
 6. **Track the closing line.** Store the moneyline at prediction time and the final pregame (closing) moneyline for every game.
 7. **Grade everything.** After games finish, compute for each source by sport: Brier score, log loss, calibration, win/loss on flagged bets, and closing-line value.
@@ -52,6 +52,7 @@ A sports prediction engine for **moneyline betting**.
   - `results`
   - `adjustments`
   - `hist_games` and `hist_odds`: past seasons for backtesting only, kept apart from the live logbook
+  - `lineup_facts` (news-confirmed starters) and `qb_checks` (verified: news supports the assumed starter)
 - Times: stored in UTC; always shown to me in Eastern time (`*_et` views, `db.fmt_et`).
 - API keys go in a `.env` file that is never committed to git.
 - Keep scripts small and named clearly, e.g., `pull_nfl.py`, `predict.py`, `grade.py`.

@@ -248,10 +248,12 @@ def main():
 
         # Claude row: confirmed starters and/or capped adjustments
         facts = confirmed_starters(conn, g["id"]) if sport == "nfl" else {}
+        checks = {r["team"]: r for r in conn.execute(
+            "SELECT * FROM qb_checks WHERE game_id = ? ORDER BY created_at, id", (g["id"],))}
         adjust = conn.execute("SELECT * FROM adjustments WHERE game_id = ? ORDER BY created_at",
                               (g["id"],)).fetchall()
         cl_row = None
-        if facts or adjust:
+        if facts or checks or adjust:
             cl_inputs = dict(eng_inputs)
             sources = []
             for side in ("home", "away"):
@@ -261,6 +263,10 @@ def main():
                     cl_inputs[f"{side}_starter_name"] = f["player_name"]
                     cl_inputs[f"{side}_starter_status"] = f"{f['status']} (Claude, fact {f['id']})"
                     sources.append(f["source_url"])
+                elif g[f"{side}_team"] in checks:
+                    c = checks[g[f"{side}_team"]]
+                    cl_inputs[f"{side}_starter_status"] = f"verified (Claude check {c['id']})"
+                    sources.append(c["source_url"])
             hp, ap, p = engine.predict(g, cl_inputs)
             shift = sum(a["d_home"] for a in adjust)
             status, cl_row = maybe_log(conn, g, "claude", (hp, ap, p + shift), cl_inputs, odds_id,

@@ -110,6 +110,17 @@ def main():
                    lambda: conn.execute("UPDATE lineup_facts SET player_name = 'X'"))
     expect_blocked("delete a starter fact", lambda: conn.execute("DELETE FROM lineup_facts"))
 
+    print("\n-- Verified QB checks --")
+    qbcheck = lambda **kw: db.add_qb_check(conn, **dict(dict(
+        game_id=future, team="Test Away", player_name="Test Away QB",
+        source_url="https://example.com/test-inactives", reason="test: active, no report otherwise"), **kw))
+    expect_ok("save a verified QB check with a source", lambda: qbcheck())
+    expect_blocked("check with no source link", lambda: qbcheck(source_url="nope"))
+    expect_blocked("check with no reason", lambda: qbcheck(reason=""))
+    expect_blocked("check for a team not in the game", lambda: qbcheck(team="Some Other Team"))
+    expect_blocked("edit a check", lambda: conn.execute("UPDATE qb_checks SET player_name = 'X'"))
+    expect_blocked("delete a check", lambda: conn.execute("DELETE FROM qb_checks"))
+
     print("\n-- The past can't be edited --")
     early_id = db.add_prediction(conn, soon, "engine", 0.55, 0.45)
     expect_blocked("save a result before kickoff",
@@ -121,6 +132,9 @@ def main():
     expect_blocked("starter fact after kickoff",
                    lambda: db.add_lineup_fact(conn, soon, "Test Home B", "QB", "Late Passer",
                                               "confirmed", "https://example.com/x", "test"))
+    expect_blocked("QB check after kickoff",
+                   lambda: db.add_qb_check(conn, soon, "Test Home B", "Late QB",
+                                           "https://example.com/x", "test"))
     expect_blocked("new odds after kickoff",
                    lambda: db.add_odds(conn, soon, "testbook", -110, -110, "test"))
     expect_blocked("edit a prediction's probability",

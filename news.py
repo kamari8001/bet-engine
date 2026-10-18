@@ -5,6 +5,10 @@ Usage:
       list upcoming games (next 7 days) with ids and current expected starters
   python3 news.py qb <game id> <team> "<player>" confirmed|expected <source url> "<reason>"
       record a starting QB (NFL). The formula turns it into a probability.
+  python3 news.py check <game id> <team> "<player>" <source url> "<reason>"
+      record that the news supports the starter the model already assumes
+      ("verified": nothing contradicts him). Refused if the name doesn't match;
+      record a `qb` fact instead in that case.
   python3 news.py adjust <game id> <home shift in points> <source url> "<reason>"
       a judgment adjustment, e.g. 1.5 moves the home team up 1.5 percentage
       points (away down 1.5). Capped at config.MAX_ADJUSTMENT per game in total.
@@ -13,6 +17,7 @@ Then run `python3 predict.py <sport>` to log the claude prediction.
 Every entry needs a source link and a reason, and must be made before kickoff.
 """
 
+import json
 import sqlite3
 import sys
 from datetime import datetime, timedelta, timezone
@@ -30,7 +35,10 @@ def list_games(conn, sport):
     for g in rows:
         facts = conn.execute("SELECT team, player_name, status FROM lineup_facts WHERE game_id = ?"
                              " ORDER BY created_at", (g["id"],)).fetchall()
-        known = "; ".join(f"{f['team']} QB {f['player_name']} ({f['status']})" for f in facts)
+        checks = conn.execute("SELECT team, player_name FROM qb_checks WHERE game_id = ? ORDER BY created_at",
+                              (g["id"],)).fetchall()
+        known = "; ".join([f"{f['team']} QB {f['player_name']} ({f['status']})" for f in facts]
+                          + [f"{c['team']} QB {c['player_name']} (verified)" for c in checks])
         print(f"  [{g['id']}] {db.fmt_et(g['start_time_utc']):<24} {g['away_team']} at {g['home_team']}"
               + (f"   recorded: {known}" if known else ""))
 
@@ -57,6 +65,37 @@ def record_qb(conn, game_id, team, player, status, url, reason):
           "  No previous NFL starts found: the model treats him as a first-time starter.")
 
 
+def assumed_qb(conn, g, team):
+    """(name, nflverse id) of the QB the model currently uses for a team in a game."""
+    fact = conn.execute("SELECT player_name, player_id FROM lineup_facts WHERE game_id = ? AND team = ?"
+                        " ORDER BY created_at DESC, id DESC LIMIT 1", (g["id"], team)).fetchone()
+    if fact:
+        return fact["player_name"], fact["player_id"]
+    eng = conn.execute("SELECT note FROM predictions WHERE game_id = ? AND source = 'engine'"
+                       " ORDER BY created_at DESC, id DESC LIMIT 1", (g["id"],)).fetchone()
+    if eng is None:
+        return None, None
+    side = "home" if team == g["home_team"] else "away"
+    inputs = json.loads(eng["note"] or "{}").get("inputs", {})
+    return inputs.get(f"{side}_starter_name"), inputs.get(f"{side}_starter_id")
+
+
+def record_check(conn, game_id, team, player, url, reason):
+    g = conn.execute("SELECT * FROM games WHERE id = ?", (game_id,)).fetchone()
+    if g is None or g["sport"] != "nfl":
+        sys.exit("No NFL game with that id. Use `python3 news.py games nfl`.")
+    if team not in (g["home_team"], g["away_team"]):
+        sys.exit(f"{team} isn't in this game ({g['away_team']} at {g['home_team']}).")
+    name, pid = assumed_qb(conn, g, team)
+    if name is None:
+        sys.exit("No engine prediction for that game yet. Run predict.py first.")
+    if name.strip().lower() != player.strip().lower():
+        sys.exit(f"The model assumes {name} for {team}, not {player}. If {player} is starting, "
+                 f"record it with `news.py qb` instead.")
+    db.add_qb_check(conn, game_id, team, name, url, reason, player_id=pid)
+    print(f"Recorded check: {team} QB {name} verified for {g['away_team']} at {g['home_team']}.")
+
+
 def record_adjustment(conn, game_id, shift_points, url, reason):
     base = conn.execute("SELECT id FROM predictions WHERE game_id = ? AND source = 'engine'"
                         " ORDER BY created_at DESC, id DESC LIMIT 1", (game_id,)).fetchone()
@@ -77,6 +116,8 @@ def main():
             list_games(conn, a[1])
         elif len(a) == 7 and a[0] == "qb" and a[4] in ("confirmed", "expected"):
             record_qb(conn, int(a[1]), a[2], a[3], a[4], a[5], a[6])
+        elif len(a) == 6 and a[0] == "check":
+            record_check(conn, int(a[1]), a[2], a[3], a[4], a[5])
         elif len(a) == 5 and a[0] == "adjust":
             record_adjustment(conn, int(a[1]), float(a[2]), a[3], a[4])
         else:
