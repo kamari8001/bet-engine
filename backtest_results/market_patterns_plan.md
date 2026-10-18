@@ -59,4 +59,55 @@ rule only: it would be tested live (shadow mode) before being trusted.
 
 ## Results
 
-(Appended after the run.)
+Run 2026-10-18 with `python3 market_patterns.py`. z = how far wins landed from what the
+market's no-vig prices predicted, in standard luck units. ROI is at the listed price, vig included.
+
+### NFL
+
+| # | Pattern (bet) | Period | Bets | Won | Market expected | ROI | z | |
+|---|---|---|---|---|---|---|---|---|
+| 1 | Home underdogs (home team) | discovery 2006-2018 | 1088 | 396 | 391.1 | +0.2% | +0.31 |  |
+| 1 | Home underdogs (home team) | confirmation 2019-2025 | 742 | 247 | 260.2 | -8.2% | -1.04 | fail |
+| 2a | Big underdogs (<25%) (the underdog) | discovery 2006-2018 | 762 | 138 | 141.8 | -7.8% | -0.36 |  |
+| 2a | Big underdogs (<25%) (the underdog) | confirmation 2019-2025 | 433 | 74 | 82.5 | -15.0% | -1.05 | fail |
+| 2b | Big favorites (>75%) (the favorite) | discovery 2006-2018 | 762 | 622 | 618.2 | -1.7% | +0.36 |  |
+| 2b | Big favorites (>75%) (the favorite) | confirmation 2019-2025 | 433 | 358 | 349.5 | -1.1% | +1.05 | fail |
+| 3 | Popular NFL teams (against them) | discovery 2006-2018 | 950 | 413 | 427.6 | -5.9% | -1.04 |  |
+| 3 | Popular NFL teams (against them) | confirmation 2019-2025 | 566 | 206 | 229.9 | -13.6% | -2.19 | fail |
+| 4 | New starting QB (the new-QB team) | discovery 2006-2018 | 577 | 225 | 237.1 | -7.1% | -1.11 |  |
+| 4 | New starting QB (the new-QB team) | confirmation 2019-2025 | 416 | 156 | 168.7 | -15.6% | -1.38 | fail |
+| 5a | After losing by 20+ (that team) | discovery 2006-2018 | 639 | 279 | 266.9 | +4.5% | +1.06 |  |
+| 5a | After losing by 20+ (that team) | confirmation 2019-2025 | 334 | 141 | 132.5 | +5.7% | +1.03 | fail |
+| 5b | After winning by 20+ (against that team) | discovery 2006-2018 | 690 | 295 | 279.6 | +0.8% | +1.29 |  |
+| 5b | After winning by 20+ (against that team) | confirmation 2019-2025 | 358 | 148 | 150.4 | -4.3% | -0.28 | fail |
+| 6 | Road team on short rest (the home team) | discovery 2006-2018 | 157 | 93 | 89.3 | -0.7% | +0.64 |  |
+| 6 | Road team on short rest (the home team) | confirmation 2019-2025 | 115 | 61 | 62.4 | -5.6% | -0.28 | fail |
+
+### College
+
+| # | Pattern (bet) | Period | Bets | Won | Market expected | ROI | z | |
+|---|---|---|---|---|---|---|---|---|
+| 1 | Home underdogs (home team) | discovery 2021-2022 | 515 | 165 | 153.4 | +2.9% | +1.15 |  |
+| 1 | Home underdogs (home team) | confirmation 2023-2025 | 814 | 251 | 245.7 | -4.0% | +0.42 | fail |
+| 2a | Big underdogs (<25%) (the underdog) | discovery 2021-2022 | 624 | 105 | 100.0 | -0.1% | +0.56 |  |
+| 2a | Big underdogs (<25%) (the underdog) | confirmation 2023-2025 | 1092 | 132 | 158.0 | -29.9% | -2.28 | fail |
+| 2b | Big favorites (>75%) (the favorite) | discovery 2021-2022 | 624 | 519 | 524.0 | -5.7% | -0.56 |  |
+| 2b | Big favorites (>75%) (the favorite) | confirmation 2023-2025 | 1092 | 960 | 934.0 | -1.7% | +2.28 | fail |
+| 5a | After losing by 20+ (that team) | discovery 2021-2022 | 405 | 166 | 161.9 | +7.1% | +0.48 |  |
+| 5a | After losing by 20+ (that team) | confirmation 2023-2025 | 738 | 289 | 288.3 | -9.8% | +0.06 | fail |
+| 5b | After winning by 20+ (against that team) | discovery 2021-2022 | 610 | 254 | 256.8 | +1.2% | -0.26 |  |
+| 5b | After winning by 20+ (against that team) | confirmation 2023-2025 | 1003 | 393 | 409.0 | -17.8% | -1.19 | fail |
+
+**Verdict: no pattern passes.** None is profitable in both periods with a confirmation z of 2 or more.
+
+Observations (NOT findings: noted for future pre-registered tests only):
+- NFL 5a, backing teams after a 20+ point loss, was profitable in both periods (+4.5%, +5.7%),
+  but each result is only about 1 standard luck unit from the market. Too weak to call real;
+  worth re-testing on future seasons.
+- College shows the classic favorite-longshot pattern in 2023-2025: big underdogs won less than
+  their prices implied (z -2.28) and big favorites more (z +2.28). But after the vig, backing the
+  favorites still lost (-1.7%), so the bias isn't big enough to profit from.
+- Fading popular NFL teams lost money; in 2019-2025 those teams won more than the market expected
+  (z +2.19 from their side). Backing them was not pre-registered, so this can't be claimed from this
+  data; it could be pre-registered and tested on 2026+ games.
+

@@ -80,6 +80,7 @@ Typical order: `pull_games` → `pull_odds` → `pull_history --current` → `pr
 | `python3 backtest.py ablate nfl` | Tests model ideas one at a time against history |
 | `python3 backtest.py tune nfl` | Re-tunes settings on the tune seasons (overwrites saved settings) |
 | `python3 backtest.py refit nfl` | Refits on all seasons for live use (overwrites saved settings) |
+| `python3 market_patterns.py` | Pre-registered tests of whether kinds of games (home underdogs, big favorites, etc.) are mispriced; see `backtest_results/market_patterns_plan.md` |
 | `python3 pull_history.py all` | Reloads *all* past seasons. Slow; about 50 college API calls. |
 
 **Avoid `backtest.py final`**: the one-time final exam has already been used. Running it again is recorded with a warning.
