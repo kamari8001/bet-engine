@@ -81,3 +81,12 @@ NFL_HOME_TZ = {
     **{t: -7 for t in ("DEN", "ARI")},
     **{t: -8 for t in ("LA", "LAC", "LV", "SEA", "SF", "SD", "OAK")},
 }
+
+
+# ESPN's logo codes for NFL teams, where they differ from ours (others: lowercase).
+NFL_ESPN_CODE = {"LA": "lar", "WAS": "wsh"}
+
+
+def nfl_logo_url(team):
+    code = NFL_ESPN_CODE.get(team, team.lower())
+    return f"https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/{code}.png&h=64&w=64"

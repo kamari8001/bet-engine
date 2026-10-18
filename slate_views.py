@@ -1,0 +1,442 @@
+"""HTML for the slate page (dark theme). Data comes from slate_data.py."""
+
+import html
+import json
+
+import config
+import db
+
+esc = html.escape
+SOURCE_LABEL = {"engine": "Engine", "claude": "Claude", "me": "You", "market": "Market"}
+# Chart series colors (validated for color-blind safety on the card surface #161b22)
+SERIES = {"engine": "#3987e5", "me": "#d95926", "claude": "#199e70"}
+
+CSS = """
+:root { --bg:#0e1116; --card:#161b22; --raise:#1c222b; --line:#262d36; --text:#e6edf3; --muted:#8b949e;
+        --soft:#c3c9d1; --accent:#58a6ff; --good:#3fb950; --flag:#d29922; --warn:#f0883e; --bad:#f85149; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text);
+       font:14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { position:sticky; top:0; z-index:20; background:rgba(14,17,22,.96); border-bottom:1px solid var(--line);
+         padding:12px 20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+header h1 { font-size:16px; margin:0 6px 0 0; }
+nav a { color:var(--muted); text-decoration:none; padding:6px 10px; border-radius:6px; }
+nav a.on { color:var(--text); background:var(--card); border:1px solid var(--line); }
+.note { color:var(--muted); font-size:12px; }
+main { padding:16px 20px 48px; max-width:1400px; margin:auto; }
+.msg { padding:10px 14px; border-radius:8px; margin-bottom:14px; border:1px solid var(--line); }
+.msg.ok { background:rgba(63,185,80,.12); border-color:var(--good); }
+.msg.err { background:rgba(248,81,73,.12); border-color:var(--bad); }
+.day { color:var(--muted); font-weight:600; margin:24px 0 10px; text-transform:uppercase; font-size:12px; letter-spacing:.06em; }
+.grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(400px, 1fr)); gap:14px; }
+.logo { width:22px; height:22px; object-fit:contain; vertical-align:middle; }
+.logo.sm { width:16px; height:16px; }
+.tm { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+th { color:var(--muted); font-weight:500; text-align:right; font-size:12px; padding:4px 6px; }
+td { padding:6px; text-align:right; border-top:1px solid var(--line); }
+th:first-child, td:first-child, th.l, td.l { text-align:left; }
+.when { white-space:nowrap; }
+.pos { color:var(--good); } .neg { color:var(--muted); }
+.flag { color:var(--flag); font-weight:600; font-size:11px; border:1px solid var(--flag); border-radius:4px; padding:0 4px; margin-left:4px; }
+
+/* flip cards */
+.card { perspective:1400px; cursor:pointer; }
+.inner { display:grid; position:relative; transition:transform .55s ease; transform-style:preserve-3d; }
+.card.flipped .inner { transform:rotateY(180deg); }
+.face { grid-area:1/1; backface-visibility:hidden; -webkit-backface-visibility:hidden; background:var(--card);
+        border:1px solid var(--line); border-radius:12px; padding:14px; min-width:0; }
+.back { transform:rotateY(180deg); position:absolute; inset:0; overflow-y:auto; }
+.top { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.matchup { display:flex; align-items:center; gap:8px; font-size:16px; font-weight:600; flex-wrap:wrap; }
+.at { color:var(--muted); font-weight:400; font-size:13px; }
+.time { color:var(--muted); white-space:nowrap; font-size:13px; }
+.sub { color:var(--muted); font-size:12px; margin:3px 0 10px; }
+.badge { background:rgba(240,136,62,.14); color:var(--warn); border:1px solid rgba(240,136,62,.5); border-radius:999px;
+         padding:1px 9px; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; }
+.picks td.src { color:var(--soft); width:72px; border-left:3px solid transparent; padding-left:8px; }
+.picks tr.dis td.src { border-left-color:var(--flag); }
+.picks tr.mkt td { color:var(--muted); }
+.picks .pct { font-weight:600; }
+.section { margin-top:12px; }
+.section h4 { margin:0 0 4px; font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
+form.pick { display:flex; gap:8px; margin-top:12px; align-items:center; flex-wrap:wrap; cursor:auto; }
+select, input { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:6px 8px; font:inherit; }
+input[type=number] { width:76px; }
+button.go { background:var(--accent); color:#0e1116; border:0; border-radius:6px; padding:7px 12px; font-weight:600; cursor:pointer; }
+.hint { color:var(--muted); font-size:11px; text-align:right; margin-top:8px; }
+.locked { color:var(--muted); font-size:12px; margin-top:12px; }
+.mine { color:var(--soft); font-size:12px; }
+.back td { padding:3px 6px; } .back .section { margin-top:10px; }
+.books tr.my td { color:var(--text); } .books tr:not(.my) td { color:var(--muted); }
+.books td.best { color:var(--good); font-weight:600; }
+.form-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-top:1px solid var(--line); gap:8px; }
+.chips { display:flex; gap:4px; }
+.chip { width:22px; height:22px; border-radius:5px; display:inline-flex; align-items:center; justify-content:center;
+        font-size:11px; font-weight:700; background:var(--raise); border:1px solid var(--line); color:var(--soft); }
+.chip.W { color:var(--good); border-color:rgba(63,185,80,.5); } .chip.L { color:var(--bad); border-color:rgba(248,81,73,.45); }
+ul.warns { margin:4px 0 0; padding:0; list-style:none; }
+ul.warns li { color:var(--warn); font-size:12px; padding:3px 0 3px 16px; position:relative; }
+ul.warns li:before { content:"!"; position:absolute; left:3px; font-weight:700; }
+.kv { display:flex; justify-content:space-between; font-size:13px; padding:4px 0; border-top:1px solid var(--line); gap:10px; }
+.kv span:first-child { color:var(--muted); }
+
+/* my picks & scorecard */
+.panel { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; }
+.panel h2 { font-size:15px; margin:0 0 10px; }
+.tiles { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:12px; margin-bottom:16px; }
+.tile { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; }
+.tile .name { display:flex; align-items:center; gap:8px; color:var(--soft); font-weight:600; }
+.dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+.big { font-size:28px; font-weight:600; margin:6px 0 2px; }
+.tile .kv { font-size:12px; }
+.ok { color:var(--good); } .bad { color:var(--bad); }
+.result.W { color:var(--good); font-weight:600; } .result.L { color:var(--bad); font-weight:600; }
+.chart-wrap { position:relative; }
+.tip { position:absolute; pointer-events:none; background:#0b0e13; border:1px solid var(--line); border-radius:8px;
+       padding:8px 10px; font-size:12px; display:none; white-space:nowrap; z-index:5; }
+.legend { display:flex; gap:16px; font-size:12px; color:var(--soft); margin-bottom:6px; flex-wrap:wrap; }
+.toggle { display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin-bottom:14px; }
+.toggle a { color:var(--muted); text-decoration:none; padding:6px 14px; }
+.toggle a.on { background:var(--card); color:var(--text); }
+a { color:var(--accent); }
+details summary { color:var(--accent); cursor:pointer; font-size:12px; margin-top:8px; }
+"""
+
+JS = """
+document.querySelectorAll('.card').forEach(function (c) {
+  c.addEventListener('click', function (e) {
+    if (e.target.closest('form, input, select, button.go, a')) return;
+    c.classList.toggle('flipped');
+  });
+});
+"""
+
+
+def page(title, active, body, msg=None, scripts=""):
+    tabs = "".join(
+        f'<a class="{"on" if active == key else ""}" href="{url}">{label}</a>'
+        for key, url, label in (("slate-nfl", "/slate?sport=nfl", "NFL"),
+                                ("slate-ncaaf", "/slate?sport=ncaaf", "College"),
+                                ("mine", "/mine", "My picks"),
+                                ("score", "/scorecard?sport=nfl", "Scorecard")))
+    banner = f'<div class="msg {msg[0]}">{esc(msg[1])}</div>' if msg else ""
+    return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>{esc(title)}</title>
+<style>{CSS}</style></head><body>
+<header><h1>Bet Engine</h1><nav>{tabs}</nav>
+<span class="note">All flags are low confidence, paper only</span></header>
+<main>{banner}{body}</main><script>{JS}{scripts}</script></body></html>"""
+
+
+def team(name, logo, small=False):
+    img = (f'<img class="logo{" sm" if small else ""}" src="{esc(logo)}" alt="" loading="lazy" '
+           f'onerror="this.remove()">') if logo else ""
+    return f'<span class="tm">{img}{esc(name)}</span>'
+
+
+def money(x):
+    return "$0" if not x else f"{'+' if x > 0 else '-'}${abs(x)}"
+
+
+def signed(x):
+    return "0" if not x else f"{x:+d}"
+
+
+# ---------- slate ----------
+
+def card(v):
+    away = team(v["away"], v["away_logo"])
+    home = team(v["home"], v["home_logo"])
+    n_warn = len(v["warnings"])
+    badge = (f'<button type="button" class="badge" title="Warnings on the back of the card">&#9888; {n_warn}</button>'
+             if n_warn else "")
+    sub = []
+    if v["neutral"]:
+        sub.append("neutral site")
+    if v["projected"]:
+        sub.append(f"projected {esc(v['away'])} {v['projected'][0]} &ndash; {esc(v['home'])} {v['projected'][1]}")
+    logos = {v["away"]: v["away_logo"], v["home"]: v["home_logo"]}
+
+    rows = ""
+    for p in v["picks"]:
+        if p["team"] is None:
+            rows += f'<tr><td class="src">{SOURCE_LABEL[p["source"]]}</td><td class="neg">no pick</td><td></td></tr>'
+            continue
+        edge = "" if p["edge"] is None else f'<span class="{"pos" if p["edge"] > 0 else "neg"}">{signed(p["edge"])} pts</span>'
+        title = ' title="Picks a different team than the market"' if p["disagrees"] else ""
+        rows += (f'<tr class="{"dis" if p["disagrees"] else ""}"{title}><td class="src">{SOURCE_LABEL[p["source"]]}</td>'
+                 f'<td>{team(p["team"], logos[p["team"]], True)} <span class="pct">{p["pct"]}%</span></td>'
+                 f'<td>{edge}</td></tr>')
+    m = v["market"]
+    if m:
+        rows += (f'<tr class="mkt"><td class="src">Market</td><td>{team(m["team"], logos[m["team"]], True)} '
+                 f'<span class="pct">{m["pct"]}%</span></td><td>no vig</td></tr>')
+
+    prices = ""
+    for pr in v["prices"]:
+        best = (f'{pr["best"]:+d} <span class="note">{esc(pr["book"])}</span>' if pr["best"] is not None
+                else '<span class="note">&ndash;</span>')
+        edge = "" if pr["edge"] is None else f'<span class="{"pos" if pr["edge"] > 0 else "neg"}">{signed(pr["edge"])}</span>'
+        flag = '<span class="flag">FLAG</span>' if pr["flag"] else ""
+        ev = money(pr["ev"]) if pr["ev"] is not None else "&ndash;"
+        prices += (f'<tr><td>{team(pr["team"], logos[pr["team"]], True)}</td><td>{pr["fair"]:+d}</td>'
+                   f'<td>{best}</td><td>{edge}{flag}</td><td>{ev}</td></tr>')
+    stale = " &middot; odds are old: no flags" if m and m["stale"] else ""
+    prices_html = (f'<div class="section"><h4>Prices{stale}</h4><table><tr><th>team</th><th>fair</th>'
+                   f'<th>best at your books</th><th>edge</th><th>per $100</th></tr>{prices}</table></div>'
+                   if prices else "")
+
+    if v["started"]:
+        form = '<div class="locked">Game has started: picks are locked.</div>'
+    else:
+        current = f'<span class="mine">your pick: {esc(v["my_pick"])}</span>' if v["my_pick"] else ""
+        form = f"""<form class="pick" method="post" action="/pick">
+<input type="hidden" name="game_id" value="{v['id']}"><input type="hidden" name="sport" value="{esc(v['sport'])}">
+<select name="team"><option value="{esc(v['away'])}">{esc(v['away'])}</option><option value="{esc(v['home'])}">{esc(v['home'])}</option></select>
+<input type="number" name="pct" min="1" max="99" step="1" placeholder="win %" required>
+<button class="go" type="submit">Log pick</button>{current}</form>"""
+
+    front = f"""<div class="face front">
+<div class="top"><div class="matchup">{away}<span class="at">at</span>{home}</div>
+<div style="display:flex;gap:8px;align-items:center">{badge}<span class="time">{esc(v['kickoff'])}</span></div></div>
+<div class="sub">{' &middot; '.join(sub)}</div>
+<table class="picks"><tr><th>source</th><th>pick</th><th>vs market</th></tr>{rows}</table>
+{prices_html}{form}<div class="hint">click card for details &#8635;</div></div>"""
+
+    # back
+    books = ""
+    for b in v["books"]:
+        books += (f'<tr class="{"my" if b["mine"] else ""}"><td>{esc(b["book"])}{" &#9733;" if b["mine"] else ""}</td>'
+                  f'<td class="{"best" if b["best_away"] else ""}">{b["away"]:+d}</td>'
+                  f'<td class="{"best" if b["best_home"] else ""}">{b["home"]:+d}</td></tr>')
+    books_html = (f'<div class="section"><h4>Odds by book &middot; {esc(v["odds_time"] or "")}</h4>'
+                  f'<table class="books"><tr><th>book (&#9733; = yours)</th><th>{esc(v["away"])}</th>'
+                  f'<th>{esc(v["home"])}</th></tr>{books}</table></div>') if books else \
+        '<div class="section"><h4>Odds by book</h4><div class="note">no odds yet</div></div>'
+    mv = v["movement"]
+    move_html = ""
+    if mv:
+        what = "no real move" if mv["pts"] == 0 else f'moved {mv["pts"]} pts toward {esc(mv["toward"])}'
+        move_html = (f'<div class="section"><h4>Line movement</h4>'
+                     f'<div class="kv"><span>since {esc(mv["since"])}</span><span>{what}</span></div>'
+                     f'<div class="kv"><span>{esc(v["away"])} / {esc(v["home"])} (no vig)</span>'
+                     f'<span>{mv["away_then"]}% / {mv["home_then"]}% &rarr; {mv["away_now"]}% / {mv["home_now"]}%</span></div></div>')
+    form_rows = ""
+    for side in ("away", "home"):
+        f = v["form"][side]
+        chips = "".join(
+            f'<span class="chip {g["result"]}" title="{g["result"]} {g["score"]} {g["where"]} {esc(g["opp"])} ({g["date"]})">'
+            f'{g["result"]}</span>' for g in reversed(f["games"]))
+        form_rows += (f'<div class="form-row">{team(v[side], v[side + "_logo"], True)}'
+                      f'<span class="note">{f["record"]} this season</span><span class="chips">{chips or "<span class=note>no games yet</span>"}</span></div>')
+    form_html = f'<div class="section"><h4>Form (last 5, oldest &rarr; newest; hover for scores)</h4>{form_rows}</div>'
+    extra = ""
+    if v["qbs"]:
+        extra += (f'<div class="kv"><span>QBs</span><span>{esc(v["qbs"]["away"]["name"])} ({v["qbs"]["away"]["tag"]}) / '
+                  f'{esc(v["qbs"]["home"]["name"])} ({v["qbs"]["home"]["tag"]})</span></div>')
+    if v["rest"]:
+        extra += f'<div class="kv"><span>Rest days</span><span>{v["rest"][0]} / {v["rest"][1]}</span></div>'
+    extra_html = f'<div class="section"><h4>Matchup</h4>{extra}</div>' if extra else ""
+    warn_html = ("".join(f"<li>{esc(w)}</li>" for w in v["warnings"]))
+    warn_html = (f'<div class="section"><h4>Warnings</h4><ul class="warns">{warn_html}</ul></div>' if warn_html
+                 else '<div class="section"><h4>Warnings</h4><div class="note">none</div></div>')
+    back = f"""<div class="face back">
+<div class="top"><div class="matchup">{away}<span class="at">at</span>{home}</div><span class="time">{esc(v['kickoff'])}</span></div>
+{warn_html}{books_html}{move_html}{form_html}{extra_html}<div class="hint">click to flip back &#8634;</div></div>"""
+    return f'<div class="card" id="g{v["id"]}"><div class="inner">{front}{back}</div></div>'
+
+
+def slate_page(sport, days, groups, msg):
+    label = "NFL" if sport == "nfl" else "College"
+    if not groups:
+        body = f"<p class='note'>No {label} games in the next {days} days.</p>"
+    else:
+        body, day = "", None
+        for d, v in groups:
+            if d != day:
+                body += ("</div>" if day else "") + f'<div class="day">{esc(d)}</div><div class="grid">'
+                day = d
+            body += card(v)
+        body += "</div>"
+    intro = (f"<p class='note'>{len(groups)} {label} games, next {days} days. &#9888; = warnings on the back. "
+             f"An orange edge on a row means that source picks a different team than the market. "
+             f"Flags need an edge of {config.EDGE_THRESHOLD:.0%}+ and fresh odds.</p>")
+    return page(f"{label} slate", f"slate-{sport}", intro + body, msg)
+
+
+# ---------- my picks ----------
+
+def mine_page(upcoming, finished, summary):
+    def pick_cell(x, logos, names):
+        if not x:
+            return '<span class="neg">&ndash;</span>'
+        logo = logos[0] if x[0] == names[0] else logos[1]
+        return f'{team(x[0], logo, True)} {x[1]}%'
+
+    s = summary
+    tiles = f"""<div class="tiles">
+<div class="tile"><div class="name">Graded picks</div><div class="big">{s['graded']}</div>
+<div class="note">{s['right']} picked the winner ({(s['right'] / s['graded'] if s['graded'] else 0):.0%})</div></div>"""
+    for key, label in (("me", "You"), ("engine", "Engine"), ("market", "Market")):
+        val = s["avg"][key]
+        tiles += (f'<div class="tile"><div class="name">{label}: accuracy</div>'
+                  f'<div class="big">{"&ndash;" if val is None else f"{val:.3f}"}</div>'
+                  f'<div class="note">avg Brier score on your graded games{" (" + str(s["compared"]) + " compared)" if key != "me" else ""}; lower is better</div></div>')
+    tiles += "</div>"
+
+    up = "".join(
+        f'<tr><td class="when">{esc(u["kickoff"])}<div class="note">{u["sport"].upper()}</div></td>'
+        f'<td class="l">{team(u["away"], u["logos"][0], True)} <span class="note">at</span> {team(u["home"], u["logos"][1], True)}</td>'
+        f'<td>{pick_cell(u["me"], u["logos"], (u["away"], u["home"]))}</td>'
+        f'<td>{pick_cell(u["engine"], u["logos"], (u["away"], u["home"]))}</td>'
+        f'<td>{pick_cell(u["market"], u["logos"], (u["away"], u["home"]))}</td></tr>' for u in upcoming)
+    up_html = (f'<div class="panel"><h2>Upcoming ({len(upcoming)})</h2><table><tr><th>kickoff</th><th class="l">game</th>'
+               f'<th>your pick</th><th>engine</th><th>market when you picked</th></tr>{up}</table></div>'
+               if upcoming else '<div class="panel"><h2>Upcoming</h2><div class="note">No upcoming picks.</div></div>')
+
+    waiting = [f for f in finished if f.get("correct") is None]
+    finished = [f for f in finished if f.get("correct") is not None]
+    wait_rows = "".join(
+        f'<tr><td class="when">{esc(f["kickoff"])}<div class="note">{f["sport"].upper()}</div></td>'
+        f'<td class="l">{team(f["away"], f["logos"][0], True)} <span class="note">at</span> {team(f["home"], f["logos"][1], True)}</td>'
+        f'<td>{pick_cell(f["me"], f["logos"], (f["away"], f["home"]))}</td>'
+        f'<td>{pick_cell(f["engine"], f["logos"], (f["away"], f["home"]))}</td>'
+        f'<td class="note">{esc(f["final"])}</td></tr>' for f in waiting)
+    wait_html = (f'<div class="panel"><h2>In progress / awaiting result ({len(waiting)})</h2><table><tr><th>kickoff</th>'
+                 f'<th class="l">game</th><th>your pick</th><th>engine</th><th>status</th></tr>{wait_rows}</table></div>'
+                 if waiting else "")
+    fin = ""
+    for f in finished:
+        if f.get("correct") is None:
+            res = f'<span class="note">{esc(f["final"])}</span>'
+        else:
+            res = f'<span class="result {"W" if f["correct"] else "L"}">{"right" if f["correct"] else "wrong"}</span>'
+        b = f.get("brier", {})
+        briers = " / ".join("&ndash;" if k not in b else f"{b[k]:.3f}" for k in ("me", "engine", "market"))
+        fin += (f'<tr><td class="when">{esc(f["kickoff"])}<div class="note">{f["sport"].upper()}</div></td>'
+                f'<td class="l">{team(f["away"], f["logos"][0], True)} <span class="note">at</span> {team(f["home"], f["logos"][1], True)}'
+                f'<div class="note">{esc(f["final"]) if f.get("correct") is not None else ""}</div></td>'
+                f'<td>{pick_cell(f["me"], f["logos"], (f["away"], f["home"]))}</td><td>{res}</td>'
+                f'<td>{pick_cell(f["engine"], f["logos"], (f["away"], f["home"]))}</td><td>{briers}</td></tr>')
+    fin_html = (f'<div class="panel"><h2>Finished ({len(finished)})</h2><table><tr><th>kickoff</th><th class="l">game</th>'
+                f'<th>your pick</th><th>result</th><th>engine</th><th>Brier: you / engine / market</th></tr>{fin}</table></div>'
+                if finished else "")
+    intro = ("<p class='note'>Every game you picked, both sports. Brier score = how far a probability was from "
+             "what happened (0 is perfect, 0.25 is a coin flip); lower is better.</p>")
+    return page("My picks", "mine", intro + tiles + up_html + wait_html + fin_html)
+
+
+# ---------- scorecard ----------
+
+def calibration_chart(tiles):
+    """SVG: predicted vs. actual home-win rate per 10% bucket, one series per source."""
+    W, H, L, R, T, B = 560, 340, 48, 16, 14, 40
+    pw, ph = W - L - R, H - T - B
+    x = lambda p: L + p * pw
+    y = lambda p: T + (1 - p) * ph
+    grid = ""
+    for v in (0, .25, .5, .75, 1):
+        grid += (f'<line x1="{L}" x2="{W - R}" y1="{y(v):.1f}" y2="{y(v):.1f}" stroke="#262d36" stroke-width="1"/>'
+                 f'<text x="{L - 8}" y="{y(v) + 4:.1f}" fill="#8b949e" font-size="11" text-anchor="end">{v:.0%}</text>'
+                 f'<text x="{x(v):.1f}" y="{H - B + 18}" fill="#8b949e" font-size="11" text-anchor="middle">{v:.0%}</text>')
+    grid += (f'<line x1="{x(0)}" y1="{y(0)}" x2="{x(1)}" y2="{y(1)}" stroke="#8b949e" stroke-width="1" stroke-dasharray="4 4"/>'
+             f'<text x="{x(.97):.1f}" y="{y(.97) + 16:.1f}" fill="#8b949e" font-size="11" text-anchor="end">perfectly calibrated</text>'
+             f'<text x="{L + pw / 2}" y="{H - 4}" fill="#8b949e" font-size="11" text-anchor="middle">predicted chance the home team wins</text>'
+             f'<text transform="translate(12 {T + ph / 2}) rotate(-90)" fill="#8b949e" font-size="11" text-anchor="middle">how often it actually won</text>')
+    series, legend = "", ""
+    for src in ("engine", "claude", "me"):
+        bins = tiles[src].get("bins") or []
+        if not bins:
+            continue
+        color = SERIES[src]
+        legend += f'<span><span class="dot" style="background:{color}"></span> {SOURCE_LABEL[src]}</span>'
+        for b in bins:
+            info = json.dumps({"s": SOURCE_LABEL[src], "lo": b["lo"], "pred": round(b["pred"] * 100),
+                               "act": round(b["actual"] * 100), "n": b["n"]})
+            series += (f'<circle cx="{x(b["pred"]):.1f}" cy="{y(b["actual"]):.1f}" r="6" fill="{color}" '
+                       f'opacity="{1 if b["n"] >= 10 else 0.4}" stroke="#161b22" stroke-width="2"/>'
+                       f'<circle class="hit" data-i=\'{esc(info)}\' cx="{x(b["pred"]):.1f}" cy="{y(b["actual"]):.1f}" r="12" fill="transparent"/>')
+    if not series:
+        return '<div class="note">Not enough graded games yet.</div>'
+    svg = (f'<svg viewBox="0 0 {W} {H}" width="100%" style="max-width:{W}px" role="img" '
+           f'aria-label="Calibration chart">{grid}{series}</svg>')
+    return f'<div class="legend">{legend}</div><div class="chart-wrap">{svg}<div class="tip"></div></div>'
+
+
+CHART_JS = """
+document.querySelectorAll('.chart-wrap').forEach(function (w) {
+  var tip = w.querySelector('.tip');
+  w.querySelectorAll('.hit').forEach(function (h) {
+    h.addEventListener('mouseenter', function () {
+      var d = JSON.parse(h.getAttribute('data-i'));
+      tip.innerHTML = '<b>' + d.s + '</b> &middot; ' + d.lo + '-' + (d.lo + 10) + '% bucket<br>predicted ' + d.pred +
+        '% &middot; actually won ' + d.act + '%<br>' + d.n + ' game' + (d.n === 1 ? '' : 's');
+      tip.style.display = 'block';
+    });
+    h.addEventListener('mousemove', function (e) {
+      var r = w.getBoundingClientRect();
+      tip.style.left = (e.clientX - r.left + 14) + 'px'; tip.style.top = (e.clientY - r.top - 10) + 'px';
+    });
+    h.addEventListener('mouseleave', function () { tip.style.display = 'none'; });
+  });
+});
+"""
+
+
+def scorecard_page(sport, sc):
+    label = "NFL" if sport == "nfl" else "College"
+    switch = ('<div class="toggle">' + "".join(
+        f'<a class="{"on" if sport == k else ""}" href="/scorecard?sport={k}">{n}</a>'
+        for k, n in (("nfl", "NFL"), ("ncaaf", "College"))) + "</div>")
+    t = sc["tiles"]
+    tiles = '<div class="tiles">'
+    for src in ("market", "engine", "claude", "me"):
+        x = t[src]
+        dot = f'<span class="dot" style="background:{SERIES[src]}"></span>' if src in SERIES else '<span class="dot" style="background:#8b949e"></span>'
+        if not x["n"]:
+            tiles += f'<div class="tile"><div class="name">{dot}{SOURCE_LABEL[src]}</div><div class="big">&ndash;</div><div class="note">no graded games yet</div></div>'
+            continue
+        rows = f'<div class="kv"><span>graded games</span><span>{x["n"]}</span></div>'
+        rows += f'<div class="kv"><span>log loss</span><span>{x["log_loss"]:.3f}</span></div>'
+        if "bets" in x:
+            b = x["bets"]
+            cls = "ok" if b["units"] > 0 else "bad"
+            rows += (f'<div class="kv"><span>paper bets</span><span>{b["w"]}-{b["l"]}, '
+                     f'<span class="{cls}">{b["units"]:+.1f}u ({b["roi"]:+.0%})</span></span></div>')
+        elif src != "market":
+            rows += '<div class="kv"><span>paper bets</span><span>none</span></div>'
+        if "clv" in x:
+            c = x["clv"]
+            avg = round(c["avg"] * 100, 1) or 0.0
+            rows += (f'<div class="kv"><span>closing-line value</span><span>{avg:+.1f} pts avg, '
+                     f'{c["pos"]:.0%} positive</span></div>')
+        tiles += (f'<div class="tile"><div class="name">{dot}{SOURCE_LABEL[src]}</div>'
+                  f'<div class="big">{x["brier"]:.3f}</div><div class="note">Brier score (lower is better)</div>{rows}</div>')
+    tiles += "</div>"
+    approx = (f'<p class="note">{sc["approx"]} game(s) had no odds pull within an hour of kickoff, so their '
+              f'closing-line value is approximate.</p>') if sc["approx"] else ""
+
+    h2h = "".join(
+        f'<tr><td>{SOURCE_LABEL[r["pair"][0]]} vs {SOURCE_LABEL[r["pair"][1]]}</td><td>{r["n"]}</td>'
+        + "".join(f'<td class="{"ok" if r[s] == min(r[a] for a in (*r["pair"], "market")) else ""}">'
+                  f'<span class="note">{SOURCE_LABEL[s]}</span> {r[s]:.3f}</td>'
+                  for s in (*r["pair"], "market")) + "</tr>" for r in sc["h2h"])
+    h2h_html = (f'<div class="panel"><h2>Head-to-head (same games only)</h2><table><tr><th>matchup</th><th>games</th>'
+                f'<th colspan="3">Brier score on those games</th></tr>{h2h}</table>'
+                f'<div class="note" style="margin-top:6px">Brier scores; green = best of the three.</div></div>') if h2h else ""
+
+    table_rows = ""
+    for src in ("engine", "claude", "me"):
+        for b in t[src].get("bins") or []:
+            table_rows += (f'<tr><td>{SOURCE_LABEL[src]}</td><td>{b["lo"]}-{b["lo"] + 10}%</td><td>{b["n"]}</td>'
+                           f'<td>{b["pred"]:.0%}</td><td>{b["actual"]:.0%}</td></tr>')
+    chart = (f'<div class="panel"><h2>Calibration: do the percentages mean what they say?</h2>'
+             f'<div class="note" style="margin-bottom:8px">Points near the dashed line = honest percentages. '
+             f'Faded points have fewer than 10 games, so luck dominates them; hover any point for its game count.</div>'
+             f'{calibration_chart(t)}<details><summary>Show as table</summary><table><tr><th>source</th><th>bucket</th>'
+             f'<th>games</th><th>predicted</th><th>won</th></tr>{table_rows}</table></details></div>')
+    rule8 = (f'<p class="note">Rule 8: {sc["graded"]} graded games this season; '
+             f'{"enough" if sc["graded"] >= 200 else str(200 - sc["graded"]) + " more needed"} before weighting sources by track record.</p>')
+    body = switch + tiles + approx + h2h_html + chart + rule8
+    return page(f"{label} scorecard", "score", body, scripts=CHART_JS)
