@@ -33,6 +33,7 @@ def nfl_games():
                 .replace(tzinfo=db.EASTERN)
         done = not blank(r["home_score"]) and not blank(r["away_score"])
         yield dict(external_id=r["game_id"], league="NFL", kickoff=kickoff,
+                   espn_id=None if blank(r["espn"]) else r["espn"],
                    home_team=r["home_team"], away_team=r["away_team"],
                    neutral_site=r["location"] == "Neutral", live_eligible=True,
                    home_score=int(r["home_score"]) if done else None,
@@ -51,7 +52,7 @@ def ncaaf_games():
             kickoff = datetime.strptime(g["startDate"][:19], "%Y-%m-%dT%H:%M:%S") \
                 .replace(tzinfo=timezone.utc)
         done = g.get("completed") and g.get("homePoints") is not None
-        yield dict(external_id=str(g["id"]), league="NCAAF", kickoff=kickoff,
+        yield dict(external_id=str(g["id"]), league="NCAAF", kickoff=kickoff, espn_id=str(g["id"]),
                    home_team=g["homeTeam"], away_team=g["awayTeam"],
                    neutral_site=bool(g.get("neutralSite")),
                    # live betting table: only games between two top-division teams
@@ -84,12 +85,17 @@ def sync(conn, sport):
                 continue
             if g["kickoff"] <= now:
                 continue  # in progress; too late to log anything
-            db.add_game(conn, sport, g["league"], str(CURRENT_SEASON), g["home_team"],
-                        g["away_team"], g["kickoff"], source=source,
-                        external_id=g["external_id"], neutral_site=g["neutral_site"])
+            gid = db.add_game(conn, sport, g["league"], str(CURRENT_SEASON), g["home_team"],
+                              g["away_team"], g["kickoff"], source=source,
+                              external_id=g["external_id"], neutral_site=g["neutral_site"])
+            conn.execute("UPDATE games SET espn_id = ? WHERE id = ?", (g["espn_id"], gid))
+            conn.commit()
             added += 1
             continue
 
+        if g.get("espn_id") and not row["espn_id"]:
+            conn.execute("UPDATE games SET espn_id = ? WHERE id = ?", (g["espn_id"], row["id"]))
+            conn.commit()
         if (row["home_team"], row["away_team"]) != (g["home_team"], g["away_team"]):
             problems.append(f"{label}: teams differ from what we stored "
                             f"({row['away_team']} at {row['home_team']}); not changed")

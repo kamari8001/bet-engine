@@ -205,6 +205,54 @@ def slate(conn, sport, now, days, college):
             for g in games]
 
 
+# ---------- live ----------
+
+def live(conn, now, college):
+    """Games from 8 hours ago through the end of today (Eastern), with live scores and picks.
+    Returns (groups {"in": [...], "post": [...], "pre": [...]}, error message or None)."""
+    import live_scores
+    from datetime import timedelta
+    today_end = now.astimezone(db.EASTERN).replace(hour=23, minute=59, second=59)
+    games = conn.execute(
+        "SELECT g.*, r.status AS result_status FROM games g LEFT JOIN results r ON r.game_id = g.id"
+        " WHERE g.start_time_utc >= ? AND g.start_time_utc <= ? ORDER BY g.start_time_utc, g.id",
+        (db.to_utc(now - timedelta(hours=8)), db.to_utc(today_end))).fetchall()
+    boards, error = {}, None
+    for sport in {g["sport"] for g in games}:
+        try:
+            boards[sport] = live_scores.scoreboard(sport, now)
+        except live_scores.LiveUnavailable as e:
+            error = str(e)
+    groups = {"in": [], "post": [], "pre": []}
+    for g in games:
+        if g["result_status"] == "cancelled":
+            continue
+        info = boards.get(g["sport"], {}).get(g["espn_id"] or "")
+        started = parse_utc(g["start_time_utc"]) <= now
+        state = info["state"] if info else ("in" if started else "pre")
+        v = {"id": g["id"], "sport": g["sport"], "away": g["away_team"], "home": g["home_team"],
+             "away_logo": logo_for(g["sport"], g["away_team"], college),
+             "home_logo": logo_for(g["sport"], g["home_team"], college),
+             "kickoff": db.fmt_et(g["start_time_utc"]), "live": info, "state": state, "picks": []}
+        rows = {s: (grade.graded_prediction(conn, g, s) if started else latest_rows(conn, g["id"])[s]) for s in SOURCES}
+        mkt = latest_odds(conn, g["id"])
+        entries = [(s, rows[s]["p_home"]) for s in SOURCES if rows[s]] + ([("market", mkt["p_home"])] if mkt else [])
+        for src, p in entries:
+            side = "home" if p >= 0.5 else "away"
+            status = None
+            if info and info["state"] != "pre":
+                mine, theirs = (info["home_score"], info["away_score"]) if side == "home" \
+                    else (info["away_score"], info["home_score"])
+                if info["state"] == "post":
+                    status = "won" if mine > theirs else "lost" if mine < theirs else "tied"
+                else:
+                    status = "ahead" if mine > theirs else "behind" if mine < theirs else "tied"
+            v["picks"].append({"source": src, "team": g[f"{side}_team"], "pct": whole(p if side == "home" else 1 - p),
+                               "logo": logo_for(g["sport"], g[f"{side}_team"], college), "status": status})
+        groups[state if state in groups else "pre"].append(v)
+    return groups, error
+
+
 # ---------- my picks ----------
 
 def my_picks(conn, now, college):

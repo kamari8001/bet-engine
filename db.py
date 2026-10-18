@@ -56,6 +56,9 @@ def upgrade_db(conn):
     for col, kind in HIST_GAMES_NEW_COLUMNS.items():
         if col not in have:
             conn.execute(f"ALTER TABLE hist_games ADD COLUMN {col} {kind}")
+    # ESPN's game id, for matching live scores (NFL; college games use CFBD ids, which are ESPN's)
+    if "espn_id" not in {r["name"] for r in conn.execute("PRAGMA table_info(games)")}:
+        conn.execute("ALTER TABLE games ADD COLUMN espn_id TEXT")
     conn.commit()
 
 

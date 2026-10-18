@@ -115,6 +115,18 @@ ul.warns li:before { content:"!"; position:absolute; left:3px; font-weight:700; 
 .toggle a { color:var(--muted); text-decoration:none; padding:6px 14px; }
 .toggle a.on { background:var(--card); color:var(--text); }
 a { color:var(--accent); }
+.lgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:12px; }
+.lcard { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
+.lstatus { display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin-bottom:6px; }
+.lstatus.on { color:var(--good); font-weight:600; }
+.lrow { display:flex; justify-content:space-between; align-items:center; padding:3px 0; font-size:15px; }
+.lscore { font-size:20px; font-weight:600; color:var(--soft); font-variant-numeric:tabular-nums; }
+.lscore.lead { color:var(--text); }
+.ball { color:var(--flag); font-size:10px; margin-left:4px; }
+.lcard .picks { margin-top:8px; }
+.lcard .picks td { height:28px; padding:3px 6px; }
+.lcard .picks tr.me td { background:rgba(88,166,255,.08); }
+.bad { color:var(--bad); }
 details summary { color:var(--accent); cursor:pointer; font-size:12px; margin-top:8px; }
 """
 
@@ -133,6 +145,7 @@ def page(title, active, body, msg=None, scripts=""):
         f'<a class="{"on" if active == key else ""}" href="{url}">{label}</a>'
         for key, url, label in (("slate-nfl", "/slate?sport=nfl", "NFL"),
                                 ("slate-ncaaf", "/slate?sport=ncaaf", "College"),
+                                ("live", "/live", "Live"),
                                 ("mine", "/mine", "My picks"),
                                 ("score", "/scorecard?sport=nfl", "Scorecard")))
     banner = f'<div class="msg {msg[0]}">{esc(msg[1])}</div>' if msg else ""
@@ -286,6 +299,70 @@ def slate_page(sport, days, groups, msg):
              f"An orange edge on a row means that source picks a different team than the market. "
              f"Flags need an edge of {config.EDGE_THRESHOLD:.0%}+ and fresh odds.</p>")
     return page(f"{label} slate", f"slate-{sport}", intro + body, msg)
+
+
+# ---------- live ----------
+
+LIVE_LABEL = {"ahead": ("winning", "pos"), "behind": ("losing", "bad"), "tied": ("tied", "neg"),
+              "won": ("won", "pos"), "lost": ("lost", "bad")}
+
+
+def live_card(v):
+    info = v["live"]
+    if info and info["state"] != "pre":
+        a, h = info["away_score"], info["home_score"]
+        status = esc(info["detail"]) + (f' &middot; {esc(info["down"])}' if info.get("down") and info["state"] == "in" else "")
+    else:
+        a = h = None
+        status = esc(v["kickoff"])
+
+    def row(side):
+        ball = ' <span class="ball" title="has the ball">&#9679;</span>' if info and info.get("possession") == side \
+            and info["state"] == "in" else ""
+        score = v["live"][f"{side}_score"] if a is not None else ""
+        lead = a is not None and ((side == "home" and h > a) or (side == "away" and a > h))
+        return (f'<div class="lrow"><span>{team(v[side], v[side + "_logo"])}{ball}</span>'
+                f'<span class="lscore{" lead" if lead else ""}">{score}</span></div>')
+
+    picks = ""
+    for p in v["picks"]:
+        label, cls = LIVE_LABEL.get(p["status"], ("", "neg"))
+        picks += (f'<tr class="{"me" if p["source"] == "me" else ""}"><td class="src">{SOURCE_LABEL[p["source"]]}</td>'
+                  f'<td class="l">{team(p["team"], p["logo"], True)}</td><td class="pct">{p["pct"]}%</td>'
+                  f'<td class="{cls}">{label}</td></tr>')
+    picks_html = (f'<table class="picks"><tr><th>source</th><th class="l">pick</th><th>win %</th><th></th></tr>{picks}</table>'
+                  if picks else '<div class="note">No picks logged for this game.</div>')
+    return (f'<div class="lcard"><div class="lstatus{" on" if v["state"] == "in" else ""}">{status}'
+            f'<span class="note">{v["sport"].upper()}</span></div>{row("away")}{row("home")}{picks_html}</div>')
+
+
+def live_fragment(groups, error):
+    out = f'<div class="msg err">{esc(error)}: showing kickoff times and picks only.</div>' if error else ""
+    titles = (("in", "In progress"), ("post", "Final"), ("pre", "Later today"))
+    if not any(groups.values()):
+        return out + '<p class="note">No games today.</p>'
+    for key, title in titles:
+        if groups[key]:
+            out += f'<div class="day">{title} ({len(groups[key])})</div><div class="lgrid">'
+            out += "".join(live_card(v) for v in groups[key]) + "</div>"
+    return out
+
+
+LIVE_JS = """
+setInterval(function () {
+  fetch('/live?fragment=1').then(function (r) { return r.text(); }).then(function (h) {
+    document.getElementById('live').innerHTML = h;
+    document.getElementById('upd').textContent = new Date().toLocaleTimeString([], {hour: 'numeric', minute: '2-digit', second: '2-digit'});
+  });
+}, 60000);
+"""
+
+
+def live_page(groups, error):
+    intro = ("<p class='note'>Scores from ESPN, refreshed every minute while this tab is open (last update "
+             "<span id='upd'>now</span>). Display only: official results still come from nflverse and CFBD. "
+             "Picks are the ones logged before kickoff.</p>")
+    return page("Live", "live", intro + f'<div id="live">{live_fragment(groups, error)}</div>', scripts=LIVE_JS)
 
 
 # ---------- my picks ----------

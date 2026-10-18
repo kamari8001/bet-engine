@@ -79,6 +79,12 @@ class Handler(BaseHTTPRequestHandler):
                 msg = (q["kind"], q["msg"]) if "msg" in q and q.get("kind") in ("ok", "err") else None
                 groups = slate_data.slate(conn, sport, now, days, college)
                 self._send(slate_views.slate_page(sport, days, groups, msg))
+            elif url.path == "/live":
+                groups, error = slate_data.live(conn, now, college)
+                if q.get("fragment"):
+                    self._send(slate_views.live_fragment(groups, error))
+                else:
+                    self._send(slate_views.live_page(groups, error))
             elif url.path == "/mine":
                 self._send(slate_views.mine_page(*slate_data.my_picks(conn, now, college)))
             elif url.path == "/scorecard":

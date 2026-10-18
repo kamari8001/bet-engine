@@ -12,7 +12,7 @@ cd ~/bet-engine
 
 | Command | What it does |
 |---|---|
-| http://localhost:8765 | **The slate page** (dark theme), always running in the background: flip cards for every game (front: each source's pick, prices at your books, pick box; back: warnings, odds by book, line movement, form), a My picks page, and a visual scorecard. It restarts itself after code changes. |
+| http://localhost:8765 | **The slate page** (dark theme), always running in the background: a Live tab (ESPN scores with each source's pick, refreshing every minute), flip cards for every game (front: each source's pick, prices at your books, pick box; back: warnings, odds by book, line movement, form), a My picks page, and a visual scorecard. It restarts itself after code changes. |
 | `python3 show_picks.py nfl` | Every source's current pick side by side (engine, claude, you, market). Add `--days 3` to change how far ahead it looks. |
 | `python3 my_pick.py list nfl` | Upcoming games with their id numbers |
 | `python3 my_pick.py 3 CHI 60` | Log your pick: game 3, Chicago, 60% to win. College teams use the full name in quotes, e.g. `"Ohio State"`. |
