@@ -2,7 +2,7 @@
 
 (Project folder: `bet-engine`.)
 
-Read this file at the start of every session and follow it.
+Read this file at the start of every session and follow it. Then read `QUEUE.md` (the development queue Talal edits): work from "Up next" top-down, and move items to "Done" with the date and version when finished.
 
 ## Who you're working with
 
