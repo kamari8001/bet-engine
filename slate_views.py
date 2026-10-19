@@ -26,7 +26,7 @@ header h1 .ver { font-size:11px; font-weight:500; color:var(--muted); border:1px
                  padding:1px 7px; margin-left:4px; vertical-align:middle; cursor:help; }
 nav a { color:var(--muted); text-decoration:none; padding:6px 10px; border-radius:6px; }
 nav a.on { color:var(--text); background:var(--card); border:1px solid var(--line); }
-.note { color:var(--muted); font-size:12px; }
+.note { color:var(--muted); font-size:12px; } .note.warn { color:var(--warn); }
 main { padding:16px 20px 48px; max-width:1400px; margin:auto; }
 .msg { padding:10px 14px; border-radius:8px; margin-bottom:14px; border:1px solid var(--line); }
 .msg.ok { background:rgba(63,185,80,.12); border-color:var(--good); }
@@ -115,6 +115,17 @@ ul.warns li:before { content:"!"; position:absolute; left:3px; font-weight:700; 
 .tip { position:absolute; pointer-events:none; background:#0b0e13; border:1px solid var(--line); border-radius:8px;
        padding:8px 10px; font-size:12px; display:none; white-space:nowrap; z-index:5; }
 .legend { display:flex; gap:16px; font-size:12px; color:var(--soft); margin-bottom:6px; flex-wrap:wrap; }
+table.rk { width:auto; } .rk td { padding:6px 10px; } .rk th { padding:6px 10px; }
+.rk td.num, .rk th.num { text-align:right; } .rk td.rank { color:var(--muted); width:36px; text-align:right; }
+.rk td.team { text-align:left; white-space:nowrap; } .rk td.team img { width:22px; height:22px; vertical-align:middle; margin-right:8px; }
+.rk td.conf, .rk td.form { text-align:left; white-space:nowrap; }
+.rk .qb { color:var(--muted); font-size:11px; margin-left:6px; }
+.ovr { display:inline-block; min-width:34px; text-align:center; border-radius:6px; padding:2px 6px; font-weight:700; color:#0e1116; }
+.o5 { background:#3fb950; } .o4 { background:#8fd18a; } .o3 { background:#c3c9d1; } .o2 { background:#f0a35e; } .o1 { background:#f85149; }
+.mv.up { color:var(--good); } .mv.down { color:var(--bad); } .mv { font-size:12px; white-space:nowrap; }
+.form span { display:inline-block; width:14px; text-align:center; font-size:12px; font-weight:700; }
+.form .W { color:var(--good); } .form .L { color:var(--bad); } .form .T { color:var(--muted); }
+.filters { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
 .toggle { display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin-bottom:14px; }
 .toggle a { color:var(--muted); text-decoration:none; padding:6px 14px; }
 .toggle a.on { background:var(--card); color:var(--text); }
@@ -151,10 +162,11 @@ def page(title, active, body, msg=None, scripts=""):
         for key, url, label in tuple((f"slate-{s}", f"/slate?sport={s}", SHORT_NAMES[s]) for s in SHORT_NAMES)
                                 + (("live", "/live", "Live"),
                                 ("mine", "/mine", "Positions"),
+                                ("rank", "/rankings?sport=nfl", "Rankings"),
                                    ("score", "/scorecard?sport=nfl", "Scorecard")))
     banner = f'<div class="msg {msg[0]}">{esc(msg[1])}</div>' if msg else ""
     mv = model_versions()
-    models = "models: " + ", ".join(f"{SHORT_NAMES.get(k, k)} {v}" for k, v in mv.items())
+    models = "models: " + ", ".join(f"{SHORT_NAMES[k]} {v}" for k, v in mv.items() if k in SHORT_NAMES)
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>{esc(title)} &middot; {esc(APP_NAME)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -497,6 +509,66 @@ document.querySelectorAll('.chart-wrap').forEach(function (w) {
   });
 });
 """
+
+
+def rankings_page(sport, rows, early, error):
+    switch = ('<div class="toggle">' + "".join(
+        f'<a class="{"on" if sport == k else ""}" href="/rankings?sport={k}">{n}</a>'
+        for k, n in SHORT_NAMES.items()) + "</div>")
+    intro = ('<p class="note">Ranked by the model&rsquo;s own current rating (the same one behind the predictions). '
+             '<b>OVR</b> = the model&rsquo;s chance, in %, that the team beats an average team of its league on a '
+             'neutral field (about 50 = average; capped at 99). <b>Net</b> = points better than an average team. '
+             '<b>Off/Def</b> = offense and defense ranks. Arrows = places moved since a week ago. '
+             'A team can rank above one with a better record if its results were stronger.</p>')
+    if sport == "nfl":
+        intro += '<p class="note">NFL ratings include the starting QB the engine expects for each team&rsquo;s next game.</p>'
+    if sport == "ncaaf":
+        intro += '<p class="note">FBS teams only. Early in the season, preseason information (talent, returning players, last season) counts too, as in the predictions.</p>'
+    if early:
+        intro += '<p class="note warn">Early season: ratings are still mostly last season&rsquo;s, pulled toward average.</p>'
+    if error:
+        return page("Rankings", "rank", switch + f'<p class="note">Rankings unavailable: {esc(error)}</p>')
+    college = sport in ("ncaaf", "ncaab")
+    filters = '<div class="filters"><input id="rk-q" placeholder="Search teams" autocomplete="off">'
+    if college:
+        confs = sorted({r["conference"] for r in rows if r["conference"]})
+        filters += ('<select id="rk-c"><option value="">All conferences</option>'
+                    + "".join(f'<option>{esc(c)}</option>' for c in confs) + "</select>")
+    filters += "</div>"
+    head = ('<tr><th class="num">#</th><th></th><th style="text-align:left">team</th><th class="num">OVR</th>'
+            '<th class="num">net</th><th class="num">record</th><th style="text-align:left">last 5</th>'
+            '<th class="num">off</th><th class="num">def</th>' + ('<th style="text-align:left">conference</th>' if college else "") + "</tr>")
+    body = ""
+    for r in rows:
+        w, l, t = r["record"]
+        rec = f"{w}-{l}" + (f"-{t}" if t else "")
+        mv = r["move"]
+        mv_html = ('<span class="mv">new</span>' if mv is None else '<span class="mv">&ndash;</span>' if mv == 0
+                   else f'<span class="mv up">&#9650;{mv}</span>' if mv > 0 else f'<span class="mv down">&#9660;{-mv}</span>')
+        tier = "o5" if r["ovr"] >= 80 else "o4" if r["ovr"] >= 65 else "o3" if r["ovr"] >= 50 else "o2" if r["ovr"] >= 35 else "o1"
+        logo = f'<img src="{esc(r["logo"])}" alt="" loading="lazy">' if r.get("logo") else ""
+        qb = f'<span class="qb">QB {esc(r["qb"])}</span>' if r.get("qb") else ""
+        form = "".join(f'<span class="{c}">{c}</span>' for c in r["form"]) or '<span class="T">&ndash;</span>'
+        body += (f'<tr data-name="{esc(r["team"].lower())}" data-conf="{esc(r["conference"] or "")}">'
+                 f'<td class="rank">{r["rank"]}</td><td>{mv_html}</td><td class="team">{logo}{esc(r["team"])}{qb}</td>'
+                 f'<td class="num"><span class="ovr {tier}">{r["ovr"]}</span></td><td class="num">{r["net"]:+.1f}</td>'
+                 f'<td class="num">{rec}</td><td class="form">{form}</td><td class="num">{r["off_rank"]}</td>'
+                 f'<td class="num">{r["def_rank"]}</td>' + (f'<td class="conf">{esc(r["conference"] or "")}</td>' if college else "") + "</tr>")
+    table = f'<div class="panel"><table class="rk">{head}{body}</table></div>'
+    script = """
+(function () {
+  var q = document.getElementById('rk-q'), c = document.getElementById('rk-c');
+  function apply() {
+    var text = (q.value || '').toLowerCase(), conf = c ? c.value : '';
+    document.querySelectorAll('table.rk tr[data-name]').forEach(function (tr) {
+      var ok = tr.dataset.name.indexOf(text) !== -1 && (!conf || tr.dataset.conf === conf);
+      tr.style.display = ok ? '' : 'none';
+    });
+  }
+  q.addEventListener('input', apply); if (c) c.addEventListener('change', apply);
+})();
+"""
+    return page(f"{SHORT_NAMES[sport]} rankings", "rank", switch + intro + filters + table, scripts=script)
 
 
 def scorecard_page(sport, sc):

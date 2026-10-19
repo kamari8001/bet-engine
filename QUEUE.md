@@ -21,7 +21,8 @@ _(nothing)_
    tuned and committed. Retry `api.clubelo.com` (502 errors all day 2026-10-19); if it works, build `clubelo.py`,
    run `backtest_soccer.py ablate --elo` (idea #2), then `final`, then `refit`. If still down, run `final` without
    it and note ClubElo as untested (shadow-only later).
-3. **Club soccer: live (v3.0.0)**, needs the $30 Odds API plan. Add soccer to `pull_games`/`pull_odds` `all`, the morning routine (`pull_soccer_history.py current`), and pre-kickoff windows.
+3. **Soccer power rankings**: decide after the ClubElo retry (ClubElo for all clubs together, UEFA league coefficients, or within each league).
+4. **Club soccer: live (v3.0.0)**, needs the $30 Odds API plan. Add soccer to `pull_games`/`pull_odds` `all`, the morning routine (`pull_soccer_history.py current`), and pre-kickoff windows.
 
 ## Waiting on a date or on data
 
@@ -47,6 +48,7 @@ _(nothing)_
 
 ## Done
 
+- 2026-10-19 v2.2.0: power rankings tab (NFL, NCAAF, NBA, NCAAM)
 - 2026-10-19 v2.1.3: "My picks" renamed "Positions"
 - 2026-10-19: club soccer data step (82,822 past games, 322,854 odds rows; live schedule and odds tested, not switched on)
 - 2026-10-19: Mac wakes at 6:50 AM on Saturdays and Sundays (`pmset repeat`, set by Talal; check with `pmset -g sched`)

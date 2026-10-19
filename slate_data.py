@@ -338,6 +338,18 @@ def my_picks(conn, now, college):
 
 # ---------- scorecard ----------
 
+def rankings(conn, sport, college):
+    """(rows with logos, early-season flag, error message or None) for the Rankings tab."""
+    import rankings as rk
+    try:
+        rows = rk.with_movement(conn, sport)
+    except RuntimeError as e:
+        return [], False, str(e)
+    for r in rows:
+        r["logo"] = logo_for(sport, r["team"], college)
+    return rows, rk.early_season(rows, sport), None
+
+
 def scorecard(conn, sport):
     games, stats, approx = grade.grade(conn, sport, current_season(sport))
     tiles = {}
