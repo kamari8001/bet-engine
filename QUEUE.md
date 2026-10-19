@@ -47,6 +47,7 @@ _(nothing)_
 
 ## Done
 
+- 2026-10-19 v2.1.3: "My picks" renamed "Positions"
 - 2026-10-19: club soccer data step (82,822 past games, 322,854 odds rows; live schedule and odds tested, not switched on)
 - 2026-10-19: Mac wakes at 6:50 AM on Saturdays and Sundays (`pmset repeat`, set by Talal; check with `pmset -g sched`)
 - 2026-10-19 v2.1.2: slate font Doppio One

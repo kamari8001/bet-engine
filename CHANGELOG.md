@@ -4,6 +4,9 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 2.1.3 (2026-10-19)
+- The "My picks" page is now called "Positions".
+
 ## 2.1.2 (2026-10-19)
 - Slate page font: Doppio One (Google Fonts). Falls back to the system font when offline.
 

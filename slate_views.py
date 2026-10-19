@@ -150,7 +150,7 @@ def page(title, active, body, msg=None, scripts=""):
         f'<a class="{"on" if active == key else ""}" href="{url}">{label}</a>'
         for key, url, label in tuple((f"slate-{s}", f"/slate?sport={s}", SHORT_NAMES[s]) for s in SHORT_NAMES)
                                 + (("live", "/live", "Live"),
-                                ("mine", "/mine", "My picks"),
+                                ("mine", "/mine", "Positions"),
                                    ("score", "/scorecard?sport=nfl", "Scorecard")))
     banner = f'<div class="msg {msg[0]}">{esc(msg[1])}</div>' if msg else ""
     mv = model_versions()
@@ -439,7 +439,7 @@ def mine_page(upcoming, finished, summary):
                 if finished else "")
     intro = ("<p class='note'>Every game you picked, both sports. Brier score = how far a probability was from "
              "what happened (0 is perfect, 0.25 is a coin flip); lower is better.</p>")
-    return page("My picks", "mine", intro + tiles + up_html + wait_html + fin_html)
+    return page("Positions", "mine", intro + tiles + up_html + wait_html + fin_html)
 
 
 # ---------- scorecard ----------
