@@ -39,3 +39,23 @@ way from the market toward the engine, so it disagrees with the market less.
   wins beating the market's expected wins by **z >= 2**.
 
 Real-money rules in CLAUDE.md still apply to anything that becomes eligible.
+
+## Added 2026-10-19 (expert signals; committed before any signal was recorded)
+
+Signals are read by scheduled Claude checks from public pages and stored with their
+source link in `expert_signals` (before kickoff, never edited). See `experts.py`.
+
+### `dk_sharp_money_v1` (rule, NFL, NCAAF, NBA, NCAAM), start 2026-10-19
+From DraftKings' public betting splits (moneyline): bet the side whose **share of money
+(handle %) exceeds its share of bets by 15 or more points**, i.e. bigger bettors are on it.
+Logged once per game, at the first recorded snapshot where a side qualifies, at that
+moment's best price at my books. Origin: the "sharp money" idea; VSiN's own tracking found
+majority-handle sides roughly break-even, so this is unproven.
+
+### `circa_consensus_v1` (rule, NFL), start 2026-10-19
+From the Circa Sports Million contest's weekly consensus (most-picked sides, released
+Saturday evenings): bet the **5 most-picked sides** each week on the moneyline, at the best
+price at my books when recorded. The contest is against the spread; this tests whether the
+crowd's favorite sides also beat the moneyline closing price.
+
+Promotion bar: the same rule bar as above (100+ graded bets, positive average CLV, z >= 2).
