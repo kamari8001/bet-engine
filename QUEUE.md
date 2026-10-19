@@ -45,6 +45,7 @@ _(nothing)_
 
 ## Done
 
+- 2026-10-19: Mac wakes at 6:50 AM on Saturdays and Sundays (`pmset repeat`, set by Talal; check with `pmset -g sched`)
 - 2026-10-19 v2.1.2: slate font Doppio One
 - 2026-10-19 v2.1.1: health-check fixes (same-day missing results, wake-up closing pulls, quiet retry)
 - 2026-10-19 v2.1.0: expert signals (DraftKings splits, Circa consensus) as shadow challengers
