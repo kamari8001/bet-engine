@@ -4,6 +4,16 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 2.1.1 (2026-10-19): health-check fixes
+- Pre-game refreshes no longer stop because an earlier game that day has no result loaded yet.
+  Now only games whose own team is waiting on a result are skipped; if any result is 24+ hours
+  late, the run still stops (the data source is probably broken). This broke Sunday night's refresh.
+- After the Mac wakes, games in a kickoff group whose first game already started now get their own
+  closing-odds pull (Sunday, the 4:25 PM games were missed). A sport whose odds are under 15
+  minutes old isn't pulled again.
+- A brief internet drop while checking credits retries quietly next run instead of sending a
+  failure notification.
+
 ## 2.1.0 (2026-10-19): expert signals
 - New paper-only shadow challengers, pre-registered: `dk_sharp_money_v1` (bet the side with 15+
   points more of the money than of the bets, from DraftKings' public splits; all four sports) and

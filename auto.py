@@ -23,6 +23,7 @@ import json
 import socket
 import subprocess
 import sys
+import urllib.error
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -38,6 +39,7 @@ WINDOW_GAP = timedelta(minutes=30)          # games this close together share on
 PULL_BEFORE = (timedelta(minutes=5), timedelta(minutes=30))  # pull when first kickoff is this far away
 CATCHUP_AHEAD = timedelta(hours=2)          # look this far ahead after waking
 CATCHUP_STALE = timedelta(hours=2)          # ...and pull if odds are older than this
+FRESH_ODDS = timedelta(minutes=15)          # a sport's odds newer than this don't need another pull
 WOKE_GAP = timedelta(minutes=20)            # a gap this long between runs = Mac was asleep
 LOW_CREDITS_WARN = 150                       # notify below this
 COLLEGE_WINDOWS_MIN_CREDITS = 100            # below this, skip college pre-kickoff pulls
@@ -109,11 +111,14 @@ def run_steps(name, steps, dry):
     return True
 
 
-def kickoff_windows(conn, sport, start, end):
-    """[(first kickoff UTC text, number of games)] for windows starting between start and end."""
+def kickoff_windows(conn, sport, start, end, now=None):
+    """[(first kickoff UTC text, number of games)] for windows starting between start and end.
+    Only games that haven't started count, so once a window's first game kicks off, its later
+    games form their own window and still get a closing pull."""
+    since = start - WINDOW_GAP if now is None else max(start - WINDOW_GAP, now)
     games = [r["start_time_utc"] for r in conn.execute(
         "SELECT start_time_utc FROM games WHERE sport = ? AND start_time_utc > ? ORDER BY start_time_utc",
-        (sport, db.to_utc(start - WINDOW_GAP)))]
+        (sport, db.to_utc(since)))]
     windows, current = [], None
     for k in games:
         t = datetime.strptime(k, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
@@ -141,16 +146,18 @@ def due_tasks(conn, state, et, woke=False):
         tasks.append(("night results", ("night", today), NIGHT))
     utc = et.astimezone(timezone.utc)
     for sport in SPORTS:
-        for first, n in kickoff_windows(conn, sport, utc + PULL_BEFORE[0], utc + PULL_BEFORE[1]):
+        last = latest_odds_time(conn, sport)
+        if last is not None and utc - last < FRESH_ODDS:
+            continue  # just pulled (e.g. the previous window); the next run will look again
+        for first, n in kickoff_windows(conn, sport, utc + PULL_BEFORE[0], utc + PULL_BEFORE[1], utc):
             key = f"{sport}|{first}"
             if key not in state["windows"]:
                 tasks.append((f"{sport.upper()} closing odds ({n} game(s) from {db.fmt_et(first)})",
                               ("windows", key), [["pull_odds.py", sport], ["predict.py", sport],
                                                      ["shadow.py", "log", sport]]))
         if woke:
-            last = latest_odds_time(conn, sport)
             if last is None or utc - last >= CATCHUP_STALE:
-                for first, n in kickoff_windows(conn, sport, utc + PULL_BEFORE[1], utc + CATCHUP_AHEAD):
+                for first, n in kickoff_windows(conn, sport, utc + PULL_BEFORE[1], utc + CATCHUP_AHEAD, utc):
                     key = f"{sport}|{first}|catchup"
                     if key not in state["windows"]:
                         tasks.append((f"{sport.upper()} catch-up odds after wake ({n} game(s) from "
@@ -216,6 +223,17 @@ def main():
     if any(t[1][0] == "windows" for t in tasks):
         try:
             credits = credits_left()
+        except urllib.error.HTTPError as e:
+            notify(f"Couldn't check Odds API credits: {e}")
+            return
+        except OSError as e:
+            # Internet dropped between the online check and this call (common right after a
+            # wake). Retry quietly next run, which should still count as "just woke".
+            log(f"internet dropped while checking credits ({e}); retrying next run")
+            if not dry:
+                state["last_run"] = last_run
+                save_state(state)
+            return
         except Exception as e:
             notify(f"Couldn't check Odds API credits: {e}")
             return

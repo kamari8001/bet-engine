@@ -13,7 +13,9 @@ Run first: pull_games.py, pull_odds.py, and pull_history.py <sport> --current.
 - A new row is logged only if there's no earlier one, the probability moved by
   1 point or more, or the starters changed. The latest row before kickoff is
   the one that gets graded.
-- Stops without logging if past results are missing (ratings would be stale).
+- Past results must be loaded, or ratings would be stale: a game whose team has a
+  finished game without a result is skipped (not logged) until it loads, and if any
+  result is more than STALE_LIMIT late the whole run stops (the source is likely broken).
   Won't flag edges against odds older than ODDS_MAX_AGE.
 """
 
@@ -35,6 +37,7 @@ from pull_history import CURRENT_SEASON, NFLVERSE_GAMES, blank, current_season, 
 RELOG_MOVE = 0.01
 ODDS_MAX_AGE = timedelta(hours=3)
 RESULT_GRACE = timedelta(hours=5)   # a game this long past kickoff should have a result
+STALE_LIMIT = timedelta(hours=24)   # a result this late stops the whole run
 
 
 def utc_now():
@@ -47,23 +50,29 @@ def parse_utc(text):
 
 # ---------- safety checks ----------
 
-def check_history_current(conn, sport):
-    """Every live game that should be over must be in the history, or ratings are stale."""
-    cutoff = db.to_utc(utc_now() - RESULT_GRACE)
+def missing_results(conn, sport):
+    """Live games that should be over but aren't in the history yet (ratings would be stale).
+    Returns the set of teams involved. Stops everything if any is more than STALE_LIMIT late."""
+    now = utc_now()
     missing = conn.execute(
         "SELECT g.* FROM games g WHERE g.sport = ? AND g.start_time_utc < ?"
         " AND NOT EXISTS (SELECT 1 FROM hist_games h WHERE h.source = g.source"
         "                 AND h.external_id = g.external_id)"
         " AND NOT EXISTS (SELECT 1 FROM results r WHERE r.game_id = g.id AND r.status = 'cancelled')",
-        (sport, cutoff)).fetchall()
-    if missing:
-        lines = "\n".join(f"  {db.fmt_et(g['start_time_utc'])}  {g['away_team']} at {g['home_team']}"
-                          for g in missing)
-        sys.exit(f"STOP: {len(missing)} finished game(s) have no result in the history yet:\n{lines}\n"
+        (sport, db.to_utc(now - RESULT_GRACE))).fetchall()
+    lines = "\n".join(f"  {db.fmt_et(g['start_time_utc'])}  {g['away_team']} at {g['home_team']}"
+                      for g in missing)
+    if any(parse_utc(g["start_time_utc"]) < now - STALE_LIMIT for g in missing):
+        sys.exit(f"STOP: finished game(s) have had no result in the history for over "
+                 f"{STALE_LIMIT.total_seconds() / 3600:.0f} hours:\n{lines}\n"
                  f"Run `python3 pull_history.py {sport} --current` and try again. If the source "
                  "hasn't posted them, ratings would be stale, so nothing was logged.\n"
                  "If a game was cancelled or postponed: `python3 game_status.py cancel <id> <link> <reason>` "
                  "or `python3 game_status.py postpone <id> \"YYYY-MM-DD HH:MM\" <link> <reason>`.")
+    if missing:
+        print(f"Note: {len(missing)} finished game(s) have no result in the history yet; games "
+              f"involving those teams are skipped until it loads:\n{lines}\n")
+    return {t for g in missing for t in (g["home_team"], g["away_team"])}
 
 
 # ---------- inputs for upcoming games ----------
@@ -245,7 +254,7 @@ def main():
     sport = args[0]
     days = int(args[args.index("--days") + 1]) if "--days" in args else 7
     conn = db.connect()
-    check_history_current(conn, sport)
+    waiting = missing_results(conn, sport)
 
     now = utc_now()
     games = conn.execute(
@@ -253,6 +262,11 @@ def main():
         " AND NOT EXISTS (SELECT 1 FROM results r WHERE r.game_id = games.id)"
         " ORDER BY start_time_utc, id",
         (sport, db.to_utc(now), db.to_utc(now + timedelta(days=days)))).fetchall()
+    skipped = [g for g in games if {g["home_team"], g["away_team"]} & waiting]
+    games = [g for g in games if not {g["home_team"], g["away_team"]} & waiting]
+    for g in skipped:
+        print(f"Skipped (a team's last result isn't loaded yet): {db.fmt_et(g['start_time_utc'])}  "
+              f"{g['away_team']} at {g['home_team']}")
     if not games:
         print(f"No {sport.upper()} games in the next {days} days.")
         return

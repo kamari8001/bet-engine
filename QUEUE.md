@@ -14,18 +14,12 @@ _(nothing)_
 
 ## Up next
 
-1. **v2.1.1: health-check fixes** (found 2026-10-19; waiting for OK)
-   - [ ] Pre-game refreshes stop when an earlier game the same day has no result yet.
-     This broke Sunday night's refresh and will break Tuesday's 9 PM NBA refresh.
-   - [ ] After the Mac wakes, games in a kickoff group that's already started get no closing pull.
-   - [ ] A brief internet hiccup sends a failure notification instead of quietly retrying.
-   - [ ] CLAUDE.md "Open items" has stale lines.
-2. **Basketball shakedown check** (around Wed Oct 21 to Thu Oct 22): confirm predictions
+1. **Basketball shakedown check** (around Wed Oct 21 to Thu Oct 22): confirm predictions
    were logged before every tip, closing pulls happened, NBA injury checks and DraftKings
    splits recorded entries, and overnight grading ran.
-3. **Club soccer: data step** (plan: `plans/club_soccer.md`; waiting for OK on its 4 decisions)
-4. **Club soccer: model and final exam**
-5. **Club soccer: live (v3.0.0)**, needs the $30 Odds API plan
+2. **Club soccer: data step** (plan: `plans/club_soccer.md`; waiting for OK on its 4 decisions)
+3. **Club soccer: model and final exam**
+4. **Club soccer: live (v3.0.0)**, needs the $30 Odds API plan
 
 ## Waiting on a date or on data
 
@@ -51,6 +45,7 @@ _(nothing)_
 
 ## Done
 
+- 2026-10-19 v2.1.1: health-check fixes (same-day missing results, wake-up closing pulls, quiet retry)
 - 2026-10-19 v2.1.0: expert signals (DraftKings splits, Circa consensus) as shadow challengers
 - 2026-10-19 v2.0.1: NCAAF and NCAAM labels
 - 2026-10-19 v2.0.0: NBA and college basketball live
