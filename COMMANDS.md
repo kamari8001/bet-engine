@@ -100,6 +100,11 @@ Challengers and the promotion bar are fixed in `backtest_results/shadow_challeng
 | `python3 market_patterns.py` | Pre-registered tests of whether kinds of games (home underdogs, big favorites, etc.) are mispriced; see `backtest_results/market_patterns_plan.md` |
 | `python3 pull_history.py all` | Reloads *all* past seasons. Slow; about 50 college API calls. |
 | `python3 pull_basketball_history.py summary` | What basketball history is loaded (games and moneylines per season) |
+| `python3 pull_soccer_history.py past` | Loads club soccer 2005-06 to 2025-26 (Big 5 leagues + second divisions) from football-data.co.uk; free, cached in `cache/football_data/`. Add `--refresh` to re-download. |
+| `python3 pull_soccer_history.py current` | This season's finished Big 5 games from ESPN (last 4 days; `--from YYYY-MM-DD` to backfill) |
+| `python3 pull_soccer_history.py summary` | What club soccer history is loaded (games, odds, shots per league and season) |
+| `python3 pull_games.py soccer_club` | Club soccer schedule and results from ESPN. **Not in `all` until soccer goes live.** |
+| `python3 pull_odds.py soccer_club` | Club soccer moneylines with the Draw. **Costs 5 credits** (1 per league). Not in `all` until soccer goes live. |
 
 **Avoid `backtest.py final`**: the one-time final exam has already been used. Running it again is recorded with a warning.
 

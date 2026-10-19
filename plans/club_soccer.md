@@ -94,6 +94,23 @@ confidence).
   when the away team won.
 - Flagged bets on any of the three outcomes; units and closing-line value at your books.
 
+## Step 1 results (data, 2026-10-19)
+
+- 82,481 past games (2005-06 to 2025-26, 10 divisions) and 322,854 odds rows from football-data;
+  341 games this season (Big 5, Aug 15 to Oct 18) from ESPN. One Ligue 2 game with no score in
+  the file (Bastia vs Red Star, Dec 5, 2025) was left out.
+- Odds by season: pre-close (Bet365 + market average) for every season; closing prices from
+  2012-13 (Pinnacle) and 2019-20 (market average, Bet365). **Pinnacle is mostly missing in
+  2025-26**, so test 3's market benchmark is the **market-average closing price** (every
+  final-exam season has it); Pinnacle is shown as extra information where present.
+- Kickoff times exist from 2019-20 (UK time in the files, stored in UTC and Eastern).
+- Cross-check: the 297 games of 2026-27 in both ESPN and football-data have identical scores.
+- Team-name map (`teams.SOCCER_TEAMS`, 96 teams) checked one-to-one against all three sources.
+- Live schedule (`pull_games.py soccer_club`) and odds with the Draw (`pull_odds.py soccer_club`,
+  5 credits) tested on a throwaway copy: 53 games, all priced, FanDuel and DraftKings on every
+  game, Polymarket on 11. Not loaded into the real logbook or automation until soccer goes live
+  (games without results would trip the 24-hour stale-result stop).
+
 ## Build steps (commit after each; plan approval as usual)
 
 1. **Data:**

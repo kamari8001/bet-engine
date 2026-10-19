@@ -30,10 +30,19 @@ def fair_moneyline(p):
     return round(100 * (1 - p) / p)
 
 
+def american_from_decimal(dec):
+    """European decimal odds (e.g. 2.50) -> American moneyline (+150), rounded to a whole number.
+    None for missing or impossible prices (1.00 or less)."""
+    if dec is None or dec <= 1.0:
+        return None
+    ml = round((dec - 1) * 100) if dec >= 2.0 else round(-100 / (dec - 1))
+    return ml if abs(ml) >= 100 else (100 if ml > 0 else -100)
+
+
 # Entries in the historical odds that are NOT prices you could bet before the game:
 # prediction sites' own projections, averages, opening lines, and live in-game prices.
 NOT_A_SPORTSBOOK = {"numberfire", "teamrankings", "accuscore", "betegy", "consensus", "opening",
-                    "fantasy911.com", "espn: no moneyline"}
+                    "fantasy911.com", "espn: no moneyline", "market average", "market average (close)"}
 
 
 def is_pregame_sportsbook(provider):

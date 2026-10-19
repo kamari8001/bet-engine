@@ -1,6 +1,8 @@
 """Load this season's upcoming games and new final scores into the live tables.
 
-Usage: python3 pull_games.py nfl | ncaaf | all
+Usage: python3 pull_games.py nfl | ncaaf | nba | ncaab | soccer_club | all
+
+`all` = the sports that are live (ALL_SPORTS); club soccer is added once it goes live.
 
 - New upcoming games are added to `games`.
 - If a kickoff time moved before the game starts, it is updated.
@@ -107,8 +109,44 @@ def ncaab_games():
                    home_score=g["homePoints"] if done else None, away_score=g["awayPoints"] if done else None)
 
 
+def soccer_games():
+    """Big 5 league games from ESPN's soccer scoreboards, 3 days back through 7 days ahead
+    (one request per league per day). An unknown team stops the run (see teams.SOCCER_TEAMS)."""
+    from pull_basketball_history import espn_get
+    from pull_soccer_history import ESPN_DAY
+    from teams import SOCCER_BY_ESPN_ID, SOCCER_LEAGUES
+    today = datetime.now(timezone.utc).astimezone(db.EASTERN).date()
+    unknown = set()
+    for offset in range(-3, 8):
+        d = today + timedelta(days=offset)
+        for league, (_, _, slug, _) in SOCCER_LEAGUES.items():
+            data = espn_get(ESPN_DAY.format(slug=slug, d=d.strftime("%Y%m%d"))) or {}
+            for e in data.get("events", []):
+                comp = e["competitions"][0]
+                teams = {t["homeAway"]: t for t in comp["competitors"]}
+                names = {side: SOCCER_BY_ESPN_ID.get(teams[side]["team"]["id"]) for side in ("home", "away")}
+                for side, hit in names.items():
+                    if hit is None:
+                        unknown.add(f"{teams[side]['team']['displayName']} (ESPN id {teams[side]['team']['id']}, {league})")
+                if None in names.values():
+                    continue
+                status = e["status"]["type"]
+                done = status.get("completed")
+                kickoff = datetime.strptime(e["date"][:16], "%Y-%m-%dT%H:%M").replace(tzinfo=timezone.utc)
+                yield dict(external_id=e["id"], league=league, kickoff=kickoff, espn_id=e["id"],
+                           home_team=names["home"][1], away_team=names["away"][1],
+                           neutral_site=bool(comp.get("neutralSite")), live_eligible=True,
+                           home_score=int(teams["home"]["score"]) if done else None,
+                           away_score=int(teams["away"]["score"]) if done else None)
+    if unknown:
+        raise RuntimeError("unknown soccer team(s); add them to SOCCER_TEAMS in teams.py, checked against "
+                           "all three sources: " + "; ".join(sorted(unknown)))
+
+
 SOURCES = {"nfl": ("nflverse", nfl_games), "ncaaf": ("cfbd", ncaaf_games),
-           "nba": ("espn", nba_games), "ncaab": ("cbbd", ncaab_games)}
+           "nba": ("espn", nba_games), "ncaab": ("cbbd", ncaab_games),
+           "soccer_club": ("espn_soccer", soccer_games)}
+ALL_SPORTS = ("nfl", "ncaaf", "nba", "ncaab")
 
 
 def sync(conn, sport):
@@ -197,7 +235,7 @@ def print_slate(conn, sport, days=7):
 
 
 def main():
-    sports = list(SOURCES) if sys.argv[1:] == ["all"] else sys.argv[1:]
+    sports = list(ALL_SPORTS) if sys.argv[1:] == ["all"] else sys.argv[1:]
     if not sports or any(s not in SOURCES for s in sports):
         sys.exit(__doc__)
     conn = db.connect()

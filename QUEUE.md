@@ -17,9 +17,8 @@ _(nothing)_
 1. **Basketball shakedown check** (around Wed Oct 21 to Thu Oct 22): confirm predictions
    were logged before every tip, closing pulls happened, NBA injury checks and DraftKings
    splits recorded entries, and overnight grading ran.
-2. **Club soccer: data step** (plan: `plans/club_soccer.md`; all 4 decisions approved 2026-10-19)
-3. **Club soccer: model and final exam**
-4. **Club soccer: live (v3.0.0)**, needs the $30 Odds API plan
+2. **Club soccer: model and final exam** (plan: `plans/club_soccer.md`; criteria file first)
+3. **Club soccer: live (v3.0.0)**, needs the $30 Odds API plan. Add soccer to `pull_games`/`pull_odds` `all`, the morning routine (`pull_soccer_history.py current`), and pre-kickoff windows.
 
 ## Waiting on a date or on data
 
@@ -45,6 +44,7 @@ _(nothing)_
 
 ## Done
 
+- 2026-10-19: club soccer data step (82,822 past games, 322,854 odds rows; live schedule and odds tested, not switched on)
 - 2026-10-19: Mac wakes at 6:50 AM on Saturdays and Sundays (`pmset repeat`, set by Talal; check with `pmset -g sched`)
 - 2026-10-19 v2.1.2: slate font Doppio One
 - 2026-10-19 v2.1.1: health-check fixes (same-day missing results, wake-up closing pulls, quiet retry)

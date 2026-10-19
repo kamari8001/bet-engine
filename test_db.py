@@ -232,6 +232,29 @@ def main():
                    lambda: conn.execute("UPDATE results SET home_score = 28 WHERE game_id = ?",
                                         (soon,)))
 
+    print("\n-- Club soccer data --")
+    expect_ok("save soccer odds with a draw price",
+              lambda: db.add_odds(conn, soccer, "testbook", home_ml=150, away_ml=180, draw_ml=230, source="test"))
+    expect_blocked("soccer odds missing the draw price",
+                   lambda: db.add_odds(conn, soccer, "testbook", home_ml=150, away_ml=180, source="test"))
+    expect_blocked("a draw price on a football game",
+                   lambda: db.add_odds(conn, future, "testbook", home_ml=-150, away_ml=130, draw_ml=900, source="test"))
+    hist = conn.execute("INSERT INTO hist_games (sport, league, season, season_type, game_date_et, home_team,"
+                        " away_team, home_score, away_score, neutral_site, source, external_id)"
+                        " VALUES ('soccer_club', 'TEST', 2026, 'regular', '2026-01-01', 'A', 'B', 1, 1, 0, 'test', 'x')").lastrowid
+    expect_blocked("a past draw price that isn't a valid moneyline (+50)",
+                   lambda: conn.execute("INSERT INTO hist_odds (hist_game_id, provider, home_ml, draw_ml, away_ml,"
+                                        " timing, source) VALUES (?, 'b', 150, 50, 180, 'close', 'test')", (hist,)))
+    from odds_math import american_from_decimal
+    conv = {d: american_from_decimal(d) for d in (2.5, 1.5, 2.0, 1.95, 1.0)}
+    check("decimal odds convert to American (2.50 = +150, 1.50 = -200, 2.00 = +100, 1.95 = -105, 1.00 = none)",
+          conv == {2.5: 150, 1.5: -200, 2.0: 100, 1.95: -105, 1.0: None}, str(conv))
+    from teams import SOCCER_TEAMS
+    espn_ids = [e for t in SOCCER_TEAMS.values() for e, _, _ in t.values()]
+    odds_names = [o for t in SOCCER_TEAMS.values() for _, _, o in t.values()]
+    check("soccer team map is one-to-one (ESPN ids and Odds API names unique)",
+          len(set(espn_ids)) == len(espn_ids) == len(set(odds_names)), f"{len(espn_ids)} teams")
+
     print("\n-- Eastern time display --")
     check("Thursday night game shows in Eastern",
           db.fmt_et("2026-10-16 00:15:00") == "Thu Oct 15, 8:15 PM ET",

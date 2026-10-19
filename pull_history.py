@@ -27,7 +27,7 @@ CFBD = "https://api.collegefootballdata.com"
 CFBD_FIRST_SEASON = 2013
 CURRENT_SEASON = 2026   # football (seasons are labeled by the year they start)
 # Basketball seasons are labeled by the year they end (2027 = the 2026-27 season), like the sources.
-SEASONS = {"nfl": 2026, "ncaaf": 2026, "nba": 2027, "ncaab": 2027}
+SEASONS = {"nfl": 2026, "ncaaf": 2026, "nba": 2027, "ncaab": 2027, "soccer_club": 2027}
 
 
 SPORT_NAMES = {"nfl": "NFL", "ncaaf": "College football", "nba": "NBA", "ncaab": "College basketball"}

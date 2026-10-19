@@ -46,6 +46,9 @@ HIST_GAMES_NEW_COLUMNS = {
     "home_off_epa": "REAL", "home_off_plays": "INTEGER",
     "away_off_epa": "REAL", "away_off_plays": "INTEGER",
     "home_pub_elo": "REAL", "away_pub_elo": "REAL",
+    # soccer: league name, shots on target, expected goals (xG; only where the source has it)
+    "league": "TEXT", "home_shots_ot": "INTEGER", "away_shots_ot": "INTEGER",
+    "home_xg": "REAL", "away_xg": "REAL",
 }
 
 
@@ -56,6 +59,10 @@ def upgrade_db(conn):
     for col, kind in HIST_GAMES_NEW_COLUMNS.items():
         if col not in have:
             conn.execute(f"ALTER TABLE hist_games ADD COLUMN {col} {kind}")
+    # soccer draw prices in past odds (timing column says "pre-close" or "close")
+    if "draw_ml" not in {r["name"] for r in conn.execute("PRAGMA table_info(hist_odds)")}:
+        conn.execute("ALTER TABLE hist_odds ADD COLUMN draw_ml INTEGER"
+                     " CHECK (draw_ml IS NULL OR draw_ml >= 100 OR draw_ml <= -100)")
     # ESPN's game id, for matching live scores (NFL; college games use CFBD ids, which are ESPN's)
     if "espn_id" not in {r["name"] for r in conn.execute("PRAGMA table_info(games)")}:
         conn.execute("ALTER TABLE games ADD COLUMN espn_id TEXT")
