@@ -17,7 +17,10 @@ _(nothing)_
 1. **Basketball shakedown check** (around Wed Oct 21 to Thu Oct 22): confirm predictions
    were logged before every tip, closing pulls happened, NBA injury checks and DraftKings
    splits recorded entries, and overnight grading ran.
-2. **Club soccer: model and final exam** (plan: `plans/club_soccer.md`; criteria file first)
+2. **Club soccer: ClubElo retry, then final exam** (around Wed Oct 21; Talal chose to wait). Model `soccer-v2` is
+   tuned and committed. Retry `api.clubelo.com` (502 errors all day 2026-10-19); if it works, build `clubelo.py`,
+   run `backtest_soccer.py ablate --elo` (idea #2), then `final`, then `refit`. If still down, run `final` without
+   it and note ClubElo as untested (shadow-only later).
 3. **Club soccer: live (v3.0.0)**, needs the $30 Odds API plan. Add soccer to `pull_games`/`pull_odds` `all`, the morning routine (`pull_soccer_history.py current`), and pre-kickoff windows.
 
 ## Waiting on a date or on data
