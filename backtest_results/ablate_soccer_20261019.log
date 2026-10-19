@@ -1,0 +1,17 @@
+Base model: tune 0.9731, check 0.9943
+
+#1 shots on target: tuning ['sot_w'] (plus the base settings) on the tune seasons
+Starting log loss on tune seasons: 0.9731
+  after step size [0.5, 0.75, 1.33, 2.0]: log loss 0.9722
+  after step size [0.85, 0.93, 1.07, 1.18]: log loss 0.9722
+  after step size [0.96, 1.04]: log loss 0.9722
+  #1 shots on target: tune 0.9722 (-0.0010), check 0.9934 (-0.0009) -> KEEP (better on both); settings sot_w=0.30962
+
+#2 ClubElo ratings: skipped (no ClubElo data loaded)
+
+#3 rest days: tuning ['rest_coef'] (plus the base settings) on the tune seasons
+Starting log loss on tune seasons: 0.9731
+  after step size [0.5, 0.75, 1.33, 2.0]: log loss 0.9731
+  after step size [0.85, 0.93, 1.07, 1.18]: log loss 0.9731
+  after step size [0.96, 1.04]: log loss 0.9731
+  #3 rest days: tune 0.9731 (-0.0000), check 0.9943 (-0.0000) -> KEEP (better on both); settings rest_coef=0.02

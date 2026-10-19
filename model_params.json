@@ -116,5 +116,31 @@
       2026
     ],
     "note": "Refit on all seasons after the final exam; judged on live results only."
+  },
+  "soccer_club": {
+    "version": "soccer-v2-20261019",
+    "ratings": {
+      "k": 0.02155,
+      "k_lg": 0.00021,
+      "regress": 0.00018,
+      "cap": 13.3,
+      "promo_gap": 0.58528,
+      "new_team": -0.04988,
+      "rho": -0.06677,
+      "home_start": 0.30241,
+      "sot_w": 0.29724,
+      "rest_coef": 0.02,
+      "rest_cap": 7,
+      "elo_w": 0.0
+    },
+    "note": "Tuned on 2013-2019 Big 5 seasons with kept ideas: shots on target, rest days. ClubElo untested (API down 2026-10-19).",
+    "tune_seasons": [
+      2013,
+      2019
+    ],
+    "check_seasons": [
+      2020,
+      2022
+    ]
   }
 }
