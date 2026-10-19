@@ -10,7 +10,7 @@ import math
 from collections import defaultdict
 
 import db
-from odds_math import decimal_odds, no_vig
+from odds_math import decimal_odds, is_pregame_sportsbook, no_vig
 
 PERIODS = {"nfl": {"discovery": (2006, 2018), "confirmation": (2019, 2025)},
            "ncaaf": {"discovery": (2021, 2022), "confirmation": (2023, 2025)}}
@@ -21,11 +21,13 @@ FRANCHISE = {"SD": "LAC", "OAK": "LV", "STL": "LA"}
 def load(conn, sport):
     """Games with moneylines: one dict per game, oldest first."""
     rows = conn.execute(
-        "SELECT g.*, o.home_ml, o.away_ml FROM hist_games g JOIN hist_odds o ON o.hist_game_id = g.id"
+        "SELECT g.*, o.home_ml, o.away_ml, o.provider FROM hist_games g JOIN hist_odds o ON o.hist_game_id = g.id"
         " WHERE g.sport = ? AND o.home_ml IS NOT NULL ORDER BY g.game_date_et, g.kickoff_utc, g.id",
         (sport,)).fetchall()
     games = {}
     for r in rows:
+        if not is_pregame_sportsbook(r["provider"]):
+            continue
         g = games.setdefault(r["id"], {**dict(r), "lines": []})
         g["lines"].append((r["home_ml"], r["away_ml"]))
     out = []

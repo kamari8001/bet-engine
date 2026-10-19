@@ -128,8 +128,8 @@ def nba_odds(conn):
             name = (item.get("provider") or {}).get("name") or "unknown"
             h, a = item.get("homeTeamOdds") or {}, item.get("awayTeamOdds") or {}
             hm, am = h.get("moneyLine"), a.get("moneyLine")
-            if "(" in name or hm is None or am is None:
-                continue  # skip state-specific duplicates and lines without both prices
+            if "(" in name or "live" in name.lower() or hm is None or am is None:
+                continue  # skip state-specific duplicates, live in-game prices, and one-sided lines
             if abs(hm) < 100 or abs(am) < 100:
                 continue  # not a valid American price
             books[name] = (int(hm), int(am), item.get("spread"), item.get("overUnder"))

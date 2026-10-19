@@ -24,7 +24,7 @@ import combiner
 import config
 import db
 import model
-from odds_math import decimal_odds, no_vig
+from odds_math import decimal_odds, is_pregame_sportsbook, no_vig
 
 PERIODS = {
     "nfl":   {"tune": (2006, 2018), "check": (2019, 2022), "final": (2023, 2025), "all": (2006, 2025)},
@@ -95,6 +95,8 @@ def market_by_game(conn, sport):
         " WHERE g.sport = ?", (sport,)).fetchall()
     by_game = {}
     for r in rows:
+        if not is_pregame_sportsbook(r["provider"]):
+            continue  # prediction sites, averages, opening and live prices aren't the market
         by_game.setdefault(r["hist_game_id"], []).append(r)
     for gid, lines in by_game.items():
         ml = [l for l in lines if l["home_ml"] is not None]

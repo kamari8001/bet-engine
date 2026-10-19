@@ -28,3 +28,15 @@ def fair_moneyline(p):
     if p >= 0.5:
         return -round(100 * p / (1 - p))
     return round(100 * (1 - p) / p)
+
+
+# Entries in the historical odds that are NOT prices you could bet before the game:
+# prediction sites' own projections, averages, opening lines, and live in-game prices.
+NOT_A_SPORTSBOOK = {"numberfire", "teamrankings", "accuscore", "betegy", "consensus", "opening",
+                    "fantasy911.com", "espn: no moneyline"}
+
+
+def is_pregame_sportsbook(provider):
+    """True only for a real sportsbook's pregame price (used when reading past odds)."""
+    name = (provider or "").strip().lower()
+    return name not in NOT_A_SPORTSBOOK and "live" not in name and "in-play" not in name
