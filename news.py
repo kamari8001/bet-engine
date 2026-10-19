@@ -9,9 +9,9 @@ Usage:
       record that the news supports the starter the model already assumes
       ("verified": nothing contradicts him). Refused if the name doesn't match;
       record a `qb` fact instead in that case.
-  python3 news.py targets ncaaf [hours]
-      college games kicking off in the next N hours (default 24) that need a news check:
-      the engine's pick differs from the market by 4+ points and no review is recorded.
+  python3 news.py targets ncaaf|ncaab|nba [hours]
+      games in the next N hours (default 24) that need a news check and have none recorded:
+      college games where the engine differs from the market by 4+ points; every NBA game.
       Biggest disagreements first, at most 15.
   python3 news.py reviewed <game id> <source url> "<reason>"
       record that the news was checked and nothing material changes the game (a
@@ -127,7 +127,8 @@ def news_targets(conn, sport, hours=24, limit=15):
             continue
         mkt = statistics.mean(no_vig(o["home_ml"], o["away_ml"])[0] for o in odds)
         gap = eng["p_home"] - mkt
-        if abs(gap) >= config.EDGE_THRESHOLD:
+        # NBA: every game needs an injury/rest check; college: only where engine and market disagree
+        if sport == "nba" or abs(gap) >= config.EDGE_THRESHOLD:
             out.append((abs(gap), g, eng["p_home"], mkt))
     out.sort(key=lambda x: -x[0])
     return out[:limit]
