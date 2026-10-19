@@ -42,7 +42,16 @@ DEFAULT_PARAMS = {
             "qb_k": 0.05, "new_qb": -2.0, "qb_regress": 0.2, "rest_coef": 0.15},
     "ncaaf": {"k": 0.08, "hfa_start": 3.0, "hfa_rate": 0.002, "regress": 0.3,
               "cap": 28.0, "sigma": 16.0, "new_team": 10.0, "avg_rate": 0.005},
+    # Basketball: many more games, so smaller steps; rest counts days since each team's last game
+    # (1 = back-to-back), with the difference capped at rest_cap days.
+    "nba": {"k": 0.03, "hfa_start": 2.5, "hfa_rate": 0.0005, "regress": 0.3,
+            "cap": 25.0, "sigma": 12.0, "new_team": 0.0, "avg_rate": 0.002,
+            "rest_coef": 0.5, "rest_cap": 3},
+    "ncaab": {"k": 0.04, "hfa_start": 3.0, "hfa_rate": 0.0005, "regress": 0.5,
+              "cap": 25.0, "sigma": 11.0, "new_team": 0.0, "avg_rate": 0.002,
+              "rest_coef": 0.3, "rest_cap": 3},
 }
+BASKETBALL = ("nba", "ncaab")
 
 # Starting values used when tuning each NFL v3 feature (0 would mean "off").
 NFL_V3_START = {"epa_w": 0.3, "epa_k": 0.08, "coach_regress": 0.15,
@@ -149,8 +158,9 @@ class RatingModel:
                     kickoff = g.get("kickoff_et") or ""
                     if away_tz == -8 and kickoff[11:13] in ("12", "13"):
                         bump += self._get("early_west")  # West Coast body clock at ~1 PM ET
-        if self._uses_qbs() and g.get("home_rest_days") is not None and g.get("away_rest_days") is not None:
-            bump += self.p["rest_coef"] * max(-7, min(7, g["home_rest_days"] - g["away_rest_days"]))
+        if "rest_coef" in self.p and g.get("home_rest_days") is not None and g.get("away_rest_days") is not None:
+            cap = self.p.get("rest_cap", 7)
+            bump += self.p["rest_coef"] * max(-cap, min(cap, g["home_rest_days"] - g["away_rest_days"]))
         return bump
 
     def _points_view(self, g):
@@ -227,15 +237,31 @@ class RatingModel:
         return self.off.get(team), self.dfn.get(team)
 
 
+def add_rest_days(games):
+    """Basketball: fill rest days from the schedule (days since each team's previous game;
+    None for a team's first game after a 30+ day break, e.g. the season opener)."""
+    from datetime import date
+    last = {}
+    for g in games:
+        d = date.fromisoformat(g["game_date_et"])
+        for side in ("home", "away"):
+            prev = last.get(g[f"{side}_team"])
+            gap = (d - prev).days if prev else None
+            g[f"{side}_rest_days"] = gap if gap is not None and gap <= 30 else None
+            last[g[f"{side}_team"]] = d
+    return games
+
+
 def load_games(conn, sport):
     """All completed past games for a sport, oldest first."""
-    return [dict(r) for r in conn.execute(
+    games = [dict(r) for r in conn.execute(
         "SELECT id, season, game_date_et, kickoff_et, kickoff_utc, home_team, away_team,"
         " home_division, away_division, home_score, away_score, neutral_site,"
         " home_starter_id, away_starter_id, home_rest_days, away_rest_days,"
         " home_coach, away_coach, home_off_epa, away_off_epa, home_pub_elo, away_pub_elo"
         " FROM hist_games WHERE sport = ?"
         " ORDER BY game_date_et, coalesce(kickoff_utc, ''), id", (sport,))]
+    return add_rest_days(games) if sport in BASKETBALL else games
 
 
 def walk_forward(games, ratings_params, sport):

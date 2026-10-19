@@ -29,12 +29,15 @@ from odds_math import decimal_odds, no_vig
 PERIODS = {
     "nfl":   {"tune": (2006, 2018), "check": (2019, 2022), "final": (2023, 2025), "all": (2006, 2025)},
     "ncaaf": {"tune": (2014, 2018), "check": (2019, 2020), "final": (2021, 2025), "all": (2014, 2025)},
+    "nba":   {"tune": (2015, 2020), "check": (2021, 2023), "final": (2024, 2026), "all": (2015, 2026)},
+    "ncaab": {"tune": (2015, 2020), "check": (2021, 2023), "final": (2024, 2026), "all": (2015, 2026)},
 }
 TUNED = ["k", "hfa_start", "hfa_rate", "regress", "cap", "sigma"]
 # Which combiner inputs each sport uses (None = our model alone). Chosen with
 # `backtest.py ablate`, judged on the check seasons.
-COMBINER_SET = {"nfl": None, "ncaaf": "ours + preseason data"}
-TUNED_EXTRA = {"nfl": ["qb_k", "new_qb", "qb_regress", "rest_coef"], "ncaaf": ["new_team"]}
+COMBINER_SET = {"nfl": None, "ncaaf": "ours + preseason data", "nba": None, "ncaab": None}
+TUNED_EXTRA = {"nfl": ["qb_k", "new_qb", "qb_regress", "rest_coef"], "ncaaf": ["new_team"],
+               "nba": ["rest_coef"], "ncaab": ["rest_coef"]}
 RESULTS_DIR = Path(__file__).parent / "backtest_results"
 
 
