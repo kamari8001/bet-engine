@@ -30,6 +30,10 @@ NCAAB_SEASONS = range(2015, 2027)       # 2014-15 through 2025-26
 PAUSE = 0.12                            # seconds between ESPN requests (be polite)
 MAX_FAILS = 20                          # consecutive failures before stopping
 NBA_TYPES = {2: "regular", 3: "postseason", 5: "postseason"}   # 5 = play-in; 1 (preseason) and 4 (All-Star) skipped
+# ESPN's codes for the 30 NBA teams (unchanged since 2014-15). Anything else is an All-Star
+# Weekend exhibition (East/West, Team LeBron, Rising Stars...), which ESPN sometimes files as regular season.
+NBA_TEAMS = {"ATL", "BKN", "BOS", "CHA", "CHI", "CLE", "DAL", "DEN", "DET", "GS", "HOU", "IND", "LAC", "LAL", "MEM",
+             "MIA", "MIL", "MIN", "NO", "NY", "OKC", "ORL", "PHI", "PHX", "POR", "SA", "SAC", "TOR", "UTAH", "WSH"}
 
 
 def espn_get(url):
@@ -77,6 +81,8 @@ def nba_games(conn):
                 continue
             comp = e["competitions"][0]
             teams = {t["homeAway"]: t for t in comp["competitors"]}
+            if {teams["home"]["team"]["abbreviation"], teams["away"]["team"]["abbreviation"]} - NBA_TEAMS:
+                continue  # All-Star Weekend exhibition
             start = datetime.strptime(e["date"][:16], "%Y-%m-%dT%H:%M").replace(tzinfo=timezone.utc)
             et = start.astimezone(db.EASTERN)
             try:
