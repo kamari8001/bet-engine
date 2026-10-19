@@ -4,6 +4,9 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 2.0.1 (2026-10-19)
+- Tab labels: "NCAAF" (college football) and "NCAAM" (college basketball).
+
 ## 2.0.0 (2026-10-19): basketball
 New sport (MAJOR): NBA `nba-v1-refit-20261019` and college basketball `ncaab-v1-refit-20261019`
 (team ratings + home court + rest days; NBA back-to-backs matter, college rest doesn't).
