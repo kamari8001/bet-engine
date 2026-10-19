@@ -27,7 +27,7 @@ def pick_text(g, p_home):
 
 def main():
     a = sys.argv[1:]
-    if not a or a[0] not in ("nfl", "ncaaf"):
+    if not a or a[0] not in ("nfl", "ncaaf", "nba", "ncaab"):
         sys.exit(__doc__)
     days = int(a[a.index("--days") + 1]) if "--days" in a else 7
     conn = db.connect()

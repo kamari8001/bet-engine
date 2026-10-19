@@ -30,7 +30,7 @@ import db
 import model
 from cautions import game_warnings
 from odds_math import decimal_odds, fair_moneyline, no_vig
-from pull_history import CURRENT_SEASON, NFLVERSE_GAMES, blank, fetch
+from pull_history import CURRENT_SEASON, NFLVERSE_GAMES, blank, current_season, fetch
 
 RELOG_MOVE = 0.01
 ODDS_MAX_AGE = timedelta(hours=3)
@@ -98,6 +98,29 @@ def nfl_inputs(conn, games):
     return out
 
 
+def basketball_inputs(conn, sport, games):
+    """{game id: {rest days, kickoff}}: days since each team's previous game (scheduled or
+    finished), from the live schedule and this season's history. None after a 30+ day break."""
+    def last_game_date(team, before_utc):
+        live = conn.execute("SELECT MAX(start_time_utc) FROM games WHERE sport = ? AND ? IN (home_team, away_team)"
+                            " AND start_time_utc < ? AND NOT EXISTS (SELECT 1 FROM results r WHERE r.game_id = games.id"
+                            " AND r.status = 'cancelled')", (sport, team, before_utc)).fetchone()[0]
+        hist = conn.execute("SELECT MAX(kickoff_utc) FROM hist_games WHERE sport = ? AND ? IN (home_team, away_team)"
+                            " AND kickoff_utc < ?", (sport, team, before_utc)).fetchone()[0]
+        last = max(x for x in (live, hist, "") if x is not None)
+        return db.utc_to_eastern(last).date() if last else None
+    out = {}
+    for g in games:
+        day = db.utc_to_eastern(g["start_time_utc"]).date()
+        inp = {"kickoff_et": db.utc_to_eastern(g["start_time_utc"]).strftime("%Y-%m-%d %H:%M")}
+        for side in ("home", "away"):
+            prev = last_game_date(g[f"{side}_team"], g["start_time_utc"])
+            gap = (day - prev).days if prev else None
+            inp[f"{side}_rest_days"] = gap if gap is not None and gap <= 30 else None
+        out[g["id"]] = inp
+    return out
+
+
 def last_starter(conn, team):
     teams = [team] + [old for old, new in model.NFL_FRANCHISE.items() if new == team]
     marks = ",".join("?" * len(teams))
@@ -126,20 +149,21 @@ class Engine:
         self.params = model.load_params(sport)
         self.history = model.load_games(conn, sport)
         _, self.model = model.walk_forward(self.history, self.params["ratings"], sport)
-        self.model.start_season(CURRENT_SEASON)
+        self.season = current_season(sport)
+        self.model.start_season(self.season)
         self.cal = self.params.get("calibration") or {"a": 1.0, "b": 0.0}
         self.comb = self.params.get("combiner")
         if self.comb:
             self.team_seasons = combiner.load_team_seasons(conn, sport)
             self.played = {}
             for h in self.history:
-                if h["season"] == CURRENT_SEASON:
+                if h["season"] == self.season:
                     for t in (h["home_team"], h["away_team"]):
                         self.played[t] = self.played.get(t, 0) + 1
 
     def predict(self, g, inputs):
         """(home pts, away pts, P(home wins)) for a live game with given inputs."""
-        gd = dict(g, season=CURRENT_SEASON, home_division="fbs" if self.sport == "ncaaf" else None,
+        gd = dict(g, season=self.season, home_division="fbs" if self.sport == "ncaaf" else None,
                   away_division="fbs" if self.sport == "ncaaf" else None, **inputs)
         # Look ahead without changing the model: copy state the prepare step touches
         saved = (dict(self.model.off), dict(self.model.dfn), dict(self.model.eoff),
@@ -216,7 +240,7 @@ def latest_odds(conn, game_id):
 
 def main():
     args = sys.argv[1:]
-    if not args or args[0] not in ("nfl", "ncaaf"):
+    if not args or args[0] not in ("nfl", "ncaaf", "nba", "ncaab"):
         sys.exit(__doc__)
     sport = args[0]
     days = int(args[args.index("--days") + 1]) if "--days" in args else 7
@@ -234,7 +258,9 @@ def main():
 
     engine = Engine(conn, sport)
     version = engine.params["version"]
-    inputs = nfl_inputs(conn, games) if sport == "nfl" else {g["id"]: {} for g in games}
+    inputs = (nfl_inputs(conn, games) if sport == "nfl"
+              else basketball_inputs(conn, sport, games) if sport in ("nba", "ncaab")
+              else {g["id"]: {} for g in games})
     counts = {"logged": 0, "unchanged": 0}
     print(f"{sport.upper()} slate, next {days} days | model {version} | "
           f"flag threshold {config.EDGE_THRESHOLD:.0%} | your books: {', '.join(config.MY_BOOKS)}")

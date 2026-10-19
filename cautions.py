@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 
 import db
 
-from pull_history import CURRENT_SEASON
+from pull_history import current_season
 
 STALE_ODDS_HOURS = 3     # flagged only within 24 hours of kickoff
 FEW_BOOKS = 4
@@ -23,7 +23,7 @@ LARGE_EDGE = 0.10
 def games_played(conn, sport, team):
     return conn.execute(
         "SELECT COUNT(*) FROM hist_games WHERE sport = ? AND season = ? AND ? IN (home_team, away_team)",
-        (sport, CURRENT_SEASON, team)).fetchone()[0]
+        (sport, current_season(sport), team)).fetchone()[0]
 
 
 def qb_status(conn, g, pred):
@@ -84,9 +84,11 @@ def game_warnings(conn, g, pred, mkt, now=None):
             edge = abs(pred["p_home"] - mkt["p_home"])
             if edge >= LARGE_EDGE:
                 out.append(f"edge of {edge * 100:.0f} pts: in backtests, edges this big were usually model error")
-            if g["sport"] == "ncaaf" and edge >= 0.04 and not conn.execute(
-                    "SELECT 1 FROM adjustments WHERE game_id = ?", (g["id"],)).fetchone():
+            reviewed = conn.execute("SELECT 1 FROM adjustments WHERE game_id = ?", (g["id"],)).fetchone()
+            if g["sport"] in ("ncaaf", "ncaab") and edge >= 0.04 and not reviewed:
                 out.append("news not checked for this game (the model can't see college injuries)")
+            if g["sport"] == "nba" and not reviewed:
+                out.append("injury report not checked (the model can't see who's sitting out)")
 
     # Early season: ratings still settling
     for side in ("away", "home"):

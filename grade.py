@@ -25,7 +25,7 @@ import sys
 import config
 import db
 from odds_math import decimal_odds, no_vig
-from pull_history import CURRENT_SEASON
+from pull_history import CURRENT_SEASON, current_season
 
 SOURCES = ("engine", "claude", "me")
 CLOSE_WARN_MIN = 60
@@ -177,9 +177,9 @@ def print_scorecard(sport, season, games, stats, approx_close):
 
 def main():
     a = sys.argv[1:]
-    if not a or a[0] not in ("nfl", "ncaaf"):
+    if not a or a[0] not in ("nfl", "ncaaf", "nba", "ncaab"):
         sys.exit(__doc__)
-    season = int(a[a.index("--season") + 1]) if "--season" in a else CURRENT_SEASON
+    season = int(a[a.index("--season") + 1]) if "--season" in a else current_season(a[0])
     conn = db.connect()
     print_scorecard(a[0], season, *grade(conn, a[0], season))
 

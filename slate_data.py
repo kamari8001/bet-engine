@@ -14,7 +14,7 @@ import grade
 from cautions import game_warnings, qb_status
 from odds_math import decimal_odds, fair_moneyline, no_vig
 from predict import ODDS_MAX_AGE, latest_odds, parse_utc
-from pull_history import CURRENT_SEASON
+from pull_history import CURRENT_SEASON, current_season
 from teams import nfl_logo_url
 
 SOURCES = ("engine", "claude", "me")
@@ -72,7 +72,7 @@ def team_form(conn, sport, team, before_utc, n=5):
     rows = conn.execute(
         "SELECT * FROM hist_games WHERE sport = ? AND season = ? AND ? IN (home_team, away_team)"
         " AND coalesce(kickoff_utc, game_date_et) < ? ORDER BY game_date_et DESC, kickoff_utc DESC",
-        (sport, CURRENT_SEASON, team, before_utc)).fetchall()
+        (sport, current_season(sport), team, before_utc)).fetchall()
     games, w, l, t = [], 0, 0, 0
     for r in rows:
         home = r["home_team"] == team
@@ -318,7 +318,7 @@ def my_picks(conn, now, college):
 # ---------- scorecard ----------
 
 def scorecard(conn, sport):
-    games, stats, approx = grade.grade(conn, sport, CURRENT_SEASON)
+    games, stats, approx = grade.grade(conn, sport, current_season(sport))
     tiles = {}
     for s in ("market",) + SOURCES:
         st = stats[s]
