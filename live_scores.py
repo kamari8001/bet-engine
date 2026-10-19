@@ -16,6 +16,9 @@ URLS = {
     "nfl": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates={date}",
     "ncaaf": ("https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard"
               "?dates={date}&groups=80&limit=300"),
+    "nba": "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates={date}",
+    "ncaab": ("https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard"
+              "?dates={date}&groups=50&limit=400"),
 }
 CACHE_SECONDS = 30
 _cache = {}  # (sport, date) -> (fetched at, {espn id: info})

@@ -81,7 +81,7 @@ A sports prediction engine for **moneyline betting**.
 
 Update this section at the end of each session: what's working, what's next, any open problems.
 
-Last updated 2026-10-16.
+Last updated 2026-10-19.
 
 - **Working:**
   - Database and logbook with rules enforced by the database itself (`schema.sql`, `db.py`; `python3 test_db.py` checks them).
@@ -107,7 +107,8 @@ Last updated 2026-10-16.
   - Shadow mode (`shadow.py`, tables `shadow_predictions` / `shadow_bets`): pre-registered challengers (`backtest_results/shadow_challengers.md`) log before kickoff, apart from the real logbook; scorecard on the Scorecard tab and `shadow.py report`. Started 2026-10-18 with `nfl_after_blowout_loss_v1`, `nfl_back_popular_v1`, `market_anchor_v1`. Never edit a challenger; make a new version. Eligible challengers wait for Talal's decision.
   - Market-pattern tests (`market_patterns.py`, `backtest_results/market_patterns_plan.md`): no pre-registered pattern beat the closing line.
   - College news step: scheduled checks (Sat 9:30 AM; Tue-Fri 4 PM) review college games where engine and market differ by 4+ points (`news.py targets`), recording `news.py reviewed` (0-point) or capped `news.py adjust` (scale: starting QB out = 3, questionable = 1.5, several key starters = 1-2). Cap stays at 3; a data-driven college QB model is a possible later project. Claude's college record covers a selected (harder) set of games, so judge it by head-to-head.
-- **Next:** Talal postponed basketball; the improvement list is done. Waiting on data: evidence-based confidence and rule-8 blending (200 graded games per sport), shadow challengers' promotion bars. Evidence-based Low/Medium/High confidence after 200 graded games per sport.
+  - Basketball (v2.0.0, 2026-10-19): NBA (ESPN history 2015-2026 + live schedule/results) and college basketball (CBBD), models `nba-v1-refit` / `ncaab-v1-refit` (ratings + home court + rest days from the schedule). Final exams in `backtest_results/criteria_basketball.md`: both calibrated, both trail the market, no money edge. Past odds count only real sportsbooks' pregame prices (`odds_math.is_pregame_sportsbook`). Daily refresh: `pull_basketball_history.py nba|ncaab current`. News: scheduled NBA injury checks (noon, 6 PM; every game) and college basketball checks (11 AM, 5 PM; 4+ point disagreements). Basketball seasons are labeled by the year they end (2027 = 2026-27).
+- **Next:** watch basketball's first live week; buy the $30 Odds API plan when college basketball starts (Nov 3) (Talal approved). Possible later projects: preseason roster data for basketball early-season ratings, a data-driven player-impact model (the 3-point cap is too small for a missing star). Then club soccer. Waiting on data: evidence-based confidence and rule-8 blending (200 graded games per sport), shadow challengers' promotion bars. Evidence-based Low/Medium/High confidence after 200 graded games per sport.
 - **Open items:**
   - Pulls run by hand for now. Closing lines need a pull shortly before each kickoff, which needs automation. Watch credit use; college Saturdays may push us to the $30 plan.
   - Results load on the next `pull_games.py` run after games finish. Cancelled/postponed games: `game_status.py` (feeds rarely flag them); kickoffs can move later, never earlier than a logged prediction; every change is logged in `schedule_changes`.

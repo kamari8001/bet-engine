@@ -41,12 +41,13 @@ CATCHUP_STALE = timedelta(hours=2)          # ...and pull if odds are older than
 WOKE_GAP = timedelta(minutes=20)            # a gap this long between runs = Mac was asleep
 LOW_CREDITS_WARN = 150                       # notify below this
 COLLEGE_WINDOWS_MIN_CREDITS = 100            # below this, skip college pre-kickoff pulls
-SPORTS = ("nfl", "ncaaf")
+SPORTS = ("nfl", "ncaaf", "nba", "ncaab")
 
-MORNING = [["pull_games.py", "all"], ["pull_history.py", "all", "--current"], ["pull_odds.py", "all"],
-           ["predict.py", "nfl"], ["predict.py", "ncaaf"], ["shadow.py", "log", "all"],
-           ["grade.py", "nfl"], ["grade.py", "ncaaf"]]
-NIGHT = [["pull_games.py", "all"], ["grade.py", "nfl"], ["grade.py", "ncaaf"]]
+MORNING = [["pull_games.py", "all"], ["pull_history.py", "all", "--current"],
+           ["pull_basketball_history.py", "nba", "current"], ["pull_basketball_history.py", "ncaab", "current"],
+           ["pull_odds.py", "all"]] + [["predict.py", s] for s in SPORTS] + [["shadow.py", "log", "all"]] \
+          + [["grade.py", s] for s in SPORTS]
+NIGHT = [["pull_games.py", "all"]] + [["grade.py", s] for s in SPORTS]
 
 
 def online():
@@ -222,7 +223,7 @@ def main():
             notify(f"Odds API credits low: {credits} left this month.")
 
     for name, (kind, key), steps in tasks:
-        if kind == "windows" and key.startswith("ncaaf") and credits is not None \
+        if kind == "windows" and key.startswith(("ncaaf", "ncaab")) and credits is not None \
                 and credits < COLLEGE_WINDOWS_MIN_CREDITS:
             log(f"skipping {name}: only {credits} credits left (saving them for NFL)")
             continue

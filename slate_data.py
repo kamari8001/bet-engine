@@ -15,7 +15,7 @@ from cautions import game_warnings, qb_status
 from odds_math import decimal_odds, fair_moneyline, no_vig
 from predict import ODDS_MAX_AGE, latest_odds, parse_utc
 from pull_history import CURRENT_SEASON, current_season
-from teams import nfl_logo_url
+from teams import nba_logo_url, nfl_logo_url
 
 SOURCES = ("engine", "claude", "me")
 LOGO_CACHE = Path(__file__).parent / "cache" / "cfbd_teams.json"
@@ -56,7 +56,28 @@ def college_logos():
 
 
 def logo_for(sport, team, college):
-    return nfl_logo_url(team) if sport == "nfl" else college.get(team)
+    if sport == "nfl":
+        return nfl_logo_url(team)
+    if sport == "nba":
+        return nba_logo_url(team)
+    return college.get(team) or _cbb_logos().get(team)
+
+
+_cbb_cache = {}
+
+
+def _cbb_logos():
+    """{school: dark-background logo} for college basketball, from the cached CBBD team list."""
+    if not _cbb_cache:
+        try:
+            from teams import cbbd_teams
+            for t in cbbd_teams():
+                dark = next((u for u in t.get("logos") or [] if "logos-dark/" in u), None)
+                if dark:
+                    _cbb_cache[t["school"]] = dark.replace("/500/", "/64/")
+        except Exception:
+            pass
+    return _cbb_cache
 
 
 # ---------- one game card ----------

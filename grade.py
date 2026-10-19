@@ -25,7 +25,7 @@ import sys
 import config
 import db
 from odds_math import decimal_odds, no_vig
-from pull_history import CURRENT_SEASON, current_season
+from pull_history import CURRENT_SEASON, current_season, season_label
 
 SOURCES = ("engine", "claude", "me")
 CLOSE_WARN_MIN = 60
@@ -131,7 +131,7 @@ def print_head_to_head(per_game):
 
 
 def print_scorecard(sport, season, games, stats, approx_close):
-    print(f"===== {sport.upper()} {season} scorecard: {len(games)} finished games =====")
+    print(f"===== {sport.upper()} {season_label(sport, season)} scorecard: {len(games)} finished games =====")
     if approx_close:
         print(f"Note: {approx_close} game(s) had no odds pull within {CLOSE_WARN_MIN} min of kickoff; "
               "their closing line is approximate.")

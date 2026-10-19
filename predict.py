@@ -254,7 +254,8 @@ def main():
         " ORDER BY start_time_utc, id",
         (sport, db.to_utc(now), db.to_utc(now + timedelta(days=days)))).fetchall()
     if not games:
-        sys.exit(f"No {sport.upper()} games in the next {days} days.")
+        print(f"No {sport.upper()} games in the next {days} days.")
+        return
 
     engine = Engine(conn, sport)
     version = engine.params["version"]

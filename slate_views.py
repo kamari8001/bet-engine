@@ -5,6 +5,7 @@ import json
 
 import config
 import db
+from pull_history import SHORT_NAMES, SPORT_NAMES
 from version import APP_NAME, APP_VERSION, model_versions
 
 esc = html.escape
@@ -147,14 +148,13 @@ document.querySelectorAll('.card').forEach(function (c) {
 def page(title, active, body, msg=None, scripts=""):
     tabs = "".join(
         f'<a class="{"on" if active == key else ""}" href="{url}">{label}</a>'
-        for key, url, label in (("slate-nfl", "/slate?sport=nfl", "NFL"),
-                                ("slate-ncaaf", "/slate?sport=ncaaf", "College"),
-                                ("live", "/live", "Live"),
+        for key, url, label in tuple((f"slate-{s}", f"/slate?sport={s}", SHORT_NAMES[s]) for s in SHORT_NAMES)
+                                + (("live", "/live", "Live"),
                                 ("mine", "/mine", "My picks"),
-                                ("score", "/scorecard?sport=nfl", "Scorecard")))
+                                   ("score", "/scorecard?sport=nfl", "Scorecard")))
     banner = f'<div class="msg {msg[0]}">{esc(msg[1])}</div>' if msg else ""
     mv = model_versions()
-    models = "models: " + ", ".join(f"{'NFL' if k == 'nfl' else 'College'} {v}" for k, v in mv.items())
+    models = "models: " + ", ".join(f"{SHORT_NAMES.get(k, k)} {v}" for k, v in mv.items())
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>{esc(title)} &middot; {esc(APP_NAME)}</title>
 <style>{CSS}</style></head><body>
@@ -290,7 +290,7 @@ def card(v):
 
 
 def slate_page(sport, days, groups, msg):
-    label = "NFL" if sport == "nfl" else "College"
+    label = SPORT_NAMES[sport]
     if not groups:
         body = f"<p class='note'>No {label} games in the next {days} days.</p>"
     else:
@@ -368,7 +368,7 @@ def live_page(groups, error, sport, counts):
     toggle = ('<div class="toggle">' + "".join(
         f'<a class="{"on" if sport == k else ""}" href="/live?sport={k}">{n}'
         f'{f" <span class=note>({counts[k]} live)</span>" if counts.get(k) else ""}</a>'
-        for k, n in (("nfl", "NFL"), ("ncaaf", "College"))) + "</div>")
+        for k, n in SHORT_NAMES.items()) + "</div>")
     intro = toggle + ("<p class='note'>Scores from ESPN, refreshed every minute while this tab is open (last update "
              "<span id='upd'>now</span>). Display only: official results still come from nflverse and CFBD. "
              "Picks are the ones logged before kickoff.</p>")
@@ -498,10 +498,10 @@ document.querySelectorAll('.chart-wrap').forEach(function (w) {
 
 
 def scorecard_page(sport, sc):
-    label = "NFL" if sport == "nfl" else "College"
+    label = SPORT_NAMES[sport]
     switch = ('<div class="toggle">' + "".join(
         f'<a class="{"on" if sport == k else ""}" href="/scorecard?sport={k}">{n}</a>'
-        for k, n in (("nfl", "NFL"), ("ncaaf", "College"))) + "</div>")
+        for k, n in SHORT_NAMES.items()) + "</div>")
     t = sc["tiles"]
     tiles = '<div class="tiles">'
     for src in ("market", "engine", "claude", "me"):
