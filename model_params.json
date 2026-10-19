@@ -68,45 +68,17 @@
     "note": "Refit on all seasons after the final exam; judged on live results only."
   },
   "nba": {
-    "version": "nba-v1-20261019",
+    "version": "nba-v1-refit-20261019",
     "ratings": {
       "k": 0.02954,
-      "hfa_start": 2.46528,
+      "hfa_start": 1.97839,
       "hfa_rate": 0.0,
-      "regress": 0.30793,
-      "cap": 33.25,
+      "regress": 0.48151,
+      "cap": 35.5775,
       "sigma": 11.00501,
       "new_team": 0.0,
       "avg_rate": 0.002,
-      "rest_coef": 0.58062,
-      "rest_cap": 3
-    },
-    "combiner": null,
-    "calibration": {
-      "a": 0.828,
-      "b": -0.0557
-    },
-    "tune_seasons": [
-      2015,
-      2020
-    ],
-    "check_seasons": [
-      2021,
-      2023
-    ]
-  },
-  "ncaab": {
-    "version": "ncaab-v1-20261019",
-    "ratings": {
-      "k": 0.10354,
-      "hfa_start": 4.25863,
-      "hfa_rate": 0.0,
-      "regress": 0.00013,
-      "cap": 44.2225,
-      "sigma": 11.77,
-      "new_team": 0.0,
-      "avg_rate": 0.002,
-      "rest_coef": 0.00791,
+      "rest_coef": 0.77222,
       "rest_cap": 3
     },
     "combiner": null,
@@ -114,13 +86,35 @@
       "a": 1.0,
       "b": 0.0
     },
-    "tune_seasons": [
+    "fit_seasons": [
       2015,
-      2020
+      2026
     ],
-    "check_seasons": [
-      2021,
-      2023
-    ]
+    "note": "Refit on all seasons after the final exam; judged on live results only."
+  },
+  "ncaab": {
+    "version": "ncaab-v1-refit-20261019",
+    "ratings": {
+      "k": 0.09629,
+      "hfa_start": 3.87322,
+      "hfa_rate": 0.0,
+      "regress": 0.00013,
+      "cap": 44.2225,
+      "sigma": 11.77,
+      "new_team": 0.0,
+      "avg_rate": 0.002,
+      "rest_coef": 0.00396,
+      "rest_cap": 3
+    },
+    "combiner": null,
+    "calibration": {
+      "a": 1.0,
+      "b": 0.0
+    },
+    "fit_seasons": [
+      2015,
+      2026
+    ],
+    "note": "Refit on all seasons after the final exam; judged on live results only."
   }
 }
