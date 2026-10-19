@@ -1,6 +1,6 @@
 # Club soccer: build plan
 
-Written 2026-10-19. Status: **proposed, waiting for Talal's OK.** Nothing here is built yet.
+Written 2026-10-19. Status: **approved 2026-10-19** (all four recommendations: Big 5 leagues, draws can be flagged, scheduled weekend Mac wake set by Talal, live after the Nov 3 Odds API plan). Not built yet.
 Sport code in the database: `soccer_club` (already allowed by the schema).
 
 ## What changes compared with football and basketball

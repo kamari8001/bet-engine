@@ -18,7 +18,7 @@ CSS = """
         --soft:#c3c9d1; --accent:#58a6ff; --good:#3fb950; --flag:#d29922; --warn:#f0883e; --bad:#f85149; }
 * { box-sizing:border-box; }
 body { margin:0; background:var(--bg); color:var(--text);
-       font:14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+       font:14px/1.45 "Doppio One", system-ui, -apple-system, "Segoe UI", sans-serif; }
 header { position:sticky; top:0; z-index:20; background:rgba(14,17,22,.96); border-bottom:1px solid var(--line);
          padding:12px 20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
 header h1 { font-size:16px; margin:0 6px 0 0; white-space:nowrap; }
@@ -157,6 +157,8 @@ def page(title, active, body, msg=None, scripts=""):
     models = "models: " + ", ".join(f"{SHORT_NAMES.get(k, k)} {v}" for k, v in mv.items())
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>{esc(title)} &middot; {esc(APP_NAME)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Doppio+One&display=swap" rel="stylesheet">
 <style>{CSS}</style></head><body>
 <header><h1>{esc(APP_NAME)} <span class="ver" title="{esc(models)}">v{APP_VERSION}</span></h1><nav>{tabs}</nav>
 <span class="note">{esc(models)} &middot; all flags are low confidence, paper only</span></header>

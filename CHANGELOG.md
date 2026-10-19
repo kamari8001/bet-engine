@@ -4,6 +4,9 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 2.1.2 (2026-10-19)
+- Slate page font: Doppio One (Google Fonts). Falls back to the system font when offline.
+
 ## 2.1.1 (2026-10-19): health-check fixes
 - Pre-game refreshes no longer stop because an earlier game that day has no result loaded yet.
   Now only games whose own team is waiting on a result are skipped; if any result is 24+ hours
