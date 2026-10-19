@@ -4,6 +4,8 @@ Usage:
   python3 pull_basketball_history.py ncaab            college: games + lines from CBBD (about 150 calls)
   python3 pull_basketball_history.py nba games        NBA scores from ESPN, one request per day (resumable)
   python3 pull_basketball_history.py nba odds         NBA moneylines from ESPN, one request per game (resumable)
+  python3 pull_basketball_history.py nba current      this season's finished NBA games (recent days only; daily)
+  python3 pull_basketball_history.py ncaab current    this season's finished college games (last 4 days; 1 CBBD call)
   python3 pull_basketball_history.py summary          what's loaded so far
 
 Seasons are labeled by the year they end (2025 = the 2024-25 season), like the sources.
@@ -54,11 +56,11 @@ def espn_get(url):
 
 # ---------- NBA ----------
 
-def nba_games(conn):
+def nba_games(conn, start=NBA_START):
     """Every completed regular-season / play-in / playoff game, day by day. Skips days already done."""
     have_days = {r[0] for r in conn.execute("SELECT DISTINCT game_date_et FROM hist_games WHERE sport = 'nba'")}
     today = datetime.now(timezone.utc).astimezone(db.EASTERN).date()
-    d, fails, added = NBA_START, 0, 0
+    d, fails, added = start, 0, 0
     while d < today:
         key = d.isoformat()
         if key in have_days and d < today - timedelta(days=3):
@@ -223,6 +225,32 @@ def ncaab(conn):
     print(f"College basketball loaded ({calls} CBBD calls).")
 
 
+def ncaab_current(conn):
+    """Finished college games from the last 4 days of this season (one CBBD call), added if new."""
+    from pull_history import current_season
+    headers = {"Authorization": f"Bearer {config.CFBD_API_KEY}"}
+    today = datetime.now(timezone.utc).astimezone(db.EASTERN).date()
+    games = cbbd_get(f"/games?season={current_season('ncaab')}&startDateRange={today - timedelta(days=4)}"
+                     f"&endDateRange={today + timedelta(days=1)}", headers)
+    added = 0
+    for g in games:
+        if g.get("status") != "final" or g.get("homePoints") is None or g.get("awayPoints") is None:
+            continue
+        if conn.execute("SELECT 1 FROM hist_games WHERE source = 'cbbd' AND external_id = ?", (str(g["id"]),)).fetchone():
+            continue
+        start = datetime.strptime(g["startDate"][:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
+        et = start.astimezone(db.EASTERN)
+        insert_game(conn, sport="ncaab", season=current_season("ncaab"), week=None,
+                    season_type="regular" if g.get("seasonType") == "regular" else "postseason",
+                    game_date_et=et.strftime("%Y-%m-%d"), kickoff_et=et.strftime("%Y-%m-%d %H:%M"),
+                    kickoff_utc=db.to_utc(start), home_team=g["homeTeam"], away_team=g["awayTeam"],
+                    home_score=g["homePoints"], away_score=g["awayPoints"],
+                    neutral_site=int(bool(g.get("neutralSite"))), source="cbbd", external_id=str(g["id"]))
+        added += 1
+    conn.commit()
+    print(f"College basketball (this season): {added} new finished games.")
+
+
 def summary(conn):
     for sport in ("nba", "ncaab"):
         print(f"\n{sport.upper()}: season  games  with moneyline")
@@ -241,6 +269,12 @@ def main():
         ncaab(conn)
     elif a == ["nba", "games"]:
         nba_games(conn)
+    elif a == ["nba", "current"]:
+        today = datetime.now(timezone.utc).astimezone(db.EASTERN).date()
+        nba_games(conn, start=max(date(today.year if today.month >= 8 else today.year - 1, 10, 1),
+                                  today - timedelta(days=10)))
+    elif a == ["ncaab", "current"]:
+        ncaab_current(conn)
     elif a == ["nba", "odds"]:
         nba_odds(conn)
     elif a == ["summary"]:

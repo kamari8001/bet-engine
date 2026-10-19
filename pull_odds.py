@@ -20,7 +20,8 @@ import db
 from teams import TeamNames
 
 API = "https://api.the-odds-api.com/v4"
-SPORT_KEYS = {"nfl": "americanfootball_nfl", "ncaaf": "americanfootball_ncaaf"}
+SPORT_KEYS = {"nfl": "americanfootball_nfl", "ncaaf": "americanfootball_ncaaf",
+              "nba": "basketball_nba", "ncaab": "basketball_ncaab"}
 MIN_CREDITS = 50
 KICKOFF_TOLERANCE = timedelta(minutes=15)   # warn if the two sources disagree by more
 SAME_GAME_WINDOW = timedelta(hours=24)      # how far apart kickoffs can be and still match
@@ -144,6 +145,16 @@ def main():
     sports = list(SPORT_KEYS) if sys.argv[1:] == ["all"] else sys.argv[1:]
     if not sports or any(s not in SPORT_KEYS for s in sports):
         sys.exit(__doc__)
+    if sys.argv[1:] == ["all"]:
+        # Only sports with games in the next 7 days, so an off-season sport doesn't cost credits
+        conn = db.connect()
+        soon = db.to_utc(datetime.now(timezone.utc) + timedelta(days=7))
+        now_txt = db.to_utc(datetime.now(timezone.utc))
+        sports = [s for s in sports if conn.execute(
+            "SELECT 1 FROM games WHERE sport = ? AND start_time_utc > ? AND start_time_utc <= ?",
+            (s, now_txt, soon)).fetchone()]
+        if not sports:
+            sys.exit("No sport has games in the next 7 days; nothing to pull.")
     if not config.ODDS_API_KEY:
         sys.exit("ODDS_API_KEY is empty in .env")
     try:

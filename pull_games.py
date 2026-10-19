@@ -18,7 +18,7 @@ from datetime import datetime, timedelta, timezone
 
 import config
 import db
-from pull_history import CFBD, CURRENT_SEASON, NFLVERSE_GAMES, blank, fetch
+from pull_history import CFBD, CURRENT_SEASON, NFLVERSE_GAMES, blank, current_season, fetch
 
 
 def nfl_games():
@@ -62,7 +62,53 @@ def ncaaf_games():
                    away_score=g["awayPoints"] if done else None)
 
 
-SOURCES = {"nfl": ("nflverse", nfl_games), "ncaaf": ("cfbd", ncaaf_games)}
+def nba_games():
+    """NBA games from ESPN's scoreboard, 3 days back (for results) through 7 days ahead."""
+    from pull_basketball_history import ESPN_DAY, NBA_TEAMS, NBA_TYPES, espn_get
+    today = datetime.now(timezone.utc).astimezone(db.EASTERN).date()
+    for offset in range(-3, 8):
+        d = today + timedelta(days=offset)
+        data = espn_get(ESPN_DAY.format(d=d.strftime("%Y%m%d"))) or {}
+        for e in data.get("events", []):
+            if NBA_TYPES.get(e["season"]["type"]) is None:
+                continue  # preseason and All-Star
+            comp = e["competitions"][0]
+            teams = {t["homeAway"]: t for t in comp["competitors"]}
+            home, away = teams["home"]["team"]["abbreviation"], teams["away"]["team"]["abbreviation"]
+            if {home, away} - NBA_TEAMS:
+                continue
+            done = e["status"]["type"].get("completed")
+            kickoff = datetime.strptime(e["date"][:16], "%Y-%m-%dT%H:%M").replace(tzinfo=timezone.utc)
+            yield dict(external_id=e["id"], league="NBA", kickoff=kickoff, espn_id=e["id"],
+                       home_team=home, away_team=away, neutral_site=bool(comp.get("neutralSite")),
+                       live_eligible=True,
+                       home_score=int(teams["home"]["score"]) if done else None,
+                       away_score=int(teams["away"]["score"]) if done else None)
+
+
+def ncaab_games():
+    """College basketball games from CBBD, 3 days back through 7 days ahead (1 call)."""
+    if not config.CFBD_API_KEY:
+        raise RuntimeError("CFBD_API_KEY is empty in .env (CBBD uses the same key)")
+    from pull_basketball_history import cbbd_get
+    headers = {"Authorization": f"Bearer {config.CFBD_API_KEY}"}
+    today = datetime.now(timezone.utc).astimezone(db.EASTERN).date()
+    games = cbbd_get(f"/games?season={current_season('ncaab')}&startDateRange={today - timedelta(days=3)}"
+                     f"&endDateRange={today + timedelta(days=7)}", headers)
+    for g in games:
+        kickoff = None
+        if not g.get("startTimeTbd"):
+            kickoff = datetime.strptime(g["startDate"][:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
+        done = g.get("status") == "final" and g.get("homePoints") is not None
+        yield dict(external_id=str(g["id"]), league="NCAAB", kickoff=kickoff,
+                   espn_id=str(g["sourceId"]) if g.get("sourceId") else None,
+                   home_team=g["homeTeam"], away_team=g["awayTeam"], neutral_site=bool(g.get("neutralSite")),
+                   live_eligible=True,
+                   home_score=g["homePoints"] if done else None, away_score=g["awayPoints"] if done else None)
+
+
+SOURCES = {"nfl": ("nflverse", nfl_games), "ncaaf": ("cfbd", ncaaf_games),
+           "nba": ("espn", nba_games), "ncaab": ("cbbd", ncaab_games)}
 
 
 def sync(conn, sport):
@@ -85,7 +131,7 @@ def sync(conn, sport):
                 continue
             if g["kickoff"] <= now:
                 continue  # in progress; too late to log anything
-            gid = db.add_game(conn, sport, g["league"], str(CURRENT_SEASON), g["home_team"],
+            gid = db.add_game(conn, sport, g["league"], str(current_season(sport)), g["home_team"],
                               g["away_team"], g["kickoff"], source=source,
                               external_id=g["external_id"], neutral_site=g["neutral_site"])
             conn.execute("UPDATE games SET espn_id = ? WHERE id = ?", (g["espn_id"], gid))

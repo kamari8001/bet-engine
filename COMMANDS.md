@@ -6,7 +6,7 @@ Run everything from the project folder. If a terminal starts somewhere else:
 cd ~/bet-engine
 ```
 
-`nfl` can be swapped for `ncaaf` (college) and, where noted, `all` (both).
+`nfl` can be swapped for `ncaaf` (college football), `nba`, or `ncaab` (college basketball), and, where noted, `all` (every sport in season).
 
 ## Everyday
 
@@ -29,6 +29,8 @@ Typical order: `pull_games` → `pull_odds` → `pull_history --current` → `pr
 | `python3 pull_games.py all` | New games, kickoff time changes, and final scores |
 | `python3 pull_odds.py all` | Current moneylines from 10 books. **Costs 1 credit per sport.** |
 | `python3 pull_history.py all --current` | Refreshes this season's history so the model's ratings are current |
+| `python3 pull_basketball_history.py nba current` | Same for the NBA (recent days from ESPN) |
+| `python3 pull_basketball_history.py ncaab current` | Same for college basketball (1 CBBD call) |
 | `python3 predict.py nfl` | Logs engine and claude predictions and prints the slate with edges. Add `--days 3` to change how far ahead it looks. |
 
 ## Automation
@@ -93,6 +95,7 @@ Challengers and the promotion bar are fixed in `backtest_results/shadow_challeng
 | `python3 backtest.py refit nfl` | Refits on all seasons for live use (overwrites saved settings) |
 | `python3 market_patterns.py` | Pre-registered tests of whether kinds of games (home underdogs, big favorites, etc.) are mispriced; see `backtest_results/market_patterns_plan.md` |
 | `python3 pull_history.py all` | Reloads *all* past seasons. Slow; about 50 college API calls. |
+| `python3 pull_basketball_history.py summary` | What basketball history is loaded (games and moneylines per season) |
 
 **Avoid `backtest.py final`**: the one-time final exam has already been used. Running it again is recorded with a warning.
 

@@ -25,7 +25,13 @@ NFLVERSE_TEAM_WEEK = ("https://github.com/nflverse/nflverse-data/releases/downlo
 NFL_FRANCHISE = {"SD": "LAC", "OAK": "LV", "STL": "LA"}
 CFBD = "https://api.collegefootballdata.com"
 CFBD_FIRST_SEASON = 2013
-CURRENT_SEASON = 2026
+CURRENT_SEASON = 2026   # football (seasons are labeled by the year they start)
+# Basketball seasons are labeled by the year they end (2027 = the 2026-27 season), like the sources.
+SEASONS = {"nfl": 2026, "ncaaf": 2026, "nba": 2027, "ncaab": 2027}
+
+
+def current_season(sport):
+    return SEASONS[sport]
 
 
 def fetch(url, headers=None):

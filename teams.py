@@ -64,11 +64,14 @@ def load_college_names():
 class TeamNames:
     def __init__(self, sport):
         self.sport = sport
-        self.college = load_college_names() if sport == "ncaaf" else None
+        self.college = (load_college_names() if sport == "ncaaf"
+                        else load_ncaab_names() if sport == "ncaab" else None)
 
     def lookup(self, odds_api_name):
         if self.sport == "nfl":
             return NFL.get(odds_api_name)
+        if self.sport == "nba":
+            return NBA.get(odds_api_name)
         return self.college.get(normalize(odds_api_name))
 
 
@@ -90,3 +93,60 @@ NFL_ESPN_CODE = {"LA": "lar", "WAS": "wsh"}
 def nfl_logo_url(team):
     code = NFL_ESPN_CODE.get(team, team.lower())
     return f"https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/{code}.png&h=64&w=64"
+
+
+
+# NBA: Odds API name -> ESPN code (as stored in the games and history tables)
+NBA = {
+    "Atlanta Hawks": "ATL", "Boston Celtics": "BOS", "Brooklyn Nets": "BKN", "Charlotte Hornets": "CHA",
+    "Chicago Bulls": "CHI", "Cleveland Cavaliers": "CLE", "Dallas Mavericks": "DAL", "Denver Nuggets": "DEN",
+    "Detroit Pistons": "DET", "Golden State Warriors": "GS", "Houston Rockets": "HOU", "Indiana Pacers": "IND",
+    "Los Angeles Clippers": "LAC", "Los Angeles Lakers": "LAL", "Memphis Grizzlies": "MEM", "Miami Heat": "MIA",
+    "Milwaukee Bucks": "MIL", "Minnesota Timberwolves": "MIN", "New Orleans Pelicans": "NO", "New York Knicks": "NY",
+    "Oklahoma City Thunder": "OKC", "Orlando Magic": "ORL", "Philadelphia 76ers": "PHI", "Phoenix Suns": "PHX",
+    "Portland Trail Blazers": "POR", "Sacramento Kings": "SAC", "San Antonio Spurs": "SA", "Toronto Raptors": "TOR",
+    "Utah Jazz": "UTAH", "Washington Wizards": "WSH",
+}
+
+# College basketball: Odds API name -> CBBD school, for names the automatic rule can't work out.
+NCAAB_OVERRIDES = {}
+
+
+def cbbd_teams():
+    """CBBD's team list, cached for a week in cache/cbbd_teams.json (1 CBBD call to refresh)."""
+    import time
+    from pathlib import Path
+    cache = Path(__file__).parent / "cache" / "cbbd_teams.json"
+    if not cache.exists() or time.time() - cache.stat().st_mtime > 7 * 86400:
+        try:
+            req = urllib.request.Request("https://api.collegebasketballdata.com/teams",
+                                         headers={"Authorization": f"Bearer {config.CFBD_API_KEY}"})
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                data = json.load(resp)
+            cache.parent.mkdir(exist_ok=True)
+            cache.write_text(json.dumps(data))
+        except Exception:
+            if not cache.exists():
+                raise
+    return json.loads(cache.read_text())
+
+
+def load_ncaab_names():
+    names, ambiguous = {}, set()
+    for t in cbbd_teams():
+        for full in {t.get("displayName") or "", f"{t['school']} {t.get('mascot') or ''}"}:
+            key = normalize(full)
+            if not key:
+                continue
+            if key in names and names[key] != t["school"]:
+                ambiguous.add(key)
+            names[key] = t["school"]
+    for key in ambiguous:
+        del names[key]
+    for odds_name, school in NCAAB_OVERRIDES.items():
+        names[normalize(odds_name)] = school
+    return names
+
+
+def nba_logo_url(team):
+    return f"https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/{team.lower()}.png&h=64&w=64"
