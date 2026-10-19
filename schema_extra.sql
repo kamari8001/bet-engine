@@ -325,3 +325,44 @@ BEGIN SELECT RAISE(ABORT, 'shadow bets can never be changed'); END;
 
 CREATE TRIGGER IF NOT EXISTS shadow_bets_no_delete BEFORE DELETE ON shadow_bets
 BEGIN SELECT RAISE(ABORT, 'shadow bets can never be deleted'); END;
+
+
+------------------------------------------------------------------------
+-- expert_signals: what expert sources showed before kickoff, with the link.
+-- dk_splits: DraftKings moneyline share of money (handle) and of bets, per side.
+-- circa_consensus: a most-picked side in the Circa Million contest, with its rank.
+-- Add-only, before kickoff, like the logbook.
+------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS expert_signals (
+    id           INTEGER PRIMARY KEY,
+    game_id      INTEGER NOT NULL REFERENCES games(id),
+    source       TEXT NOT NULL CHECK (source IN ('dk_splits', 'circa_consensus')),
+    side         TEXT CHECK (side IS NULL OR side IN ('home', 'away')),
+    home_handle  REAL CHECK (home_handle IS NULL OR home_handle BETWEEN 0 AND 100),
+    home_bets    REAL CHECK (home_bets IS NULL OR home_bets BETWEEN 0 AND 100),
+    away_handle  REAL CHECK (away_handle IS NULL OR away_handle BETWEEN 0 AND 100),
+    away_bets    REAL CHECK (away_bets IS NULL OR away_bets BETWEEN 0 AND 100),
+    pick_pct     REAL CHECK (pick_pct IS NULL OR pick_pct BETWEEN 0 AND 100),
+    pick_rank    INTEGER CHECK (pick_rank IS NULL OR pick_rank >= 1),
+    source_url   TEXT NOT NULL CHECK (source_url LIKE 'http://_%' OR source_url LIKE 'https://_%'),
+    created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+    CHECK (source <> 'dk_splits' OR (home_handle IS NOT NULL AND home_bets IS NOT NULL
+                                    AND away_handle IS NOT NULL AND away_bets IS NOT NULL
+                                    AND abs(home_handle + away_handle - 100) <= 2
+                                    AND abs(home_bets + away_bets - 100) <= 2)),
+    CHECK (source <> 'circa_consensus' OR (side IS NOT NULL AND pick_pct IS NOT NULL AND pick_rank IS NOT NULL))
+);
+
+CREATE TRIGGER IF NOT EXISTS expert_signals_current BEFORE INSERT ON expert_signals
+WHEN abs(julianday(NEW.created_at) - julianday('now')) * 86400 > 5
+BEGIN SELECT RAISE(ABORT, 'expert signals must be stamped with the current time'); END;
+
+CREATE TRIGGER IF NOT EXISTS expert_signals_before_kickoff BEFORE INSERT ON expert_signals
+WHEN datetime('now') >= (SELECT start_time_utc FROM games WHERE id = NEW.game_id)
+BEGIN SELECT RAISE(ABORT, 'kickoff has passed: expert signals must be recorded before the game starts'); END;
+
+CREATE TRIGGER IF NOT EXISTS expert_signals_no_update BEFORE UPDATE ON expert_signals
+BEGIN SELECT RAISE(ABORT, 'expert signals can never be changed'); END;
+
+CREATE TRIGGER IF NOT EXISTS expert_signals_no_delete BEFORE DELETE ON expert_signals
+BEGIN SELECT RAISE(ABORT, 'expert signals can never be deleted'); END;

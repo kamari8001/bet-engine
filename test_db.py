@@ -145,6 +145,18 @@ def main():
     expect_blocked("the cap still applies after a review (total would be 4 > 3)",
                    lambda: db.add_adjustment(conn, future, engine_id, -0.01, 0.01, "test", "https://example.com/x"))
 
+    print("\n-- Expert signals --")
+    sig = lambda **kw: db.add_expert_signal(conn, future, kw.pop("source", "dk_splits"),
+                                            kw.pop("source_url", "https://example.com/splits"), **kw)
+    expect_ok("record DraftKings splits with a source",
+              lambda: sig(away_handle=27, away_bets=5, home_handle=73, home_bets=95))
+    expect_blocked("splits that don't add up to 100", lambda: sig(away_handle=27, away_bets=5, home_handle=50, home_bets=95))
+    expect_blocked("splits with no source link",
+                   lambda: sig(source_url="nope", away_handle=27, away_bets=5, home_handle=73, home_bets=95))
+    expect_blocked("a Circa signal with no side", lambda: sig(source="circa_consensus", pick_pct=60, pick_rank=1))
+    expect_blocked("edit an expert signal", lambda: conn.execute("UPDATE expert_signals SET home_bets = 1"))
+    expect_blocked("delete an expert signal", lambda: conn.execute("DELETE FROM expert_signals"))
+
     print("\n-- The past can't be edited --")
     early_id = db.add_prediction(conn, soon, "engine", 0.55, 0.45)
     # A second game kicking off at the same moment, to be postponed after its start
@@ -167,6 +179,9 @@ def main():
                                            "https://example.com/x", "test"))
     expect_blocked("shadow bet after kickoff",
                    lambda: shadow_bet(game_id=soon, challenger="late_v1"))
+    expect_blocked("expert signal after kickoff",
+                   lambda: db.add_expert_signal(conn, soon, "dk_splits", "https://example.com/x",
+                                                away_handle=50, away_bets=50, home_handle=50, home_bets=50))
     expect_blocked("new odds after kickoff",
                    lambda: db.add_odds(conn, soon, "testbook", -110, -110, "test"))
     expect_blocked("edit a prediction's probability",

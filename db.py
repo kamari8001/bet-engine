@@ -152,6 +152,10 @@ def cancel_game(conn, game_id, source, reason):
                      " VALUES (?, 'cancelled', ?, ?, ?)", (game_id, old, source, reason))
 
 
+def add_expert_signal(conn, game_id, source, source_url, **values):
+    return _insert(conn, "expert_signals", game_id=game_id, source=source, source_url=source_url, **values)
+
+
 def add_result(conn, game_id, status, source, home_score=None, away_score=None):
     return _insert(conn, "results", game_id=game_id, status=status, source=source,
                    home_score=home_score, away_score=away_score)

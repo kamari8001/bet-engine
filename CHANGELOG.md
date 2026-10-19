@@ -4,6 +4,13 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 2.1.0 (2026-10-19): expert signals
+- New paper-only shadow challengers, pre-registered: `dk_sharp_money_v1` (bet the side with 15+
+  points more of the money than of the bets, from DraftKings' public splits; all four sports) and
+  `circa_consensus_v1` (bet the Circa Million contest's 5 most-picked NFL sides).
+- `experts.py` records signals with their source link in the protected `expert_signals` table.
+- Scheduled checks: DraftKings splits snapshots (11:45 AM, 5:45 PM) and Circa consensus (Saturday 9 PM).
+
 ## 2.0.1 (2026-10-19)
 - Tab labels: "NCAAF" (college football) and "NCAAM" (college basketball).
 

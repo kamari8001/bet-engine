@@ -70,6 +70,24 @@ def model_market_anchor(conn, g, mkt):
     return mkt["p_home"] + 0.25 * (eng["p_home"] - mkt["p_home"])
 
 
+def rule_dk_sharp_money(conn, g):
+    """First recorded DraftKings snapshot where one side's money share beats its bet share by 15+."""
+    for s in conn.execute("SELECT * FROM expert_signals WHERE game_id = ? AND source = 'dk_splits'"
+                          " ORDER BY created_at, id", (g["id"],)):
+        if s["home_handle"] - s["home_bets"] >= 15:
+            return "home"
+        if s["away_handle"] - s["away_bets"] >= 15:
+            return "away"
+    return None
+
+
+def rule_circa_consensus(conn, g):
+    """A top-5 Circa Million consensus side."""
+    s = conn.execute("SELECT side FROM expert_signals WHERE game_id = ? AND source = 'circa_consensus'"
+                     " AND pick_rank <= 5 ORDER BY created_at DESC, id DESC LIMIT 1", (g["id"],)).fetchone()
+    return s["side"] if s else None
+
+
 CHALLENGERS = {
     "nfl_after_blowout_loss_v1": {"type": "rule", "sports": ("nfl",), "fn": rule_after_blowout_loss,
                                   "about": "Bet a team after a 20+ point loss"},
@@ -77,6 +95,10 @@ CHALLENGERS = {
                             "about": "Bet DAL/KC/GB/PIT/SF"},
     "market_anchor_v1": {"type": "model", "sports": ("nfl", "ncaaf"), "fn": model_market_anchor,
                          "about": "Market + 25% of the way toward the engine"},
+    "dk_sharp_money_v1": {"type": "rule", "sports": ("nfl", "ncaaf", "nba", "ncaab"), "fn": rule_dk_sharp_money,
+                          "about": "Bet the side with 15+ pts more money than bets (DraftKings splits)"},
+    "circa_consensus_v1": {"type": "rule", "sports": ("nfl",), "fn": rule_circa_consensus,
+                           "about": "Bet the Circa Million contest's 5 most-picked sides"},
 }
 
 
@@ -242,11 +264,12 @@ def print_report(conn, sport):
 def main():
     a = sys.argv[1:]
     conn = db.connect()
-    if len(a) == 2 and a[0] == "log" and a[1] in ("nfl", "ncaaf", "all"):
-        for sport in (("nfl", "ncaaf") if a[1] == "all" else (a[1],)):
+    sports = ("nfl", "ncaaf", "nba", "ncaab")
+    if len(a) == 2 and a[0] == "log" and a[1] in sports + ("all",):
+        for sport in (sports if a[1] == "all" else (a[1],)):
             log(conn, sport)
     elif a and a[0] == "report":
-        for sport in (a[1:] or ["nfl", "ncaaf"]):
+        for sport in (a[1:] or list(sports)):
             print_report(conn, sport)
             print()
     else:

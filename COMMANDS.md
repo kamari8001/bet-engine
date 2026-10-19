@@ -74,6 +74,10 @@ Typical order: `pull_games` → `pull_odds` → `pull_history --current` → `pr
 | `python3 shadow.py report` | Each challenger's record and whether it's eligible for promotion (also on the Scorecard tab) |
 | `python3 shadow.py log all` | Logs every challenger for upcoming games (automation does this after each prediction run) |
 
+| `python3 experts.py list` | Expert signals recorded in the last week (DraftKings splits, Circa consensus) |
+| `python3 experts.py splits <id> <away $%> <away bets%> <home $%> <home bets%> "<link>"` | Record DraftKings moneyline splits for a game (Claude's scheduled check does this) |
+| `python3 experts.py circa <id> <team> <pick %> <rank> "<link>"` | Record a Circa Million consensus side (Saturday check) |
+
 Challengers and the promotion bar are fixed in `backtest_results/shadow_challengers.md`.
 
 ## Checks and setup
