@@ -44,6 +44,10 @@ Typical order: `pull_games` → `pull_odds` → `pull_history --current` → `pr
 | `python3 pull_basketball_history.py nba current` | Same for the NBA (recent days from ESPN) |
 | `python3 pull_basketball_history.py ncaab current` | Same for college basketball (1 CBBD call) |
 | `python3 rankings.py nfl` | Power rankings in the terminal (rank, OVR, net points, record, last 5, offense/defense ranks, movement since last week). Add `--top 50` for more teams; also `ncaaf`, `nba`, `ncaab`. |
+| `python3 rankings.py nfl --season 2017` | Final rankings for a past season (each team's rating after its last game) |
+| `python3 rankings.py nfl --all-time` | The best team-seasons in our history, on the same OVR scale |
+| `python3 rankings.py nfl --team KC` | One team's OVR, rank and record season by season |
+| `python3 rankings.py nfl --rebuild` | Rebuilds the saved season history (happens by itself when a model is retrained) |
 | `python3 predict.py nfl` | Logs engine and claude predictions and prints the slate with edges. Add `--days 3` to change how far ahead it looks. |
 
 ## Automation

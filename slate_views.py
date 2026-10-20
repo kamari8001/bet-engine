@@ -122,7 +122,13 @@ table.rk { width:auto; } .rk td { padding:6px 10px; } .rk th { padding:6px 10px;
 .rk td.conf, .rk td.form { text-align:left; white-space:nowrap; }
 .rk .qb { color:var(--muted); font-size:11px; margin-left:6px; }
 .ovr { display:inline-block; min-width:34px; text-align:center; border-radius:6px; padding:2px 6px; font-weight:700; color:#0e1116; }
-.o5 { background:#3fb950; } .o4 { background:#8fd18a; } .o3 { background:#c3c9d1; } .o2 { background:#f0a35e; } .o1 { background:#f85149; }
+.o6 { background:#2ea043; } .o5 { background:#56c26a; } .o4 { background:#9fdc9a; } .o3 { background:#c3c9d1; } .o2 { background:#f0a35e; } .o1 { background:#f85149; }
+a.tlink { color:inherit; text-decoration:none; } a.tlink:hover { text-decoration:underline; }
+.thead { display:flex; align-items:center; gap:10px; font-size:20px; margin:4px 0 8px; } .tlogo { width:32px; height:32px; }
+.ovrchart { width:100%; height:auto; display:block; } .ovrchart .gl { stroke:var(--line); stroke-width:1; }
+.ovrchart .ax { fill:var(--muted); font-size:11px; } .ovrchart .ln { fill:none; stroke:var(--accent); stroke-width:2; }
+.ovrchart .dot { fill:var(--accent); stroke:var(--card); stroke-width:2; } .ovrchart .hit { fill:transparent; }
+.ovrchart .pt:hover .dot { r:6; }
 .mv.up { color:var(--good); } .mv.down { color:var(--bad); } .mv { font-size:12px; white-space:nowrap; }
 .form span { display:inline-block; width:14px; text-align:center; font-size:12px; font-weight:700; }
 .form .W { color:var(--good); } .form .L { color:var(--bad); } .form .T { color:var(--muted); }
@@ -568,53 +574,57 @@ document.querySelectorAll('.chart-wrap').forEach(function (w) {
 """
 
 
-def rankings_page(sport, rows, early, error):
+def ovr_tier(v):
+    """Color band for an OVR badge (90+ / 80s / 70s / 60s / 50s / below 50)."""
+    return "o6" if v >= 90 else "o5" if v >= 80 else "o4" if v >= 70 else "o3" if v >= 60 else "o2" if v >= 50 else "o1"
+
+
+def ovr_chart(points):
+    """Line chart of OVR by season (one series, so no legend): [(season label, OVR, hover text)]."""
+    if not points:
+        return ""
+    w, h, left, right, top, bottom = 640, 220, 34, 14, 12, 28
+    lo = min(40, min(p[1] for p in points) - 5)
+    lo = max(1, lo - lo % 10)
+    xs = [left + (w - left - right) * (i / (len(points) - 1) if len(points) > 1 else 0.5) for i in range(len(points))]
+    y = lambda v: top + (h - top - bottom) * (99 - v) / (99 - lo)
+    grid = "".join(f'<line x1="{left}" x2="{w - right}" y1="{y(v):.1f}" y2="{y(v):.1f}" class="gl"/>'
+                   f'<text x="{left - 6}" y="{y(v) + 4:.1f}" class="ax" text-anchor="end">{v}</text>'
+                   for v in range(lo + (10 - lo % 10) % 10, 100, 10))
+    step = max(1, len(points) // 8)
+    labels = "".join(f'<text x="{xs[i]:.1f}" y="{h - 8}" class="ax" text-anchor="middle">{esc(points[i][0])}</text>'
+                     for i in range(len(points)) if i % step == 0 or i == len(points) - 1)
+    line = " ".join(f"{x:.1f},{y(p[1]):.1f}" for x, p in zip(xs, points))
+    dots = "".join(f'<g class="pt"><circle cx="{x:.1f}" cy="{y(p[1]):.1f}" r="12" class="hit"/>'
+                   f'<circle cx="{x:.1f}" cy="{y(p[1]):.1f}" r="4.5" class="dot"/><title>{esc(p[2])}</title></g>'
+                   for x, p in zip(xs, points))
+    return (f'<svg class="ovrchart" viewBox="0 0 {w} {h}" role="img" aria-label="OVR by season">{grid}{labels}'
+            f'<polyline points="{line}" class="ln"/>{dots}</svg>')
+
+
+def rankings_page(sport, d):
     switch = ('<div class="toggle">' + "".join(
         f'<a class="{"on" if sport == k else ""}" href="/rankings?sport={k}">{n}</a>'
         for k, n in SHORT_NAMES.items()) + "</div>")
-    intro = ('<p class="note">Ranked by the model&rsquo;s own current rating (the same one behind the predictions). '
-             '<b>OVR</b> = the model&rsquo;s chance, in %, that the team beats an average team of its league on a '
-             'neutral field (about 50 = average; capped at 99). <b>Net</b> = points better than an average team. '
-             '<b>Off/Def</b> = offense and defense ranks. Arrows = places moved since a week ago. '
-             'A team can rank above one with a better record if its results were stronger.</p>')
-    if sport == "nfl":
-        intro += '<p class="note">NFL ratings include the starting QB the engine expects for each team&rsquo;s next game.</p>'
-    if sport == "ncaaf":
-        intro += '<p class="note">FBS teams only. Early in the season, preseason information (talent, returning players, last season) counts too, as in the predictions.</p>'
-    if early:
-        intro += '<p class="note warn">Early season: ratings are still mostly last season&rsquo;s, pulled toward average.</p>'
-    if error:
-        return page("Rankings", "rank", switch + f'<p class="note">Rankings unavailable: {esc(error)}</p>')
+    if d["error"]:
+        return page("Rankings", "rank", switch + f'<p class="note">Rankings unavailable: {esc(d["error"])}</p>')
     college = sport in ("ncaaf", "ncaab")
-    filters = '<div class="filters"><input id="rk-q" placeholder="Search teams" autocomplete="off">'
-    if college:
-        confs = sorted({r["conference"] for r in rows if r["conference"]})
-        filters += ('<select id="rk-c"><option value="">All conferences</option>'
-                    + "".join(f'<option>{esc(c)}</option>' for c in confs) + "</select>")
-    filters += "</div>"
-    head = ('<tr><th class="num">#</th><th></th><th style="text-align:left">team</th><th class="num">OVR</th>'
-            '<th class="num hide-sm">net</th><th class="num">record</th><th style="text-align:left">last 5</th>'
-            '<th class="num hide-sm">off</th><th class="num hide-sm">def</th>' + ('<th class="hide-sm" style="text-align:left">conference</th>' if college else "") + "</tr>")
-    body = ""
-    for r in rows:
-        w, l, t = r["record"]
-        rec = f"{w}-{l}" + (f"-{t}" if t else "")
-        mv = r["move"]
-        mv_html = ('<span class="mv">new</span>' if mv is None else '<span class="mv">&ndash;</span>' if mv == 0
-                   else f'<span class="mv up">&#9650;{mv}</span>' if mv > 0 else f'<span class="mv down">&#9660;{-mv}</span>')
-        tier = "o5" if r["ovr"] >= 80 else "o4" if r["ovr"] >= 65 else "o3" if r["ovr"] >= 50 else "o2" if r["ovr"] >= 35 else "o1"
-        logo = f'<img src="{esc(r["logo"])}" alt="" loading="lazy">' if r.get("logo") else ""
-        qb = f'<span class="qb">QB {esc(r["qb"])}</span>' if r.get("qb") else ""
-        form = "".join(f'<span class="{c}">{c}</span>' for c in r["form"]) or '<span class="T">&ndash;</span>'
-        body += (f'<tr data-name="{esc(r["team"].lower())}" data-conf="{esc(r["conference"] or "")}">'
-                 f'<td class="rank">{r["rank"]}</td><td>{mv_html}</td><td class="team">{logo}{esc(r["team"])}{qb}</td>'
-                 f'<td class="num"><span class="ovr {tier}">{r["ovr"]}</span></td><td class="num hide-sm">{r["net"]:+.1f}</td>'
-                 f'<td class="num">{rec}</td><td class="form">{form}</td><td class="num hide-sm">{r["off_rank"]}</td>'
-                 f'<td class="num hide-sm">{r["def_rank"]}</td>' + (f'<td class="conf hide-sm">{esc(r["conference"] or "")}</td>' if college else "") + "</tr>")
-    table = f'<div class="panel"><table class="rk">{head}{body}</table></div>'
+    selected = "all" if d["mode"] == "all" else str(d["season"])
+    picker = ('<select id="rk-s" aria-label="Season">' + "".join(
+        f'<option value="{v}"{" selected" if v == selected and d["mode"] != "team" else ""}>{esc(label)}</option>'
+        for v, label in d["options"]) + "</select>")
+    intro = ('<p class="note"><b>OVR</b> (1&ndash;99) rates each team the same way in every season, so numbers '
+             'compare across years: 62 = an average team, 80+ = great (top ~7% of all teams in our history), '
+             '90+ = historically great (top ~1%). It starts from the model&rsquo;s chance that the team beats an '
+             'average team of its league that season on a neutral field. Past seasons use each team&rsquo;s rating '
+             'after its last game; records include playoffs. Tap a team for its history.</p>')
+    link = lambda team, text: f'<a class="tlink" href="/rankings?sport={sport}&amp;team={esc(team)}">{text}</a>'
     script = """
 (function () {
+  var s = document.getElementById('rk-s');
+  if (s) s.addEventListener('change', function () { location.href = '/rankings?sport=__SPORT__&season=' + s.value; });
   var q = document.getElementById('rk-q'), c = document.getElementById('rk-c');
+  if (!q) return;
   function apply() {
     var text = (q.value || '').toLowerCase(), conf = c ? c.value : '';
     document.querySelectorAll('table.rk tr[data-name]').forEach(function (tr) {
@@ -624,8 +634,87 @@ def rankings_page(sport, rows, early, error):
   }
   q.addEventListener('input', apply); if (c) c.addEventListener('change', apply);
 })();
-"""
-    return page(f"{SHORT_NAMES[sport]} rankings", "rank", switch + intro + filters + table, scripts=script)
+""".replace("__SPORT__", sport)
+
+    def rec(r):
+        w, l, t = r["record"]
+        return f"{w}-{l}" + (f"-{t}" if t else "")
+
+    def badge(v):
+        return f'<span class="ovr {ovr_tier(v)}">{v}</span>'
+
+    if d["mode"] == "team":
+        hist = d["history"]
+        logo = f'<img src="{esc(d["logo"])}" alt="" class="tlogo">' if d.get("logo") else ""
+        title = f'<h2 class="thead">{logo}{esc(d["team"])}</h2>'
+        if not hist:
+            body = f'<p class="note">No seasons found for {esc(d["team"])}.</p>'
+        else:
+            pts = [(lbl, r["ovr"], f'{lbl}: OVR {r["ovr"]}, #{r["rank"]}, {rec(r)}') for lbl, r in hist]
+            best = max(hist, key=lambda x: x[1]["ovr"])
+            rows = "".join(f'<tr><td>{esc(lbl)}{" <span class=note>(so far)</span>" if lbl == d["options"][0][1].split(" ")[0] else ""}</td>'
+                           f'<td class="num">{badge(r["ovr"])}</td><td class="num">#{r["rank"]}</td>'
+                           f'<td class="num">{rec(r)}</td></tr>' for lbl, r in reversed(hist))
+            body = (f'<p class="note">Best season: {esc(best[0])} (OVR {best[1]["ovr"]}). Hover or tap a point for details.</p>'
+                    f'<div class="panel">{ovr_chart(pts)}</div>'
+                    f'<div class="panel"><table class="rk"><tr><th style="text-align:left">season</th><th class="num">OVR</th>'
+                    f'<th class="num">rank</th><th class="num">record</th></tr>{rows}</table></div>')
+        back = f'<p><a class="tlink" href="/rankings?sport={sport}">&larr; back to rankings</a></p>'
+        return page(f"{d['team']} history", "rank", switch + back + title + body, scripts=script)
+
+    filters = f'<div class="filters">{picker}'
+    if d["mode"] == "all":
+        head = ('<tr><th class="num">#</th><th style="text-align:left">team</th><th class="num">season</th>'
+                '<th class="num">OVR</th><th class="num">record</th></tr>')
+        body = "".join(
+            f'<tr><td class="rank">{i}</td><td class="team">'
+            + (f'<img src="{esc(r["logo"])}" alt="" loading="lazy">' if r.get("logo") else "")
+            + link(r["team"], esc(r["team"])) + f'</td><td class="num">{esc(r["season_label"])}'
+            + (' <span class="note">so far</span>' if r.get("current") else "")
+            + f'</td><td class="num">{badge(r["ovr"])}</td><td class="num">{rec(r)}</td></tr>'
+            for i, r in enumerate(d["rows"], 1))
+        filters += "</div>"
+        return page(f"{SHORT_NAMES[sport]} all-time", "rank", switch + intro + filters
+                    + f'<div class="panel"><table class="rk">{head}{body}</table></div>', scripts=script)
+
+    live = d["season"] == d["current"]
+    rows = d["rows"]
+    if sport == "nfl" and live:
+        intro += '<p class="note">NFL ratings include the starting QB the engine expects for each team&rsquo;s next game.</p>'
+    if sport == "ncaaf":
+        intro += '<p class="note">FBS teams only. Early in a season, preseason information (talent, returning players, last season) counts too, as in the predictions.</p>'
+    if d["early"]:
+        intro += '<p class="note warn">Early season: ratings are still mostly last season&rsquo;s, pulled toward average.</p>'
+    filters += '<input id="rk-q" placeholder="Search teams" autocomplete="off">'
+    show_conf = college and live
+    if show_conf:
+        confs = sorted({r["conference"] for r in rows if r.get("conference")})
+        filters += ('<select id="rk-c"><option value="">All conferences</option>'
+                    + "".join(f'<option>{esc(c)}</option>' for c in confs) + "</select>")
+    filters += "</div>"
+    head = ('<tr><th class="num">#</th>' + ('<th></th>' if live else "") + '<th style="text-align:left">team</th><th class="num">OVR</th>'
+            '<th class="num hide-sm">net</th><th class="num">record</th><th style="text-align:left">last 5</th>'
+            '<th class="num hide-sm">off</th><th class="num hide-sm">def</th>'
+            + ('<th class="hide-sm" style="text-align:left">conference</th>' if show_conf else "") + "</tr>")
+    body = ""
+    for r in rows:
+        mv = r.get("move")
+        mv_html = ("" if not live else '<td><span class="mv">new</span></td>' if mv is None
+                   else '<td><span class="mv">&ndash;</span></td>' if mv == 0
+                   else f'<td><span class="mv up">&#9650;{mv}</span></td>' if mv > 0
+                   else f'<td><span class="mv down">&#9660;{-mv}</span></td>')
+        logo = f'<img src="{esc(r["logo"])}" alt="" loading="lazy">' if r.get("logo") else ""
+        qb = f'<span class="qb">QB {esc(r["qb"])}</span>' if r.get("qb") else ""
+        form = "".join(f'<span class="{c}">{c}</span>' for c in r["form"]) or '<span class="T">&ndash;</span>'
+        body += (f'<tr data-name="{esc(r["team"].lower())}" data-conf="{esc(r.get("conference") or "")}">'
+                 f'<td class="rank">{r["rank"]}</td>{mv_html}<td class="team">{logo}{link(r["team"], esc(r["team"]))}{qb}</td>'
+                 f'<td class="num">{badge(r["ovr"])}</td><td class="num hide-sm">{r["net"]:+.1f}</td>'
+                 f'<td class="num">{rec(r)}</td><td class="form">{form}</td><td class="num hide-sm">{r["off_rank"]}</td>'
+                 f'<td class="num hide-sm">{r["def_rank"]}</td>'
+                 + (f'<td class="conf hide-sm">{esc(r.get("conference") or "")}</td>' if show_conf else "") + "</tr>")
+    title = "" if live else f'<p class="note">Final ratings for {esc(rows[0]["season_label"]) if rows else ""}, after each team&rsquo;s last game.</p>'
+    return page(f"{SHORT_NAMES[sport]} rankings", "rank", switch + intro + filters + title
+                + f'<div class="panel"><table class="rk">{head}{body}</table></div>', scripts=script)
 
 
 def scorecard_page(sport, sc):

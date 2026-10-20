@@ -338,16 +338,36 @@ def my_picks(conn, now, college):
 
 # ---------- scorecard ----------
 
-def rankings(conn, sport, college):
-    """(rows with logos, early-season flag, error message or None) for the Rankings tab."""
+def rankings(conn, sport, college, season=None, team=None):
+    """Everything the Rankings tab shows. season: a year, "all" (all-time list) or None (current);
+    team: one team's season-by-season history."""
     import rankings as rk
+    from pull_history import current_season, season_label
+    cur = current_season(sport)
+    out = {"mode": "season", "season": cur, "current": cur, "rows": [], "early": False, "error": None, "team": team}
     try:
-        rows = rk.with_movement(conn, sport)
+        seasons = sorted(rk.past_seasons(conn, sport), reverse=True)
+        out["options"] = [(str(cur), f"{season_label(sport, cur)} (this season)")] + \
+                         [(str(s), season_label(sport, s)) for s in seasons] + [("all", "All-time top 25")]
+        if team:
+            out["mode"] = "team"
+            out["history"] = [(season_label(sport, s), r) for s, r in rk.team_history(conn, sport, team)]
+            out["logo"] = logo_for(sport, team, college)
+            return out
+        if season == "all":
+            out["mode"] = "all"
+            out["rows"] = rk.all_time(conn, sport, 25)
+        else:
+            year = int(season) if season and season.isdigit() and (int(season) in seasons or int(season) == cur) else cur
+            out["season"] = year
+            out["rows"] = rk.season_rows(conn, sport, year)
+            out["early"] = year == cur and rk.early_season(out["rows"], sport)
+        for r in out["rows"]:
+            r["logo"] = logo_for(sport, r["team"], college)
+            r["season_label"] = season_label(sport, r["season"])
     except RuntimeError as e:
-        return [], False, str(e)
-    for r in rows:
-        r["logo"] = logo_for(sport, r["team"], college)
-    return rows, rk.early_season(rows, sport), None
+        out["error"] = str(e)
+    return out
 
 
 def scorecard(conn, sport):

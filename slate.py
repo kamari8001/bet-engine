@@ -89,7 +89,8 @@ class Handler(BaseHTTPRequestHandler):
             elif url.path == "/mine":
                 self._send(slate_views.mine_page(*slate_data.my_picks(conn, now, college)))
             elif url.path == "/rankings":
-                self._send(slate_views.rankings_page(sport, *slate_data.rankings(conn, sport, college)))
+                self._send(slate_views.rankings_page(sport, slate_data.rankings(
+                    conn, sport, college, q.get("season"), q.get("team"))))
             elif url.path == "/scorecard":
                 self._send(slate_views.scorecard_page(sport, slate_data.scorecard(conn, sport)))
             else:

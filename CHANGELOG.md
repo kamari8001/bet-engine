@@ -4,6 +4,16 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 2.3.0 (2026-10-20): OVR on one scale, past seasons
+- OVR now works like a FIFA rating and means the same thing in every season: 62 = an average team,
+  80+ = great (top ~7% of all team-seasons in our history), 90+ = historically great (top ~1%).
+  It starts from the model's chance to beat an average team that season, then places it on a bell
+  curve of every past team-season in that sport. The curve is frozen per model version
+  (`rankings_scale.json`), so a 95 in 2017 really was more dominant than an 88 today.
+- Rankings tab: season picker (past seasons show each team's rating after its last game, records
+  incl. playoffs), an all-time top 25, and a page per team with its OVR by season (chart + table).
+  History: NFL 2000+, college football 2014+, NBA and college basketball 2015-16+.
+
 ## 2.2.2 (2026-10-20)
 - Fixed "DraftKings" showing a stray symbol on iPhone: the Doppio One font's "ft" ligature (joined letters) is now turned off.
 

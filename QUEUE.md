@@ -48,6 +48,7 @@ _(nothing)_
 
 ## Done
 
+- 2026-10-20 v2.3.0: OVR on one scale across seasons; past seasons, all-time top 25, team history
 - 2026-10-20 v2.2.2: fixed the "ft" ligature glitch in DraftKings on iPhone
 - 2026-10-20 v2.2.1: phone layout for the slate
 - 2026-10-20: phone access to the slate via Tailscale (private; Mac must be awake)
