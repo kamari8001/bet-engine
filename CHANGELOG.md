@@ -4,6 +4,9 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 2.2.2 (2026-10-20)
+- Fixed "DraftKings" showing a stray symbol on iPhone: the Doppio One font's "ft" ligature (joined letters) is now turned off.
+
 ## 2.2.1 (2026-10-20): phone layout
 - The slate now fits phone screens (it used to render the full desktop page zoomed out): compact
   header, swipeable tab bar, one game card per row, bigger tap targets, text boxes that don't make

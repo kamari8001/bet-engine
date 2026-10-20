@@ -18,7 +18,8 @@ CSS = """
         --soft:#c3c9d1; --accent:#58a6ff; --good:#3fb950; --flag:#d29922; --warn:#f0883e; --bad:#f85149; }
 * { box-sizing:border-box; }
 body { margin:0; background:var(--bg); color:var(--text);
-       font:14px/1.45 "Doppio One", system-ui, -apple-system, "Segoe UI", sans-serif; }
+       font:14px/1.45 "Doppio One", system-ui, -apple-system, "Segoe UI", sans-serif;
+       font-variant-ligatures:none; font-feature-settings:"liga" 0, "clig" 0, "dlig" 0; }
 header { position:sticky; top:0; z-index:20; background:rgba(14,17,22,.96); border-bottom:1px solid var(--line);
          padding:12px 20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
 header h1 { font-size:16px; margin:0 6px 0 0; white-space:nowrap; }
