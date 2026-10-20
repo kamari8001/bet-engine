@@ -19,6 +19,18 @@ cd ~/bet-engine
 | `python3 grade.py nfl` | Scorecard: accuracy, calibration, paper bets, closing-line value, head-to-head. Add `--season 2026` for a specific season. |
 | `python3 auto.py --status` | What automation has done and what's coming, plus credits left |
 
+## Phone access (Tailscale)
+
+The slate is shared privately over Tailscale: https://talals-macbook-pro.tail7eeb70.ts.net
+(works only on devices signed into Talal's Tailscale account with Tailscale on; the Mac must be awake).
+The slate itself still listens only on this Mac; Tailscale passes requests through.
+
+| Command | What it does |
+|---|---|
+| `/Applications/Tailscale.app/Contents/MacOS/Tailscale serve status` | Shows whether the slate is shared |
+| `/Applications/Tailscale.app/Contents/MacOS/Tailscale serve --bg 8765` | Shares it (already done 2026-10-20; survives restarts) |
+| `/Applications/Tailscale.app/Contents/MacOS/Tailscale serve --https=443 off` | Stops sharing it |
+
 ## The routine by hand
 
 Automation does these for you; use them when you want things fresh right now.
