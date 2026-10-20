@@ -48,6 +48,7 @@ _(nothing)_
 
 ## Done
 
+- 2026-10-20 v2.2.1: phone layout for the slate
 - 2026-10-20: phone access to the slate via Tailscale (private; Mac must be awake)
 - 2026-10-19 v2.2.0: power rankings tab (NFL, NCAAF, NBA, NCAAM)
 - 2026-10-19 v2.1.3: "My picks" renamed "Positions"

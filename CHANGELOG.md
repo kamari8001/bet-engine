@@ -4,6 +4,13 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 2.2.1 (2026-10-20): phone layout
+- The slate now fits phone screens (it used to render the full desktop page zoomed out): compact
+  header, swipeable tab bar, one game card per row, bigger tap targets, text boxes that don't make
+  the iPhone zoom in, the book name under the price, Positions picks stacked as blocks, summary
+  tiles two per row, and Rankings showing the key columns. Desktop layout unchanged.
+  Checked at 375 and 430 pixels wide on every page.
+
 ## 2.2.0 (2026-10-19): power rankings
 - New **Rankings** tab (and `python3 rankings.py <sport>`): every team ranked by the model's own
   current rating, with an **OVR** (0-99) = the model's chance to beat an average team of its league

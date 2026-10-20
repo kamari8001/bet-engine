@@ -144,6 +144,61 @@ a { color:var(--accent); }
 .lcard .picks tr.me td { background:rgba(88,166,255,.08); }
 .bad { color:var(--bad); }
 details summary { color:var(--accent); cursor:pointer; font-size:12px; margin-top:8px; }
+.models { } .hint .touch { display:none; }
+@media (hover: none) { .hint .mouse { display:none; } .hint .touch { display:inline; } }
+
+/* ---------- phones ---------- */
+@media (max-width: 640px) {
+  :root { --card-h:565px; }
+  body { font-size:15px; -webkit-text-size-adjust:100%; }
+  header { padding:8px 12px 0; gap:6px 10px; flex-wrap:wrap; }
+  header h1 { font-size:15px; }
+  header .models { display:none; }
+  nav { order:3; flex:1 0 100%; display:flex; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+        margin:0 -12px; padding:0 8px 8px; gap:2px; }
+  nav::-webkit-scrollbar { display:none; }
+  nav a { flex:0 0 auto; padding:9px 12px; white-space:nowrap; }
+  main { padding:12px 12px 40px; }
+  .grid { grid-template-columns:minmax(0, 1fr); gap:12px; }
+  .tiles { grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; } .tile { padding:10px; } .tile .big { font-size:22px; } .tile .note { font-size:12px; }
+  .note, .sub, .day, th, .hint, .mine, .locked, details summary { font-size:13px; }
+  .flag, .prices .note, .mv, .qb { font-size:12px; }
+  .face { padding:12px; }
+  td { padding:7px 5px; } th { padding:4px 5px; }
+  .face table .tm { max-width:120px; } .prices .tm { max-width:96px; }
+  select, input { font-size:16px; padding:8px 10px; }      /* 16px stops iPhone zooming in on tap */
+  button.go { font-size:16px; padding:9px 14px; }
+  .toggle { display:flex; overflow-x:auto; scrollbar-width:none; max-width:100%; }
+  .toggle::-webkit-scrollbar { display:none; }
+  .toggle a { flex:0 0 auto; padding:9px 14px; }
+  .filters input, .filters select { flex:1 1 140px; min-width:0; }
+  .rk .hide-sm { display:none; }
+  .rk td, .rk th { padding:7px 3px; } .rk .form span { width:11px; } .rk td.team img { margin-right:6px; }
+  .panel { padding:10px; } .panel td { overflow-wrap:anywhere; }
+  .prices .fair { display:none; } .prices th { white-space:normal; line-height:1.15; } .prices .tm { max-width:84px; }
+  form.pick { flex-wrap:nowrap; } form.pick select { flex:1 1 auto; min-width:0; max-width:55%; }
+  input[type=number] { width:72px; }
+  .sub2 .time { white-space:normal; overflow:visible; }
+  .badge { padding:7px 12px; align-self:center; white-space:nowrap; flex:0 0 auto; }
+  button.go { white-space:nowrap; flex:0 0 auto; }
+  .prices td .note { display:block; line-height:1.1; }
+  .prices td, .prices th { padding-left:4px; padding-right:4px; }
+  .rk td.team { white-space:normal; }
+  /* Positions: each pick becomes a stacked block */
+  table.mt, table.mt tbody { display:block; }
+  table.mt tr:first-child { display:none; }
+  table.mt tr { display:flex; flex-wrap:wrap; align-items:center; border-top:1px solid var(--line); padding:10px 0; }
+  table.mt td { border:0; padding:3px 0; }
+  table.mt td.when { flex:1 0 100%; text-align:left; display:flex; gap:8px; color:var(--muted); font-size:13px; }
+  table.mt td.when .note { font-size:13px; }
+  table.mt td.game { flex:1 0 100%; display:flex; flex-wrap:wrap; gap:2px 6px; align-items:center; padding-bottom:6px; }
+  table.mt td.game .vs { margin:0; }
+  table.mt td.pk { flex:1 1 70%; padding-left:0; display:flex; align-items:center; gap:6px; }
+  table.mt td.pk::before, table.mt td.res::before, table.mt td[data-label="Status"]::before {
+    content:attr(data-label); color:var(--muted); font-size:13px; min-width:92px; }
+  table.mt td.pp { flex:0 0 auto; text-align:right; width:auto; }
+  table.mt td.res, table.mt td[data-label="Status"] { flex:1 0 100%; text-align:left; display:flex; gap:6px; }
+}
 """
 
 JS = """
@@ -173,7 +228,7 @@ def page(title, active, body, msg=None, scripts=""):
 <link href="https://fonts.googleapis.com/css2?family=Doppio+One&display=swap" rel="stylesheet">
 <style>{CSS}</style></head><body>
 <header><h1>{esc(APP_NAME)} <span class="ver" title="{esc(models)}">v{APP_VERSION}</span></h1><nav>{tabs}</nav>
-<span class="note">{esc(models)} &middot; all flags are low confidence, paper only</span></header>
+<span class="note models">{esc(models)} &middot; all flags are low confidence, paper only</span></header>
 <main>{banner}{body}</main><script>{JS}{scripts}</script></body></html>"""
 
 
@@ -229,11 +284,11 @@ def card(v):
         edge = "" if pr["edge"] is None else f'<span class="{"pos" if pr["edge"] > 0 else "neg"}">{signed(pr["edge"])}</span>'
         flag = '<span class="flag">FLAG</span>' if pr["flag"] else ""
         ev = money(pr["ev"]) if pr["ev"] is not None else "&ndash;"
-        prices += (f'<tr><td>{team(pr["team"], logos[pr["team"]], True)}</td><td>{pr["fair"]:+d}</td>'
+        prices += (f'<tr><td>{team(pr["team"], logos[pr["team"]], True)}</td><td class="fair">{pr["fair"]:+d}</td>'
                    f'<td>{best}</td><td>{edge}{flag}</td><td>{ev}</td></tr>')
     stale = " &middot; odds are old: no flags" if m and m["stale"] else ""
     prices_html = (f'<div class="section"><h4>Prices at your books{stale}</h4><table class="prices"><tr><th>team</th>'
-                   f'<th>fair</th><th>best price</th><th>edge</th><th>per $100</th></tr>{prices}</table></div>'
+                   f'<th class="fair">fair</th><th>best price</th><th>edge</th><th>per $100</th></tr>{prices}</table></div>'
                    if prices else "")
 
     if v.get("cancelled"):
@@ -251,7 +306,7 @@ def card(v):
 <div class="matchup">{away}<span class="at">at</span>{home}</div>
 <div class="sub2"><span class="time">{'<b style="color:var(--bad)">CANCELLED</b> &middot; ' if v.get('cancelled') else ''}{esc(v['kickoff'])}{' &middot; ' + ' &middot; '.join(sub) if sub else ''}</span>{badge}</div>
 <table class="picks"><tr><th>source</th><th class="l">pick</th><th>win %</th><th>vs market</th></tr>{rows}</table>
-{prices_html}{form}<div class="hint">click card for details &#8635;</div></div>"""
+{prices_html}{form}<div class="hint"><span class="mouse">click</span><span class="touch">tap</span> card for details &#8635;</div></div>"""
 
     # back
     books = ""
@@ -392,12 +447,13 @@ def live_page(groups, error, sport, counts):
 # ---------- my picks ----------
 
 def mine_page(upcoming, finished, summary):
-    def pick_cell(x, logos, names):
-        """Two table cells: team (left) and win % (right), so columns line up."""
+    def pick_cell(x, logos, names, label=""):
+        """Two table cells: team (left) and win % (right), so columns line up.
+        `label` is shown before the pick on phones, where rows stack."""
         if not x:
-            return '<td class="l neg">&ndash;</td><td></td>'
+            return f'<td class="l neg pk" data-label="{label}">&ndash;</td><td class="pp"></td>'
         logo = logos[0] if x[0] == names[0] else logos[1]
-        return f'<td class="l pk">{team(x[0], logo, True)}</td><td class="pp">{x[1]}%</td>'
+        return f'<td class="l pk" data-label="{label}">{team(x[0], logo, True)}</td><td class="pp">{x[1]}%</td>'
 
     s = summary
     tiles = f"""<div class="tiles">
@@ -412,11 +468,11 @@ def mine_page(upcoming, finished, summary):
 
     up = "".join(
         f'<tr><td class="when">{esc(u["kickoff"])}<div class="note">{u["sport"].upper()}</div></td>'
-        f'<td class="l">{team(u["away"], u["logos"][0], True)}<div class="vs">@ {team(u["home"], u["logos"][1], True)}</div></td>'
-        f'{pick_cell(u["me"], u["logos"], (u["away"], u["home"]))}'
-        f'{pick_cell(u["engine"], u["logos"], (u["away"], u["home"]))}'
-        f'{pick_cell(u["market"], u["logos"], (u["away"], u["home"]))}</tr>' for u in upcoming)
-    up_html = (f'<div class="panel"><h2>Upcoming ({len(upcoming)})</h2><table><tr><th>kickoff</th><th class="l">game</th>'
+        f'<td class="l game">{team(u["away"], u["logos"][0], True)}<div class="vs">@ {team(u["home"], u["logos"][1], True)}</div></td>'
+        f'{pick_cell(u["me"], u["logos"], (u["away"], u["home"]), "You")}'
+        f'{pick_cell(u["engine"], u["logos"], (u["away"], u["home"]), "Engine")}'
+        f'{pick_cell(u["market"], u["logos"], (u["away"], u["home"]), "Market at your pick")}</tr>' for u in upcoming)
+    up_html = (f'<div class="panel"><h2>Upcoming ({len(upcoming)})</h2><table class="mt"><tr><th>kickoff</th><th class="l">game</th>'
                f'<th class="l" colspan="2">your pick</th><th class="l" colspan="2">engine</th>'
                f'<th class="l" colspan="2">market when you picked</th></tr>{up}</table></div>'
                if upcoming else '<div class="panel"><h2>Upcoming</h2><div class="note">No upcoming picks.</div></div>')
@@ -425,11 +481,11 @@ def mine_page(upcoming, finished, summary):
     finished = [f for f in finished if f.get("correct") is not None]
     wait_rows = "".join(
         f'<tr><td class="when">{esc(f["kickoff"])}<div class="note">{f["sport"].upper()}</div></td>'
-        f'<td class="l">{team(f["away"], f["logos"][0], True)}<div class="vs">@ {team(f["home"], f["logos"][1], True)}</div></td>'
-        f'{pick_cell(f["me"], f["logos"], (f["away"], f["home"]))}'
-        f'{pick_cell(f["engine"], f["logos"], (f["away"], f["home"]))}'
-        f'<td class="note">{esc(f["final"])}</td></tr>' for f in waiting)
-    wait_html = (f'<div class="panel"><h2>In progress / awaiting result ({len(waiting)})</h2><table><tr><th>kickoff</th>'
+        f'<td class="l game">{team(f["away"], f["logos"][0], True)}<div class="vs">@ {team(f["home"], f["logos"][1], True)}</div></td>'
+        f'{pick_cell(f["me"], f["logos"], (f["away"], f["home"]), "You")}'
+        f'{pick_cell(f["engine"], f["logos"], (f["away"], f["home"]), "Engine")}'
+        f'<td class="note" data-label="Status">{esc(f["final"])}</td></tr>' for f in waiting)
+    wait_html = (f'<div class="panel"><h2>In progress / awaiting result ({len(waiting)})</h2><table class="mt"><tr><th>kickoff</th>'
                  f'<th class="l">game</th><th class="l" colspan="2">your pick</th><th class="l" colspan="2">engine</th><th>status</th></tr>{wait_rows}</table></div>'
                  if waiting else "")
     fin = ""
@@ -441,11 +497,11 @@ def mine_page(upcoming, finished, summary):
         b = f.get("brier", {})
         briers = " / ".join("&ndash;" if k not in b else f"{b[k]:.3f}" for k in ("me", "engine", "market"))
         fin += (f'<tr><td class="when">{esc(f["kickoff"])}<div class="note">{f["sport"].upper()}</div></td>'
-                f'<td class="l">{team(f["away"], f["logos"][0], True)}<div class="vs">@ {team(f["home"], f["logos"][1], True)}</div>'
+                f'<td class="l game">{team(f["away"], f["logos"][0], True)}<div class="vs">@ {team(f["home"], f["logos"][1], True)}</div>'
                 f'<div class="note">{esc(f["final"]) if f.get("correct") is not None else ""}</div></td>'
-                f'{pick_cell(f["me"], f["logos"], (f["away"], f["home"]))}<td>{res}</td>'
-                f'{pick_cell(f["engine"], f["logos"], (f["away"], f["home"]))}<td>{briers}</td></tr>')
-    fin_html = (f'<div class="panel"><h2>Finished ({len(finished)})</h2><table><tr><th>kickoff</th><th class="l">game</th>'
+                f'{pick_cell(f["me"], f["logos"], (f["away"], f["home"]), "You")}<td class="res" data-label="Result">{res}</td>'
+                f'{pick_cell(f["engine"], f["logos"], (f["away"], f["home"]), "Engine")}<td class="res" data-label="Brier you / engine / market">{briers}</td></tr>')
+    fin_html = (f'<div class="panel"><h2>Finished ({len(finished)})</h2><table class="mt"><tr><th>kickoff</th><th class="l">game</th>'
                 f'<th class="l" colspan="2">your pick</th><th>result</th><th class="l" colspan="2">engine</th>'
                 f'<th>Brier: you / engine / market</th></tr>{fin}</table></div>'
                 if finished else "")
@@ -536,8 +592,8 @@ def rankings_page(sport, rows, early, error):
                     + "".join(f'<option>{esc(c)}</option>' for c in confs) + "</select>")
     filters += "</div>"
     head = ('<tr><th class="num">#</th><th></th><th style="text-align:left">team</th><th class="num">OVR</th>'
-            '<th class="num">net</th><th class="num">record</th><th style="text-align:left">last 5</th>'
-            '<th class="num">off</th><th class="num">def</th>' + ('<th style="text-align:left">conference</th>' if college else "") + "</tr>")
+            '<th class="num hide-sm">net</th><th class="num">record</th><th style="text-align:left">last 5</th>'
+            '<th class="num hide-sm">off</th><th class="num hide-sm">def</th>' + ('<th class="hide-sm" style="text-align:left">conference</th>' if college else "") + "</tr>")
     body = ""
     for r in rows:
         w, l, t = r["record"]
@@ -551,9 +607,9 @@ def rankings_page(sport, rows, early, error):
         form = "".join(f'<span class="{c}">{c}</span>' for c in r["form"]) or '<span class="T">&ndash;</span>'
         body += (f'<tr data-name="{esc(r["team"].lower())}" data-conf="{esc(r["conference"] or "")}">'
                  f'<td class="rank">{r["rank"]}</td><td>{mv_html}</td><td class="team">{logo}{esc(r["team"])}{qb}</td>'
-                 f'<td class="num"><span class="ovr {tier}">{r["ovr"]}</span></td><td class="num">{r["net"]:+.1f}</td>'
-                 f'<td class="num">{rec}</td><td class="form">{form}</td><td class="num">{r["off_rank"]}</td>'
-                 f'<td class="num">{r["def_rank"]}</td>' + (f'<td class="conf">{esc(r["conference"] or "")}</td>' if college else "") + "</tr>")
+                 f'<td class="num"><span class="ovr {tier}">{r["ovr"]}</span></td><td class="num hide-sm">{r["net"]:+.1f}</td>'
+                 f'<td class="num">{rec}</td><td class="form">{form}</td><td class="num hide-sm">{r["off_rank"]}</td>'
+                 f'<td class="num hide-sm">{r["def_rank"]}</td>' + (f'<td class="conf hide-sm">{esc(r["conference"] or "")}</td>' if college else "") + "</tr>")
     table = f'<div class="panel"><table class="rk">{head}{body}</table></div>'
     script = """
 (function () {
