@@ -15,6 +15,12 @@ How it works (plain English):
   A team never seen before starts at `new_team`.
 - Optional ideas (off unless their setting is non-zero): shots on target in the updates (sot_w),
   rest days (rest_coef), ClubElo ratings (elo_w).
+- European games (Champions/Europa/Conference League, only when loaded with include_europe=True):
+  each league has a STRENGTH (log-goals, starts at 0) learned from European results (eu_k_s). In a
+  European game a club's attack and defense are its domestic ratings shifted by half its league's
+  strength; European games have their own average goals and home advantage (eu_k_lg). Optional:
+  club ratings learn from European games too (eu_k_team), league strengths shrink between seasons
+  (eu_regress_s). Domestic games and predictions are unaffected unless eu_k_team > 0.
 
 Only ratings from games BEFORE a game are used to predict it (walk forward, no hindsight).
 """
@@ -48,6 +54,13 @@ DEFAULT_PARAMS = {
     "rest_cap": 7,
     "elo_w": 0.0,       # idea 2: weight of ClubElo difference (0 = off)
 }
+EU_DEFAULTS = {
+    "eu_k_s": 0.05,         # league strength learning rate (European games)
+    "eu_k_lg": 0.01,        # European average-goals / home-advantage learning rate
+    "eu_home_start": 0.25,  # starting European home advantage (log-goals)
+    "eu_k_team": 0.0,       # UCL idea 1: club ratings learn from European games (0 = off)
+    "eu_regress_s": 0.0,    # UCL idea 2: share of league strength removed between seasons (0 = off)
+}
 MAX_GOALS = 10
 
 
@@ -63,6 +76,9 @@ def load_games(conn, include_europe=False):
     last = {}
     from datetime import date
     for g in games:
+        if g["league"] in EUROPE:            # rest days count league games only (as tuned)
+            g["home_rest"] = g["away_rest"] = None
+            continue
         d = date.fromisoformat(g["game_date_et"])
         for side in ("home", "away"):
             prev = last.get(g[f"{side}_team"])
@@ -106,6 +122,11 @@ class Ratings:
         self.home = defaultdict(lambda: self.p["home_start"])
         self.sot_ratio = defaultdict(lambda: 0.32)   # goals per shot on target, per league
         self.elo = elo or {}
+        self.e = {**EU_DEFAULTS, **{k: v for k, v in params.items() if k.startswith("eu_")}}
+        self.strength = defaultdict(float)          # league strength from European games (log-goals)
+        self.strength_season = {}
+        self.eu_base = math.log(1.35)
+        self.eu_home = self.e["eu_home_start"]
 
     def _arrive(self, team, league, season):
         """Season regression and promotion/relegation shift, at a team's first game of a season."""
@@ -123,7 +144,29 @@ class Ratings:
         self.team_league[team] = league
         self.team_season[team] = season
 
+    def _euro_leagues(self, g):
+        """Domestic leagues of both clubs, or None if either has no domestic history yet."""
+        lh, la = self.team_league.get(g["home_team"]), self.team_league.get(g["away_team"])
+        if lh is None or la is None:
+            return None
+        for lg in {lh, la}:
+            if self.e["eu_regress_s"] and self.strength_season.get(lg) not in (None, g["season"]):
+                self.strength[lg] *= 1 - self.e["eu_regress_s"]
+            self.strength_season[lg] = g["season"]
+        return lh, la
+
     def expected_goals(self, g):
+        """(xG home, xG away), or None for a European game with a club we have no domestic history for."""
+        if g["league"] in EUROPE:
+            leagues = self._euro_leagues(g)
+            if leagues is None:
+                return None
+            h, a = g["home_team"], g["away_team"]
+            sh, sa = self.strength[leagues[0]] / 2, self.strength[leagues[1]] / 2
+            hfa = 0.0 if g.get("neutral_site") else self.eu_home
+            xh = self.eu_base + hfa + (self.att[h] + sh) - (self.dfn[a] + sa)
+            xa = self.eu_base + (self.att[a] + sa) - (self.dfn[h] + sh)
+            return math.exp(xh), math.exp(xa)
         p, lg = self.p, g["league"]
         h, a = g["home_team"], g["away_team"]
         self._arrive(h, lg, g["season"])
@@ -143,7 +186,27 @@ class Ratings:
                 xa -= p["elo_w"] * d
         return math.exp(xh), math.exp(xa)
 
+    def update_europe(self, g, lh, la):
+        p, e = self.p, self.e
+        eh = min(g["home_score"], p["cap"]) - lh
+        ea = min(g["away_score"], p["cap"]) - la
+        lg_h, lg_a = self.team_league[g["home_team"]], self.team_league[g["away_team"]]
+        if lg_h != lg_a:
+            self.strength[lg_h] += e["eu_k_s"] * (eh - ea) / 2
+            self.strength[lg_a] += e["eu_k_s"] * (ea - eh) / 2
+        self.eu_base += e["eu_k_lg"] * (eh + ea) / 2
+        if not g.get("neutral_site"):
+            self.eu_home += e["eu_k_lg"] * (eh - ea) / 2
+        if e["eu_k_team"]:
+            h, a = g["home_team"], g["away_team"]
+            self.att[h] += e["eu_k_team"] * eh
+            self.dfn[a] -= e["eu_k_team"] * eh
+            self.att[a] += e["eu_k_team"] * ea
+            self.dfn[h] -= e["eu_k_team"] * ea
+
     def update(self, g, lh, la):
+        if g["league"] in EUROPE:
+            return self.update_europe(g, lh, la)
         p, lg = self.p, g["league"]
         gh, ga = min(g["home_score"], p["cap"]), min(g["away_score"], p["cap"])
         if p["sot_w"] and g.get("home_shots_ot") is not None and g.get("away_shots_ot") is not None:
@@ -171,7 +234,10 @@ def walk_forward(games, params, elo=None, keep=lambda g: True):
     rho = r.p["rho"]
     preds = {}
     for g in games:
-        lh, la = r.expected_goals(g)
+        xg = r.expected_goals(g)
+        if xg is None:
+            continue                       # European game with a club we can't rate yet
+        lh, la = xg
         if keep(g):
             preds[g["id"]] = (*outcome_probs(lh, la, rho), lh, la)
         r.update(g, lh, la)

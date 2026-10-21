@@ -137,6 +137,17 @@
     "fit_seasons": [
       2013,
       2026
-    ]
+    ],
+    "europe": {
+      "version": "ucl-v1-20261021",
+      "settings": {
+        "eu_k_s": 0.0442,
+        "eu_k_lg": 0.0,
+        "eu_home_start": 0.30241,
+        "eu_k_team": 0.0,
+        "eu_regress_s": 0.0
+      },
+      "note": "Tuned on 2016-2019 Champions League games; ideas off."
+    }
   }
 }
