@@ -54,4 +54,24 @@ flags paper only / Low confidence, like every other sport.
 
 ## Results
 
-_(filled in after the one-time final exam)_
+**Tuning (2016-2019) and check (2020-2022), `ucl-v1-20261021`:** log loss tune 0.9639 (baseline 1.0482),
+check 0.9170 (baseline 1.0568; market 0.8886 on 313 games). Domestic Big 5 predictions confirmed
+identical with European games loaded. Calibration was shaky on these small samples (worst bucket 15.0 on
+tune, 10.7 on check; check includes 2020-21 without crowds). Ideas: #1 club ratings learning from European
+games: tune -0.0118 but check +0.0025, dropped (overfits); #2 league-strength season shrink: no effect,
+dropped. A calibration stretch fit on the check seasons improved log loss by 0.0011 (< 0.002), not applied.
+
+**Final exam, run once 2026-10-21** (domestic settings `soccer-v2-20261019`, tuned before the soccer exam;
+full numbers in `final_runs.jsonl`):
+
+| Test | Result (2022-23 to 2025-26, 521 Champions League games) |
+|---|---|
+| 1. Works at all | PASS: log loss 0.9455 vs baseline 1.0303 |
+| 2. Honest percentages | PASS: worst bucket with 50+ games off by 5.0 |
+| 3. Vs. market | model 0.9455 / Brier 0.5590 / RPS 0.2032 vs market 0.9208 / 0.5419 / 0.1952 (521 games) |
+| 4. Made money? | **FAIL** (narrowly): 354 flagged bets, 127 won, -3.5 units, -1.0% |
+
+**Verdict:** works and is calibrated, trails the market, no money edge (the closest to break-even of
+any exam so far). Goes live with flags paper only / Low confidence. Refit on 2016-2026 with the live
+domestic settings: `ucl-v1-refit-20261021` (league strength learning rate 0.034, European home
+advantage 0.275 log-goals).

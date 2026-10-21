@@ -14,7 +14,7 @@ _(nothing)_
 
 ## Up next
 
-1. **Champions League: step 1 data done 2026-10-21**; next step 2 (criteria file first, then league strengths learned from European games, tune/check, final exam), then step 3 (live, v3.1.0; target matchday 4 Nov 4-5 or 5 Nov 25-26).
+1. **Champions League step 3: live (v3.1.0)**, target matchday 4 (Nov 4-5). Steps 1 (data) and 2 (model, final exam) done 2026-10-21.
 2. **Club soccer shakedown check** (after the first weekend, around Mon Oct 26): early-kickoff closing pulls (6:50 AM wake), predictions before every game, results and grading, the 8 AM news check.
 
 ## Waiting on a date or on data
