@@ -14,15 +14,8 @@ _(nothing)_
 
 ## Up next
 
-1. **Basketball shakedown check** (around Wed Oct 21 to Thu Oct 22): confirm predictions
-   were logged before every tip, closing pulls happened, NBA injury checks and DraftKings
-   splits recorded entries, and overnight grading ran.
-2. **Club soccer: ClubElo retry, then final exam** (around Wed Oct 21; Talal chose to wait). Model `soccer-v2` is
-   tuned and committed. Retry `api.clubelo.com` (502 errors all day 2026-10-19); if it works, build `clubelo.py`,
-   run `backtest_soccer.py ablate --elo` (idea #2), then `final`, then `refit`. If still down, run `final` without
-   it and note ClubElo as untested (shadow-only later).
-3. **Soccer power rankings**: decide after the ClubElo retry (ClubElo for all clubs together, UEFA league coefficients, or within each league).
-4. **Club soccer: live (v3.0.0)**, needs the $30 Odds API plan. Add soccer to `pull_games`/`pull_odds` `all`, the morning routine (`pull_soccer_history.py current`), and pre-kickoff windows.
+1. **Soccer power rankings**: ClubElo is still down, so choose: UEFA league coefficients (all clubs together) or within each league.
+2. **Club soccer: live (v3.0.0)**, needs the $30 Odds API plan. Add soccer to `pull_games`/`pull_odds` `all`, the morning routine (`pull_soccer_history.py current`), and pre-kickoff windows.
 
 ## Waiting on a date or on data
 
@@ -48,6 +41,8 @@ _(nothing)_
 
 ## Done
 
+- 2026-10-21: club soccer final exam (works, calibrated, trails market, no money edge; ClubElo untested, API down 3 days) and refit `soccer-v2-refit-20261021`
+- 2026-10-21: basketball shakedown passed (predictions before every tip, scheduled checks ran, grading works; one pull-failure bug found)
 - 2026-10-20 v2.3.0: OVR on one scale across seasons; past seasons, all-time top 25, team history
 - 2026-10-20 v2.2.2: fixed the "ft" ligature glitch in DraftKings on iPhone
 - 2026-10-20 v2.2.1: phone layout for the slate
