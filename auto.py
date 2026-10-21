@@ -28,7 +28,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import db
-from pull_odds import MIN_CREDITS, credits_left
+from pull_odds import MIN_CREDITS, api_keys, credits_left
 
 HERE = Path(__file__).parent
 LOG_DIR = HERE / "logs"
@@ -43,14 +43,20 @@ FRESH_ODDS = timedelta(minutes=15)          # a sport's odds newer than this don
 WOKE_GAP = timedelta(minutes=20)            # a gap this long between runs = Mac was asleep
 LOW_CREDITS_WARN = 150                       # notify below this
 COLLEGE_WINDOWS_MIN_CREDITS = 100            # below this, skip college pre-kickoff pulls
-SPORTS = ("nfl", "ncaaf", "nba", "ncaab")
+SPORTS = ("nfl", "ncaaf", "nba", "ncaab", "soccer_club")
 
 MORNING = [["pull_games.py", "all"], ["pull_history.py", "all", "--current"],
            ["pull_basketball_history.py", "nba", "current"], ["pull_basketball_history.py", "ncaab", "current"],
+           ["pull_soccer_history.py", "current"],
            ["pull_odds.py", "all"]] + [["predict.py", s] for s in SPORTS] + [["shadow.py", "log", "all"]] \
-          + [["grade.py", s] for s in SPORTS] \
-          + [["pull_soccer_history.py", "current"]]   # soccer rankings stay fresh; last, so it can't block the rest
-NIGHT = [["pull_games.py", "all"]] + [["grade.py", s] for s in SPORTS]
+          + [["grade.py", s] for s in SPORTS]
+NIGHT = [["pull_games.py", "all"], ["pull_soccer_history.py", "current"]] + [["grade.py", s] for s in SPORTS]
+
+
+def window_steps(sport):
+    """Steps for a pre-kickoff pull: odds, predictions, and shadow challengers (none for soccer yet)."""
+    return [["pull_odds.py", sport], ["predict.py", sport]] + (
+        [] if sport == "soccer_club" else [["shadow.py", "log", sport]])
 
 
 def online():
@@ -154,17 +160,14 @@ def due_tasks(conn, state, et, woke=False):
             key = f"{sport}|{first}"
             if key not in state["windows"]:
                 tasks.append((f"{sport.upper()} closing odds ({n} game(s) from {db.fmt_et(first)})",
-                              ("windows", key), [["pull_odds.py", sport], ["predict.py", sport],
-                                                     ["shadow.py", "log", sport]]))
+                              ("windows", key), window_steps(sport)))
         if woke:
             if last is None or utc - last >= CATCHUP_STALE:
                 for first, n in kickoff_windows(conn, sport, utc + PULL_BEFORE[1], utc + CATCHUP_AHEAD, utc):
                     key = f"{sport}|{first}|catchup"
                     if key not in state["windows"]:
                         tasks.append((f"{sport.upper()} catch-up odds after wake ({n} game(s) from "
-                                      f"{db.fmt_et(first)})", ("windows", key),
-                                      [["pull_odds.py", sport], ["predict.py", sport],
-                                       ["shadow.py", "log", sport]]))
+                                      f"{db.fmt_et(first)})", ("windows", key), window_steps(sport)))
                         break  # one pull covers every game of the sport
     return tasks
 
@@ -246,7 +249,8 @@ def main():
                 and credits < COLLEGE_WINDOWS_MIN_CREDITS:
             log(f"skipping {name}: only {credits} credits left (saving them for NFL)")
             continue
-        if kind == "windows" and credits is not None and credits - 1 < MIN_CREDITS:
+        cost = len(api_keys(key.split("|")[0])) if kind == "windows" else 0
+        if kind == "windows" and credits is not None and credits - cost < MIN_CREDITS:
             notify(f"Skipping {name}: credits would drop below {MIN_CREDITS}.")
             continue
         if dry:
@@ -255,7 +259,7 @@ def main():
         if not dry:
             if kind == "windows":
                 state["windows"][key] = db.to_utc(datetime.now(timezone.utc))
-                credits = credits - 1 if credits is not None else None
+                credits = credits - cost if credits is not None else None
             elif ok:
                 state[kind] = key
             save_state(state)

@@ -14,11 +14,11 @@ _(nothing)_
 
 ## Up next
 
-1. **Club soccer: live (v3.0.0)**, needs the $30 Odds API plan. Add soccer to `pull_games`/`pull_odds` `all`, the morning routine (`pull_soccer_history.py current`), and pre-kickoff windows.
+1. **Club soccer shakedown check** (after the first weekend, around Mon Oct 26): early-kickoff closing pulls (6:50 AM wake), predictions before every game, results and grading, the 8 AM news check.
 
 ## Waiting on a date or on data
 
-- **Nov 3:** Talal buys the $30 Odds API plan (approved) when college basketball starts.
+- **Each summer (from July 2027):** add promoted soccer clubs to `teams.SOCCER_TEAMS` (checked against football-data, ESPN, The Odds API) before the season starts.
 - **200 graded games per sport:** evidence-based Low / Medium / High confidence, and
   rule-8 blending by track record.
 - **Shadow challengers' promotion bars** (100+ bets for rules, 150+ games for models).
@@ -40,6 +40,7 @@ _(nothing)_
 
 ## Done
 
+- 2026-10-21 v3.0.0: club soccer live (Big 5, three-way predictions, grading with RPS, Soccer tab, automation, 8 AM news check); $30 Odds API plan bought
 - 2026-10-21 v2.4.0: soccer power rankings (Big 5 together via UEFA coefficients; adjustable league strength)
 - 2026-10-21 v2.3.1: odds pulls skip games our schedule says already started (was a false failure)
 - 2026-10-21: club soccer final exam (works, calibrated, trails market, no money edge; ClubElo untested, API down 3 days) and refit `soccer-v2-refit-20261021`

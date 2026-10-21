@@ -9,9 +9,10 @@ Usage:
       record that the news supports the starter the model already assumes
       ("verified": nothing contradicts him). Refused if the name doesn't match;
       record a `qb` fact instead in that case.
-  python3 news.py targets ncaaf|ncaab|nba [hours]
+  python3 news.py targets ncaaf|ncaab|nba|soccer_club [hours]
       games in the next N hours (default 24) that need a news check and have none recorded:
-      college games where the engine differs from the market by 4+ points; every NBA game.
+      college and club soccer games where the engine differs from the market by 4+ points
+      (soccer: on any of home/draw/away); every NBA game.
       Biggest disagreements first, at most 15.
   python3 news.py reviewed <game id> <source url> "<reason>"
       record that the news was checked and nothing material changes the game (a
@@ -19,6 +20,7 @@ Usage:
   python3 news.py adjust <game id> <home shift in points> <source url> "<reason>"
       a judgment adjustment, e.g. 1.5 moves the home team up 1.5 percentage
       points (away down 1.5). Capped at config.MAX_ADJUSTMENT per game in total.
+      Club soccer: the draw chance is left unchanged; the shift moves between home and away.
 
 Then run `python3 predict.py <sport>` to log the claude prediction.
 Every entry needs a source link and a reason, and must be made before kickoff.
@@ -118,6 +120,19 @@ def news_targets(conn, sport, hours=24, limit=15):
         " AND NOT EXISTS (SELECT 1 FROM adjustments a WHERE a.game_id = games.id)",
         (sport, db.to_utc(now), db.to_utc(now + timedelta(hours=hours)))).fetchall()
     out = []
+    if sport == "soccer_club":
+        from predict_soccer import latest_odds
+        for g in games:
+            eng = conn.execute("SELECT p_home, p_draw, p_away FROM predictions WHERE game_id = ? AND source = 'engine'"
+                               " AND corrects_id IS NULL ORDER BY created_at DESC, id DESC LIMIT 1", (g["id"],)).fetchone()
+            mkt = latest_odds(conn, g["id"])
+            if not eng or not mkt:
+                continue
+            gaps = [eng[k] - mkt["p"][i] for i, k in enumerate(("p_home", "p_draw", "p_away"))]
+            if max(abs(x) for x in gaps) >= config.EDGE_THRESHOLD:
+                out.append((max(abs(x) for x in gaps), g, eng["p_home"], mkt["p_home"]))
+        out.sort(key=lambda x: -x[0])
+        return out[:limit]
     for g in games:
         eng = conn.execute("SELECT p_home FROM predictions WHERE game_id = ? AND source = 'engine'"
                            " AND corrects_id IS NULL ORDER BY created_at DESC, id DESC LIMIT 1", (g["id"],)).fetchone()
@@ -140,7 +155,9 @@ def record_adjustment(conn, game_id, shift_points, url, reason):
     if base is None:
         sys.exit("No engine prediction for that game yet. Run predict.py first.")
     d = shift_points / 100
-    db.add_adjustment(conn, game_id, base["id"], d_home=d, d_away=-d, reason=reason, source_url=url)
+    soccer = conn.execute("SELECT sport FROM games WHERE id = ?", (game_id,)).fetchone()[0] == "soccer_club"
+    db.add_adjustment(conn, game_id, base["id"], d_home=d, d_away=-d, d_draw=0.0 if soccer else None,
+                      reason=reason, source_url=url)
     used = conn.execute("SELECT SUM(d_home) FROM adjustments WHERE game_id = ?", (game_id,)).fetchone()[0]
     if shift_points == 0:
         print("Recorded review: news checked, nothing material (no change to the probability).")

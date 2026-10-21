@@ -2,7 +2,7 @@
 
 Usage: python3 pull_games.py nfl | ncaaf | nba | ncaab | soccer_club | all
 
-`all` = the sports that are live (ALL_SPORTS); club soccer is added once it goes live.
+`all` = the sports that are live (ALL_SPORTS).
 
 - New upcoming games are added to `games`.
 - If a kickoff time moved before the game starts, it is updated.
@@ -138,15 +138,15 @@ def soccer_games():
                            neutral_site=bool(comp.get("neutralSite")), live_eligible=True,
                            home_score=int(teams["home"]["score"]) if done else None,
                            away_score=int(teams["away"]["score"]) if done else None)
-    if unknown:
-        raise RuntimeError("unknown soccer team(s); add them to SOCCER_TEAMS in teams.py, checked against "
-                           "all three sources: " + "; ".join(sorted(unknown)))
+    for name in sorted(unknown):
+        print(f"  NOTE: unknown soccer team {name}: its games are skipped until it's added to "
+              "SOCCER_TEAMS in teams.py (checked against all three sources)")
 
 
 SOURCES = {"nfl": ("nflverse", nfl_games), "ncaaf": ("cfbd", ncaaf_games),
            "nba": ("espn", nba_games), "ncaab": ("cbbd", ncaab_games),
            "soccer_club": ("espn_soccer", soccer_games)}
-ALL_SPORTS = ("nfl", "ncaaf", "nba", "ncaab")
+ALL_SPORTS = ("nfl", "ncaaf", "nba", "ncaab", "soccer_club")
 
 
 def sync(conn, sport):

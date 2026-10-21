@@ -23,7 +23,7 @@ from teams import TeamNames
 API = "https://api.the-odds-api.com/v4"
 SPORT_KEYS = {"nfl": "americanfootball_nfl", "ncaaf": "americanfootball_ncaaf",
               "nba": "basketball_nba", "ncaab": "basketball_ncaab", "soccer_club": None}
-ALL_SPORTS = ("nfl", "ncaaf", "nba", "ncaab")   # club soccer joins once it goes live
+ALL_SPORTS = ("nfl", "ncaaf", "nba", "ncaab", "soccer_club")
 
 
 def api_keys(sport):

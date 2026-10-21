@@ -171,9 +171,9 @@ def current(conn, start=None):
         conn.commit()
         d += timedelta(days=1)
     print(f"Club soccer (this season, from ESPN): {added} new finished games.")
-    if unknown:
-        sys.exit("STOP: unknown team(s), not loaded (add them to SOCCER_TEAMS in teams.py, checked "
-                 "against all three sources):\n  " + "\n  ".join(sorted(unknown)))
+    for name in sorted(unknown):
+        print(f"  NOTE: unknown team {name}, its games not loaded: add it to SOCCER_TEAMS in teams.py "
+              "(checked against all three sources). Predictions skip its games until then.")
 
 
 def summary(conn):

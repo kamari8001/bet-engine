@@ -4,6 +4,22 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 3.0.0 (2026-10-21): club soccer is live
+New sport (MAJOR): the Big 5 European leagues (Premier League, La Liga, Bundesliga, Serie A,
+Ligue 1), with three outcomes: home, draw, away.
+- Model `soccer-v2-refit-20261021`: attack and defense ratings per club, expected goals, and a
+  scoreline model (Poisson + Dixon-Coles); shots on target help the ratings. Final exam: works and
+  is calibrated, trails the market, no money edge (-13.9%), so flags are paper only, Low confidence.
+- Predictions before every kickoff with edges on all three outcomes; at most one flag per game
+  (draws can be flagged). Grading adds RPS, a soccer-standard score where a draw sits between a
+  home and an away win.
+- Slate: a Soccer tab (league filter, Draw row, three-way odds by book), plus Live, Positions,
+  and Scorecard. Your pick: a team or Draw and your chance; the other two split the rest in the
+  market's proportions.
+- Automation: soccer odds (5 credits a pull) and predictions in the 9 AM routine and before each
+  kickoff group, results overnight; a scheduled Claude team news check at 8 AM daily.
+- The $30 Odds API plan (20,000 credits a month) is active.
+
 ## 2.4.0 (2026-10-21): soccer power rankings
 - Rankings tab has **Soccer**: every Big 5 club in one list, with the same OVR scale, season picker
   (2012-13 on), all-time top 25, and team pages. Clubs from different leagues are compared using

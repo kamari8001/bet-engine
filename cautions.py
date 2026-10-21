@@ -92,7 +92,7 @@ def game_warnings(conn, g, pred, mkt, now=None):
                 out.append("news not checked for this game (the model can't see college injuries)")
             if g["sport"] == "nba" and not reviewed:
                 out.append("injury report not checked (the model can't see who's sitting out)")
-            if g["sport"] == "soccer_club" and not reviewed:
+            if g["sport"] == "soccer_club" and edge >= 0.04 and not reviewed:
                 out.append("team news not checked (the model can't see injuries or suspensions)")
 
     # Early season: ratings still settling
