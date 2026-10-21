@@ -48,13 +48,15 @@ class SoccerEngine:
 
 def soccer_inputs(conn, games):
     """{game id: {kickoff, rest days}}: days since each team's previous league game (history or
-    live schedule); None after a 30+ day break."""
+    live schedule); None after a 30+ day break. European games don't count (the model was tuned on
+    domestic rest days)."""
     def last_date(team, before_utc):
         live = conn.execute("SELECT MAX(start_time_utc) FROM games WHERE sport = ? AND ? IN (home_team, away_team)"
                             " AND start_time_utc < ? AND NOT EXISTS (SELECT 1 FROM results r WHERE r.game_id = games.id"
                             " AND r.status = 'cancelled')", (SPORT, team, before_utc)).fetchone()[0]
         hist = conn.execute("SELECT MAX(kickoff_utc) FROM hist_games WHERE sport = ? AND ? IN (home_team, away_team)"
-                            " AND kickoff_utc < ?", (SPORT, team, before_utc)).fetchone()[0]
+                            f" AND kickoff_utc < ? AND league NOT IN ({','.join(repr(x) for x in sm.EUROPE)})",
+                            (SPORT, team, before_utc)).fetchone()[0]
         last = max(x for x in (live, hist, "") if x is not None)
         return db.utc_to_eastern(last).date() if last else None
     out = {}

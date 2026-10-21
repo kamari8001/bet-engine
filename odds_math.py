@@ -42,7 +42,8 @@ def american_from_decimal(dec):
 # Entries in the historical odds that are NOT prices you could bet before the game:
 # prediction sites' own projections, averages, opening lines, and live in-game prices.
 NOT_A_SPORTSBOOK = {"numberfire", "teamrankings", "accuscore", "betegy", "consensus", "opening",
-                    "fantasy911.com", "espn: no moneyline", "market average", "market average (close)"}
+                    "fantasy911.com", "espn: no moneyline", "market average", "market average (close)",
+                    "betradar"}
 
 
 def is_pregame_sportsbook(provider):

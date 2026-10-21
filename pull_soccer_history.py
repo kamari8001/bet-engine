@@ -6,6 +6,10 @@ Usage:
   python3 pull_soccer_history.py current [--from YYYY-MM-DD]
                                                       this season's finished Big 5 games from ESPN
                                                       (last 4 days; --from to backfill; daily)
+  python3 pull_soccer_history.py extra [--refresh]    other European top flights (Portugal, Netherlands,
+                                                      Belgium, Scotland, Turkey, Greece, Austria, Switzerland,
+                                                      Denmark, Norway, Sweden, Poland, Romania, Russia), history
+                                                      only, for Champions League clubs; --refresh = this season
   python3 pull_soccer_history.py summary              what's loaded, per league and season
 
 Seasons are labeled by the year they end (2026 = 2025-26), like basketball.
@@ -35,6 +39,14 @@ from teams import SOCCER_BY_ESPN_ID, SOCCER_LEAGUES
 FD_URL = "https://football-data.co.uk/mmz4281/{code}/{div}.csv"
 CACHE = Path(__file__).parent / "cache" / "football_data"
 PAST_SEASONS = range(2006, 2027)          # 2005-06 through 2025-26
+FD_NEW_URL = "https://www.football-data.co.uk/new/{code}.csv"
+EXTRA_SEASONS = range(2006, 2028)         # incl. the current season (refreshed with --refresh)
+# Other top flights whose clubs play in Europe (history only, never predicted)
+EXTRA_MAIN = {"P1": "Primeira Liga", "N1": "Eredivisie", "B1": "Belgian Pro League",
+              "SC0": "Scottish Premiership", "T1": "Super Lig", "G1": "Greek Super League"}
+EXTRA_NEW = {"AUT": "Austrian Bundesliga", "SWZ": "Swiss Super League", "DNK": "Danish Superliga",
+             "NOR": "Eliteserien", "SWE": "Allsvenskan", "POL": "Ekstraklasa", "ROU": "Romanian Liga I",
+             "RUS": "Russian Premier League"}
 SECOND_DIVISIONS = {"E1": "Championship", "SP2": "La Liga 2", "D2": "2. Bundesliga",
                     "I2": "Serie B", "F2": "Ligue 2"}
 UK = ZoneInfo("Europe/London")
@@ -87,47 +99,99 @@ def num(r, key, kind=float):
         return None
 
 
+def insert_fd(conn, div, league, season, r):
+    """Save one football-data row (main-file column names). Returns odds rows added, or None if the
+    game was already loaded."""
+    d = datetime.strptime(r["Date"], "%d/%m/%Y" if len(r["Date"]) == 10 else "%d/%m/%y").date()
+    kickoff = None
+    if (r.get("Time") or "").strip():
+        hh, mm = map(int, r["Time"].strip().split(":"))
+        kickoff = datetime(d.year, d.month, d.day, hh, mm, tzinfo=UK)
+    et = kickoff.astimezone(db.EASTERN) if kickoff else None
+    ext = f"{div}-{d.isoformat()}-{r['HomeTeam']}-{r['AwayTeam']}"
+    try:
+        gid = insert_game(conn, sport="soccer_club", league=league, season=season, week=None,
+                          season_type="regular",
+                          game_date_et=et.strftime("%Y-%m-%d") if et else d.isoformat(),
+                          kickoff_et=et.strftime("%Y-%m-%d %H:%M") if et else None,
+                          kickoff_utc=db.to_utc(kickoff) if kickoff else None,
+                          home_team=r["HomeTeam"].strip(), away_team=r["AwayTeam"].strip(),
+                          home_score=int(r["FTHG"]), away_score=int(r["FTAG"]),
+                          home_shots_ot=num(r, "HST", int), away_shots_ot=num(r, "AST", int),
+                          home_xg=num(r, "HxG"), away_xg=num(r, "AxG"),
+                          neutral_site=0, source="football-data", external_id=ext)
+    except Exception as err:
+        if "UNIQUE" not in str(err):
+            raise
+        return None  # already loaded
+    n = 0
+    for provider, timing, options in ODDS_COLUMNS:
+        for cols in options:
+            h, dr, a = (american_from_decimal(num(r, c)) for c in cols)
+            if None not in (h, dr, a):
+                insert_odds(conn, hist_game_id=gid, provider=provider, timing=timing,
+                            home_ml=h, draw_ml=dr, away_ml=a, source="football-data")
+                n += 1
+                break
+    return n
+
+
 def past(conn, refresh=False):
     added = odds_rows = 0
     for season in PAST_SEASONS:
         season_added = 0
         for div, league in divisions().items():
             for r in fd_file(div, season, refresh):
-                d = datetime.strptime(r["Date"], "%d/%m/%Y" if len(r["Date"]) == 10 else "%d/%m/%y").date()
-                kickoff = None
-                if (r.get("Time") or "").strip():
-                    hh, mm = map(int, r["Time"].strip().split(":"))
-                    kickoff = datetime(d.year, d.month, d.day, hh, mm, tzinfo=UK)
-                et = kickoff.astimezone(db.EASTERN) if kickoff else None
-                ext = f"{div}-{d.isoformat()}-{r['HomeTeam']}-{r['AwayTeam']}"
-                try:
-                    gid = insert_game(conn, sport="soccer_club", league=league, season=season, week=None,
-                                      season_type="regular",
-                                      game_date_et=et.strftime("%Y-%m-%d") if et else d.isoformat(),
-                                      kickoff_et=et.strftime("%Y-%m-%d %H:%M") if et else None,
-                                      kickoff_utc=db.to_utc(kickoff) if kickoff else None,
-                                      home_team=r["HomeTeam"].strip(), away_team=r["AwayTeam"].strip(),
-                                      home_score=int(r["FTHG"]), away_score=int(r["FTAG"]),
-                                      home_shots_ot=num(r, "HST", int), away_shots_ot=num(r, "AST", int),
-                                      home_xg=num(r, "HxG"), away_xg=num(r, "AxG"),
-                                      neutral_site=0, source="football-data", external_id=ext)
-                except Exception as err:
-                    if "UNIQUE" not in str(err):
-                        raise
-                    continue  # already loaded
-                added += 1
-                season_added += 1
-                for provider, timing, options in ODDS_COLUMNS:
-                    for cols in options:
-                        h, dr, a = (american_from_decimal(num(r, c)) for c in cols)
-                        if None not in (h, dr, a):
-                            insert_odds(conn, hist_game_id=gid, provider=provider, timing=timing,
-                                        home_ml=h, draw_ml=dr, away_ml=a, source="football-data")
-                            odds_rows += 1
-                            break
+                n = insert_fd(conn, div, league, season, r)
+                if n is not None:
+                    added += 1
+                    season_added += 1
+                    odds_rows += n
         conn.commit()
         print(f"  {season - 1}-{season % 100:02d}: {season_added} games added", flush=True)
     print(f"Past seasons: {added} games and {odds_rows} odds rows added.")
+
+
+def fd_new_file(code, refresh=False):
+    """football-data's one-file-per-country leagues (all seasons in one CSV)."""
+    path = CACHE / f"new_{code}.csv"
+    if refresh or not path.exists() or path.stat().st_size == 0:
+        CACHE.mkdir(parents=True, exist_ok=True)
+        req = urllib.request.Request(FD_NEW_URL.format(code=code), headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=60) as r:
+            path.write_bytes(r.read())
+        time.sleep(0.3)
+    raw = path.read_bytes().decode("utf-8-sig", "replace")
+    if not raw.startswith("Country"):
+        raise RuntimeError(f"{path.name} isn't a football-data CSV file; delete it and re-run")
+    return [r for r in csv.DictReader(io.StringIO(raw)) if r.get("Home") and r.get("HG")]
+
+
+def extra(conn, refresh=False):
+    """The other European top flights (history for Champions League clubs; never predicted)."""
+    added = odds_rows = 0
+    for div, league in EXTRA_MAIN.items():
+        n_league = 0
+        for season in EXTRA_SEASONS:
+            current = season == current_season("soccer_club")
+            for r in fd_file(div, season, refresh and current):
+                n = insert_fd(conn, div, league, season, r)
+                if n is not None:
+                    added, n_league, odds_rows = added + 1, n_league + 1, odds_rows + n
+        conn.commit()
+        print(f"  {league}: {n_league} games added", flush=True)
+    for code, league in EXTRA_NEW.items():
+        n_league = 0
+        for r in fd_new_file(code, refresh):
+            season = int(r["Season"].split("/")[-1])          # "2012/2013" -> 2013; "2026" -> 2026
+            row = {"Date": r["Date"], "Time": r.get("Time", ""), "HomeTeam": r["Home"], "AwayTeam": r["Away"],
+                   "FTHG": r["HG"], "FTAG": r["AG"], **{k: v for k, v in r.items() if k[:3] in ("PSC", "Avg", "B36")}}
+            n = insert_fd(conn, code, league, season, row)
+            if n is not None:
+                added, n_league, odds_rows = added + 1, n_league + 1, odds_rows + n
+        conn.commit()
+        print(f"  {league}: {n_league} games added", flush=True)
+    print(f"Extra leagues: {added} games and {odds_rows} odds rows added.")
 
 
 def current(conn, start=None):
@@ -196,12 +260,14 @@ def summary(conn):
 
 def main():
     args = sys.argv[1:]
-    if not args or args[0] not in ("past", "current", "summary"):
+    if not args or args[0] not in ("past", "current", "summary", "extra"):
         sys.exit(__doc__)
     conn = db.connect()
     db.upgrade_db(conn)
     if args[0] == "past":
         past(conn, refresh="--refresh" in args)
+    elif args[0] == "extra":
+        extra(conn, refresh="--refresh" in args)
     elif args[0] == "current":
         start = date.fromisoformat(args[args.index("--from") + 1]) if "--from" in args else None
         current(conn, start)

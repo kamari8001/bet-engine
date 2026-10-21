@@ -62,3 +62,9 @@ model itself improved (0.640 -> 0.608).
 **Verdict:** both sports work and are calibrated but trail the market; neither made money.
 They go live with flags paper only / Low confidence, like football. For basketball, player
 availability (injuries, rest) is the main thing the model misses, so the news step matters most.
+
+**Note added 2026-10-21:** "Betradar" (a sports-data supplier, not a sportsbook) was later found among
+ESPN's NBA odds providers: 151 NBA game prices. They're now excluded (`odds_math.NOT_A_SPORTSBOOK`) and
+deleted from `hist_odds`. The final exam above (run 2026-10-19) counted them in the market average for
+those games; it is not re-run (one-time rule), and the effect is small (about 151 of roughly 4,000 games
+had a Betradar price alongside real sportsbooks').

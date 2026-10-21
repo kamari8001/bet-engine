@@ -1,0 +1,3705 @@
+{
+ "6418": {
+  "espn_name": "1. FC Heidenheim 1846",
+  "ours": "Heidenheim",
+  "proposed": "Heidenheim",
+  "league": "Bundesliga",
+  "espn_league": "ger.2",
+  "how": "auto",
+  "score": 1.0
+ },
+ "598": {
+  "espn_name": "1. FC Union Berlin",
+  "ours": "Union Berlin",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "17501": {
+  "espn_name": "AC Libertas",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "103": {
+  "espn_name": "AC Milan",
+  "ours": "Milan",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "887": {
+  "espn_name": "AEK Athens",
+  "ours": "AEK",
+  "proposed": "AEK",
+  "league": "Greek Super League",
+  "espn_league": "gre.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "4039": {
+  "espn_name": "AEK Larnaca",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "cyp.1"
+ },
+ "8357": {
+  "espn_name": "AEL",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "cyp.1"
+ },
+ "349": {
+  "espn_name": "AFC Bournemouth",
+  "ours": "Bournemouth",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "7853": {
+  "espn_name": "AGF",
+  "ours": "Aarhus",
+  "proposed": "FC Copenhagen",
+  "league": "Danish Superliga",
+  "espn_league": "den.1",
+  "how": "manual",
+  "score": 0.308,
+  "note": "checked by hand 2026-10-21"
+ },
+ "994": {
+  "espn_name": "AIK",
+  "ours": "AIK",
+  "proposed": "AIK",
+  "league": "Allsvenskan",
+  "espn_league": "swe.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "3030": {
+  "espn_name": "AIK Solna",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "174": {
+  "espn_name": "AS Monaco",
+  "ours": "Monaco",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "104": {
+  "espn_name": "AS Roma",
+  "ours": "Roma",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "8102": {
+  "espn_name": "AS Trencin",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "17881": {
+  "espn_name": "ASA Targu Mures",
+  "ours": "Targu Mures",
+  "proposed": "Targu Mures",
+  "league": "Romanian Liga I",
+  "espn_league": "rou.1",
+  "how": "auto",
+  "score": 0.846
+ },
+ "140": {
+  "espn_name": "AZ Alkmaar",
+  "ours": "AZ Alkmaar",
+  "proposed": "AZ Alkmaar",
+  "league": "Eredivisie",
+  "espn_league": "ned.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "2986": {
+  "espn_name": "AaB",
+  "ours": "Aalborg",
+  "proposed": "Aalborg",
+  "league": "Danish Superliga",
+  "espn_league": "den.1",
+  "how": "auto",
+  "score": 0.6
+ },
+ "263": {
+  "espn_name": "Aberdeen",
+  "ours": "Aberdeen",
+  "proposed": "Aberdeen",
+  "league": "Scottish Premiership",
+  "espn_league": "sco.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "4201": {
+  "espn_name": "Aberystwyth Town",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "4193": {
+  "espn_name": "Airbus UK",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "wal.1"
+ },
+ "139": {
+  "espn_name": "Ajax Amsterdam",
+  "ours": "Ajax",
+  "proposed": "Ajax",
+  "league": "Eredivisie",
+  "espn_league": "ned.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "20027": {
+  "espn_name": "Akademija Pandev",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "18330": {
+  "espn_name": "Akhisar Belediyespor",
+  "ours": "Akhisar Belediyespor",
+  "proposed": "Akhisar Belediyespor",
+  "league": "Super Lig",
+  "espn_league": "tur.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "6733": {
+  "espn_name": "Aktobe",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "17858": {
+  "espn_name": "Alashkert FC",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "441": {
+  "espn_name": "Anderlecht",
+  "ours": "Anderlecht",
+  "proposed": "Anderlecht",
+  "league": "Belgian Pro League",
+  "espn_league": "bel.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "2550": {
+  "espn_name": "Anorthosis",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "cyp.1"
+ },
+ "17544": {
+  "espn_name": "Antwerp",
+  "ours": "Antwerp",
+  "proposed": "Antwerp",
+  "league": "Belgian Pro League",
+  "espn_league": "bel.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "2497": {
+  "espn_name": "Apoel Nicosia",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "cyp.1"
+ },
+ "525": {
+  "espn_name": "Apollon Limassol",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "cyp.1"
+ },
+ "20024": {
+  "espn_name": "Ararat-Armenia",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "11553": {
+  "espn_name": "Aris",
+  "ours": "Aris",
+  "proposed": "Aris",
+  "league": "Greek Super League",
+  "espn_league": "gre.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "21530": {
+  "espn_name": "Aris Limassol",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "cyp.1"
+ },
+ "5890": {
+  "espn_name": "Arka Gdynia",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "15784": {
+  "espn_name": "Arouca",
+  "ours": "Arouca",
+  "proposed": "Arouca",
+  "league": "Primeira Liga",
+  "espn_league": "por.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "359": {
+  "espn_name": "Arsenal",
+  "ours": "Arsenal",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "8354": {
+  "espn_name": "Asteras Tripoli",
+  "ours": "Asteras Tripolis",
+  "proposed": "Asteras Tripolis",
+  "league": "Greek Super League",
+  "espn_league": "gre.1",
+  "how": "auto",
+  "score": 0.968
+ },
+ "362": {
+  "espn_name": "Aston Villa",
+  "ours": "Aston Villa",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "105": {
+  "espn_name": "Atalanta",
+  "ours": "Atalanta",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "93": {
+  "espn_name": "Athletic Club",
+  "ours": "Ath Bilbao",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "1068": {
+  "espn_name": "Atlético Madrid",
+  "ours": "Ath Madrid",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "6790": {
+  "espn_name": "Atromitos",
+  "ours": "Atromitos",
+  "proposed": "Atromitos",
+  "league": "Greek Super League",
+  "espn_league": "gre.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "1382": {
+  "espn_name": "Austria Vienna",
+  "ours": "Austria Vienna",
+  "proposed": "Austria Vienna",
+  "league": "Austrian Bundesliga",
+  "espn_league": "aut.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "2510": {
+  "espn_name": "B36 Torshavn",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "497": {
+  "espn_name": "BATE Borisov",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "7834": {
+  "espn_name": "BK Häcken",
+  "ours": "Hacken",
+  "proposed": "Hacken",
+  "league": "Allsvenskan",
+  "espn_league": "swe.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "10496": {
+  "espn_name": "Bala Town",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "wal.1"
+ },
+ "21526": {
+  "espn_name": "Ballkani",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "7595": {
+  "espn_name": "Ballymena",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "nir.1"
+ },
+ "17859": {
+  "espn_name": "Balzan FC",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "mlt.1"
+ },
+ "11494": {
+  "espn_name": "Banga",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "2560": {
+  "espn_name": "Bangor City",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "wal.1"
+ },
+ "83": {
+  "espn_name": "Barcelona",
+  "ours": "Barcelona",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "621": {
+  "espn_name": "Barry Town",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "wal.1"
+ },
+ "131": {
+  "espn_name": "Bayer Leverkusen",
+  "ours": "Leverkusen",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "132": {
+  "espn_name": "Bayern Munich",
+  "ours": "Bayern Munich",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "5218": {
+  "espn_name": "Beitar Jerusalem",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "isr.1"
+ },
+ "3519": {
+  "espn_name": "Belenenses",
+  "ours": "Belenenses",
+  "proposed": "Belenenses",
+  "league": "Primeira Liga",
+  "espn_league": "por.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "1929": {
+  "espn_name": "Benfica",
+  "ours": "Benfica",
+  "proposed": "Benfica",
+  "league": "Primeira Liga",
+  "espn_league": "por.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "5993": {
+  "espn_name": "Beroe Stara Zagora",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "1895": {
+  "espn_name": "Besiktas",
+  "ours": "Besiktas",
+  "proposed": "Besiktas",
+  "league": "Super Lig",
+  "espn_league": "tur.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "11514": {
+  "espn_name": "Birkirkara",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "506": {
+  "espn_name": "Birkirkara",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "mlt.1"
+ },
+ "6764": {
+  "espn_name": "Bnei Yehuda",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "isr.1"
+ },
+ "2980": {
+  "espn_name": "Bodo/Glimt",
+  "ours": "Bodo/Glimt",
+  "proposed": "Bodo/Glimt",
+  "league": "Eliteserien",
+  "espn_league": "nor.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "8280": {
+  "espn_name": "Bokelj",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "107": {
+  "espn_name": "Bologna",
+  "ours": "Bologna",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "20710": {
+  "espn_name": "Borac Banja Luka",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "159": {
+  "espn_name": "Bordeaux",
+  "ours": "Bordeaux",
+  "proposed": "Bordeaux",
+  "league": "Ligue 1",
+  "espn_league": "fra.2",
+  "how": "auto",
+  "score": 1.0
+ },
+ "124": {
+  "espn_name": "Borussia Dortmund",
+  "ours": "Dortmund",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "268": {
+  "espn_name": "Borussia Mönchengladbach",
+  "ours": "M'gladbach",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "7293": {
+  "espn_name": "Botev Plovdiv",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa_qual"
+ },
+ "2994": {
+  "espn_name": "Braga",
+  "ours": "Sp Braga",
+  "proposed": "Sp Braga",
+  "league": "Primeira Liga",
+  "espn_league": "por.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "8250": {
+  "espn_name": "Breidablik",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "6997": {
+  "espn_name": "Brest",
+  "ours": "Brest",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "331": {
+  "espn_name": "Brighton & Hove Albion",
+  "ours": "Brighton",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "575": {
+  "espn_name": "Brøndby IF",
+  "ours": "Brondby",
+  "proposed": "Brondby",
+  "league": "Danish Superliga",
+  "espn_league": "den.1",
+  "how": "auto",
+  "score": 0.923
+ },
+ "7822": {
+  "espn_name": "Buducnost Podgorica",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.champions_qual"
+ },
+ "379": {
+  "espn_name": "Burnley",
+  "ours": "Burnley",
+  "proposed": "Burnley",
+  "league": "EPL",
+  "espn_league": "eng.2",
+  "how": "auto",
+  "score": 1.0
+ },
+ "810": {
+  "espn_name": "Bursaspor",
+  "ours": "Bursaspor",
+  "proposed": "Bursaspor",
+  "league": "Super Lig",
+  "espn_league": "tur.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "3472": {
+  "espn_name": "C.D. Nacional",
+  "ours": "Nacional",
+  "proposed": "Nacional",
+  "league": "Primeira Liga",
+  "espn_league": "por.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "5260": {
+  "espn_name": "CFR Cluj-Napoca",
+  "ours": "CFR Cluj",
+  "proposed": "CFR Cluj",
+  "league": "Romanian Liga I",
+  "espn_league": "rou.1",
+  "how": "auto",
+  "score": 0.696
+ },
+ "11439": {
+  "espn_name": "CS Fola Esch",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "1963": {
+  "espn_name": "CSKA Moscow",
+  "ours": "CSKA Moscow",
+  "proposed": "CSKA Moscow",
+  "league": "Russian Premier League",
+  "espn_league": "rus.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "10834": {
+  "espn_name": "CSKA Sofia",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "8089": {
+  "espn_name": "CSU Craiova",
+  "ours": "U Craiova",
+  "proposed": "U Craiova",
+  "league": "Romanian Liga I",
+  "espn_league": "rou.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "18288": {
+  "espn_name": "Cardiff MU",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "wal.1"
+ },
+ "7593": {
+  "espn_name": "Cefn Druids",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "wal.1"
+ },
+ "8065": {
+  "espn_name": "Celik",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "85": {
+  "espn_name": "Celta Vigo",
+  "ours": "Celta",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "256": {
+  "espn_name": "Celtic",
+  "ours": "Celtic",
+  "proposed": "Celtic",
+  "league": "Scottish Premiership",
+  "espn_league": "sco.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "3610": {
+  "espn_name": "Cercle Brugge KSV",
+  "ours": "Cercle Brugge",
+  "proposed": "Club Brugge",
+  "league": "Belgian Pro League",
+  "espn_league": "bel.1",
+  "how": "manual",
+  "score": 0.9,
+  "note": "checked by hand 2026-10-21"
+ },
+ "363": {
+  "espn_name": "Chelsea",
+  "ours": "Chelsea",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "7837": {
+  "espn_name": "Cherno More",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "12357": {
+  "espn_name": "Chikhura Sachkhere",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "7597": {
+  "espn_name": "Cliftonville",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "nir.1"
+ },
+ "570": {
+  "espn_name": "Club Brugge",
+  "ours": "Club Brugge",
+  "proposed": "Club Brugge",
+  "league": "Belgian Pro League",
+  "espn_league": "bel.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "2723": {
+  "espn_name": "Coleraine",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "nir.1"
+ },
+ "2572": {
+  "espn_name": "Como",
+  "ours": "Como",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "7591": {
+  "espn_name": "Connah's Quay",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "wal.1"
+ },
+ "5252": {
+  "espn_name": "Cork",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "irl.1"
+ },
+ "4093": {
+  "espn_name": "Cracovia",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa_qual"
+ },
+ "7599": {
+  "espn_name": "Crusaders",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "nir.1"
+ },
+ "384": {
+  "espn_name": "Crystal Palace",
+  "ours": "Crystal Palace",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "8287": {
+  "espn_name": "Cukaricki Belgrade",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "17511": {
+  "espn_name": "Daugava Riga",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "532": {
+  "espn_name": "Debrecen",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "2712": {
+  "espn_name": "Derry City",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "irl.1"
+ },
+ "8284": {
+  "espn_name": "Dila Gori",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "12344": {
+  "espn_name": "Dinamo Batumi",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.champions_qual"
+ },
+ "7833": {
+  "espn_name": "Dinamo Brest",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "2496": {
+  "espn_name": "Dinamo Bucuresti",
+  "ours": "Din. Bucuresti",
+  "proposed": "Din. Bucuresti",
+  "league": "Romanian Liga I",
+  "espn_league": "rou.1",
+  "how": "auto",
+  "score": 0.897
+ },
+ "2539": {
+  "espn_name": "Dinamo Minsk",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "596": {
+  "espn_name": "Dinamo Moscow",
+  "ours": "Dynamo Moscow",
+  "proposed": "Dynamo Moscow",
+  "league": "Russian Premier League",
+  "espn_league": "rus.1",
+  "how": "auto",
+  "score": 0.923
+ },
+ "498": {
+  "espn_name": "Dinamo Tbilisi",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "597": {
+  "espn_name": "Dinamo Zagreb",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "8013": {
+  "espn_name": "Diosgyor VTK",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "2339": {
+  "espn_name": "Djurgården",
+  "ours": "Djurgarden",
+  "proposed": "Djurgarden",
+  "league": "Allsvenskan",
+  "espn_league": "swe.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "600": {
+  "espn_name": "Dnipro Dnipropetrovsk",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "19243": {
+  "espn_name": "Drita Gjilan",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "19247": {
+  "espn_name": "Dunajska Streda",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "18753": {
+  "espn_name": "Dunav Ruse",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "2559": {
+  "espn_name": "Dundalk",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "irl.1"
+ },
+ "440": {
+  "espn_name": "Dynamo Kyiv",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "21943": {
+  "espn_name": "Egnatia",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "125": {
+  "espn_name": "Eintracht Frankfurt",
+  "ours": "Ein Frankfurt",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "12312": {
+  "espn_name": "Ermis Aradippou",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "12504": {
+  "espn_name": "Esbjerg FB",
+  "ours": "Esbjerg",
+  "proposed": "Esbjerg",
+  "league": "Danish Superliga",
+  "espn_league": "den.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "88": {
+  "espn_name": "Espanyol",
+  "ours": "Espanol",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "12216": {
+  "espn_name": "Estoril",
+  "ours": "Estoril",
+  "proposed": "Estoril",
+  "league": "Primeira Liga",
+  "espn_league": "por.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "17503": {
+  "espn_name": "Europa FC",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "368": {
+  "espn_name": "Everton",
+  "ours": "Everton",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "909": {
+  "espn_name": "F.C. København",
+  "ours": "FC Copenhagen",
+  "proposed": "FC Copenhagen",
+  "league": "Danish Superliga",
+  "espn_league": "den.1",
+  "how": "manual",
+  "score": 0.545,
+  "note": "checked by hand 2026-10-21"
+ },
+ "2512": {
+  "espn_name": "F91 Dudelange",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "11485": {
+  "espn_name": "FC Admira Wacker Modling",
+  "ours": "Admira",
+  "proposed": "Admira",
+  "league": "Austrian Bundesliga",
+  "espn_league": "aut.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "17495": {
+  "espn_name": "FC Arsenal Tula",
+  "ours": "Arsenal Tula",
+  "proposed": "Arsenal Tula",
+  "league": "Russian Premier League",
+  "espn_league": "rus.1.promotion.relegation",
+  "how": "auto",
+  "score": 1.0
+ },
+ "12124": {
+  "espn_name": "FC Astana",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "3841": {
+  "espn_name": "FC Augsburg",
+  "ours": "Augsburg",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "989": {
+  "espn_name": "FC Basel",
+  "ours": "Basel",
+  "proposed": "Basel",
+  "league": "Swiss Super League",
+  "espn_league": "sui.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "9682": {
+  "espn_name": "FC Botosani",
+  "ours": "FC Botosani",
+  "proposed": "FC Botosani",
+  "league": "Romanian Liga I",
+  "espn_league": "rou.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "17536": {
+  "espn_name": "FC Chornomorets Odessa",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "122": {
+  "espn_name": "FC Cologne",
+  "ours": "FC Koln",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "5248": {
+  "espn_name": "FC Dacia",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "8243": {
+  "espn_name": "FC Daugava",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "7759": {
+  "espn_name": "FC Differdange 03",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "145": {
+  "espn_name": "FC Groningen",
+  "ours": "Groningen",
+  "proposed": "Groningen",
+  "league": "Eredivisie",
+  "espn_league": "ned.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "4495": {
+  "espn_name": "FC Honka",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "19248": {
+  "espn_name": "FC Ilves",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "3726": {
+  "espn_name": "FC Inter Turku",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "3364": {
+  "espn_name": "FC Koper",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "15714": {
+  "espn_name": "FC Kruoja",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "3885": {
+  "espn_name": "FC Lahti",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "2540": {
+  "espn_name": "FC Levadia Tallinn",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "7672": {
+  "espn_name": "FC Lugano",
+  "ours": "Lugano",
+  "proposed": "Lugano",
+  "league": "Swiss Super League",
+  "espn_league": "sui.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "7640": {
+  "espn_name": "FC Luzern",
+  "ours": "Luzern",
+  "proposed": "Luzern",
+  "league": "Swiss Super League",
+  "espn_league": "sui.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "2947": {
+  "espn_name": "FC Mariupol",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "8095": {
+  "espn_name": "FC Metalist Kharkiv",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "572": {
+  "espn_name": "FC Midtjylland",
+  "ours": "Midtjylland",
+  "proposed": "Midtjylland",
+  "league": "Danish Superliga",
+  "espn_league": "den.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "11440": {
+  "espn_name": "FC Milsami",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "20712": {
+  "espn_name": "FC Noah",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "3101": {
+  "espn_name": "FC Nordsjælland",
+  "ours": "Nordsjaelland",
+  "proposed": "Nordsjaelland",
+  "league": "Danish Superliga",
+  "espn_league": "den.1",
+  "how": "auto",
+  "score": 0.917
+ },
+ "18333": {
+  "espn_name": "FC Olexandriya",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "18804": {
+  "espn_name": "FC Olimpik Donetsk",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "437": {
+  "espn_name": "FC Porto",
+  "ours": "Porto",
+  "proposed": "Porto",
+  "league": "Primeira Liga",
+  "espn_league": "por.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "12353": {
+  "espn_name": "FC Samtredia",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "17860": {
+  "espn_name": "FC Saxan",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "3076": {
+  "espn_name": "FC Sion",
+  "ours": "Sion",
+  "proposed": "Sion",
+  "league": "Swiss Super League",
+  "espn_league": "sui.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "3929": {
+  "espn_name": "FC Spartak Trnava",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "19249": {
+  "espn_name": "FC Stumbras",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "3024": {
+  "espn_name": "FC Thun",
+  "ours": "Thun",
+  "proposed": "Thun",
+  "league": "Swiss Super League",
+  "espn_league": "sui.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "2946": {
+  "espn_name": "FC Tiraspol",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "152": {
+  "espn_name": "FC Twente",
+  "ours": "Twente",
+  "proposed": "Twente",
+  "league": "Eredivisie",
+  "espn_league": "ned.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "17368": {
+  "espn_name": "FC Ufa",
+  "ours": "Ufa",
+  "proposed": "Ufa",
+  "league": "Russian Premier League",
+  "espn_league": "rus.1.promotion.relegation",
+  "how": "auto",
+  "score": 1.0
+ },
+ "2719": {
+  "espn_name": "FC Urartu",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "153": {
+  "espn_name": "FC Utrecht",
+  "ours": "Utrecht",
+  "proposed": "Utrecht",
+  "league": "Eredivisie",
+  "espn_league": "ned.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "562": {
+  "espn_name": "FC Vaduz",
+  "ours": "Vaduz",
+  "proposed": "Vaduz",
+  "league": "Swiss Super League",
+  "espn_league": "sui.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "17504": {
+  "espn_name": "FC Veris",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "12303": {
+  "espn_name": "FC Vitebsk",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "18289": {
+  "espn_name": "FC Zaria Balti",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "7758": {
+  "espn_name": "FC Zestafoni",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "18835": {
+  "espn_name": "FC Zlín",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "17520": {
+  "espn_name": "FC Zorya Luhansk",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "3019": {
+  "espn_name": "FC Zürich",
+  "ours": "Zurich",
+  "proposed": "Zurich",
+  "league": "Swiss Super League",
+  "espn_league": "sui.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "12339": {
+  "espn_name": "FCI Tallinn",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.champions"
+ },
+ "484": {
+  "espn_name": "FCSB",
+  "ours": "FCSB",
+  "proposed": "FCSB",
+  "league": "Romanian Liga I",
+  "espn_league": "rou.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "2935": {
+  "espn_name": "FH Hafnarfjordur",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "17537": {
+  "espn_name": "FK Astra Giurgiu",
+  "ours": "Astra",
+  "proposed": "Astra",
+  "league": "Romanian Liga I",
+  "espn_league": "rou.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "546": {
+  "espn_name": "FK Atlantas",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "11496": {
+  "espn_name": "FK Buducnost Podgorica",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "2706": {
+  "espn_name": "FK Ekranas",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "11021": {
+  "espn_name": "FK Jelgava",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "12998": {
+  "espn_name": "FK Kapaz",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "15713": {
+  "espn_name": "FK Kukesi",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa_qual"
+ },
+ "18283": {
+  "espn_name": "FK Liepaja",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "6747": {
+  "espn_name": "FK Makedonija",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "17502": {
+  "espn_name": "FK Qabala",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "10414": {
+  "espn_name": "FK Qarabag",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa_qual"
+ },
+ "5238": {
+  "espn_name": "FK Rabotnicki",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "551": {
+  "espn_name": "FK Sarajevo",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "2940": {
+  "espn_name": "FK Sileks ",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "12033": {
+  "espn_name": "FK Spartaks Jurmala",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.champions"
+ },
+ "2552": {
+  "espn_name": "FK Suduva",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "8281": {
+  "espn_name": "FK Sutjeska",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "20713": {
+  "espn_name": "FK TSC",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "15715": {
+  "espn_name": "FK Turnovo",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "501": {
+  "espn_name": "FK Ventspils",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa_qual"
+ },
+ "11543": {
+  "espn_name": "FK Zeta",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa_qual"
+ },
+ "6740": {
+  "espn_name": "Fehérvár",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "436": {
+  "espn_name": "Fenerbahce",
+  "ours": "Fenerbahce",
+  "proposed": "Fenerbahce",
+  "league": "Super Lig",
+  "espn_league": "tur.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "622": {
+  "espn_name": "Ferencvaros",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "20020": {
+  "espn_name": "Feronikeli",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "club.friendly"
+ },
+ "142": {
+  "espn_name": "Feyenoord Rotterdam",
+  "ours": "Feyenoord",
+  "proposed": "Feyenoord",
+  "league": "Eredivisie",
+  "espn_league": "ned.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "109": {
+  "espn_name": "Fiorentina",
+  "ours": "Fiorentina",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "8594": {
+  "espn_name": "Fiorita",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "12146": {
+  "espn_name": "Flora",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "7857": {
+  "espn_name": "Floriana FC",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "mlt.1"
+ },
+ "7862": {
+  "espn_name": "Fram Reykjavik",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "432": {
+  "espn_name": "Galatasaray",
+  "ours": "Galatasaray",
+  "proposed": "Galatasaray",
+  "league": "Super Lig",
+  "espn_league": "tur.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "8127": {
+  "espn_name": "Gandzasar Kapan",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "2922": {
+  "espn_name": "Getafe",
+  "ours": "Getafe",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "9812": {
+  "espn_name": "Girona",
+  "ours": "Girona",
+  "proposed": "Girona",
+  "league": "La Liga",
+  "espn_league": "esp.2",
+  "how": "auto",
+  "score": 1.0
+ },
+ "573": {
+  "espn_name": "Glenavon",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "nir.1"
+ },
+ "571": {
+  "espn_name": "Glentoran",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "nir.1"
+ },
+ "3706": {
+  "espn_name": "Go Ahead Eagles",
+  "ours": "Go Ahead Eagles",
+  "proposed": "Go Ahead Eagles",
+  "league": "Eredivisie",
+  "espn_league": "ned.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "8180": {
+  "espn_name": "Gornik Zabrze",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "3747": {
+  "espn_name": "Granada",
+  "ours": "Granada",
+  "proposed": "Granada",
+  "league": "La Liga",
+  "espn_league": "esp.2",
+  "how": "auto",
+  "score": 1.0
+ },
+ "492": {
+  "espn_name": "Grasshoppers",
+  "ours": "Grasshoppers",
+  "proposed": "Grasshoppers",
+  "league": "Swiss Super League",
+  "espn_league": "sui.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "17578": {
+  "espn_name": "Grasshoppers Zürich",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "171": {
+  "espn_name": "Guingamp",
+  "ours": "Guingamp",
+  "proposed": "Guingamp",
+  "league": "Ligue 1",
+  "espn_league": "fra.2",
+  "how": "auto",
+  "score": 1.0
+ },
+ "12367": {
+  "espn_name": "Györi ETO FC",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.champions_qual"
+ },
+ "12934": {
+  "espn_name": "Gzira United",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "mlt.1"
+ },
+ "566": {
+  "espn_name": "HB Torshavn",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "502": {
+  "espn_name": "HJK Helsinki",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "489": {
+  "espn_name": "Hajduk Split",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "11554": {
+  "espn_name": "Hajduk Split",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "7858": {
+  "espn_name": "Hamrun Spartans",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "mlt.1"
+ },
+ "13083": {
+  "espn_name": "Hapoel Be'er",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "isr.1"
+ },
+ "9577": {
+  "espn_name": "Hapoel Haifa",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "isr.1"
+ },
+ "8327": {
+  "espn_name": "Hapoel Kiryat Shmona",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "isr.1"
+ },
+ "1037": {
+  "espn_name": "Hapoel Tel Aviv",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "isr.1"
+ },
+ "3327": {
+  "espn_name": "Haugesund",
+  "ours": "Haugesund",
+  "proposed": "Haugesund",
+  "league": "Eliteserien",
+  "espn_league": "nor.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "262": {
+  "espn_name": "Heart of Midlothian",
+  "ours": "Hearts",
+  "proposed": "Hamilton",
+  "league": "Scottish Premiership",
+  "espn_league": "sco.1",
+  "how": "manual",
+  "score": 0.519,
+  "note": "checked by hand 2026-10-21"
+ },
+ "3708": {
+  "espn_name": "Heracles Almelo",
+  "ours": "Heracles",
+  "proposed": "Heracles",
+  "league": "Eredivisie",
+  "espn_league": "ned.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "129": {
+  "espn_name": "Hertha Berlin",
+  "ours": "Hertha",
+  "proposed": "Hertha",
+  "league": "Bundesliga",
+  "espn_league": "ger.2",
+  "how": "auto",
+  "score": 0.9
+ },
+ "258": {
+  "espn_name": "Hibernian",
+  "ours": "Hibernian",
+  "proposed": "Hibernian",
+  "league": "Scottish Premiership",
+  "espn_league": "sco.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "2499": {
+  "espn_name": "Hibernians",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "mlt.1"
+ },
+ "18749": {
+  "espn_name": "Honvéd",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa_qual"
+ },
+ "306": {
+  "espn_name": "Hull City",
+  "ours": "Hull",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "2549": {
+  "espn_name": "IBV",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "8221": {
+  "espn_name": "IF Brommapojkarna",
+  "ours": "Brommapojkarna",
+  "proposed": "Brommapojkarna",
+  "league": "Allsvenskan",
+  "espn_league": "swe.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "529": {
+  "espn_name": "IF Elfsborg",
+  "ours": "Elfsborg",
+  "proposed": "Elfsborg",
+  "league": "Allsvenskan",
+  "espn_league": "swe.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "11492": {
+  "espn_name": "IF Fuglafjørdur",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "2556": {
+  "espn_name": "IFK Göteborg",
+  "ours": "Goteborg",
+  "proposed": "Goteborg",
+  "league": "Allsvenskan",
+  "espn_league": "swe.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "4509": {
+  "espn_name": "IFK Mariehamn",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.champions"
+ },
+ "8544": {
+  "espn_name": "IFK Norrköping",
+  "ours": "Norrkoping",
+  "proposed": "Norrkoping",
+  "league": "Allsvenskan",
+  "espn_league": "swe.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "20025": {
+  "espn_name": "Iberia 1999",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "17509": {
+  "espn_name": "Inter Baku",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "20703": {
+  "espn_name": "Inter D'Escaldes",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "110": {
+  "espn_name": "Internazionale",
+  "ours": "Inter",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "253": {
+  "espn_name": "Inverness Caledonian Thistle",
+  "ours": "Inverness C",
+  "proposed": "Inverness C",
+  "league": "Scottish Premiership",
+  "espn_league": "sco.2",
+  "how": "manual",
+  "score": 0.564,
+  "note": "checked by hand 2026-10-21"
+ },
+ "2695": {
+  "espn_name": "Irtysh Pavlodar",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "7914": {
+  "espn_name": "Istanbul Basaksehir",
+  "ours": "Buyuksehyr",
+  "proposed": "Istanbulspor",
+  "league": "Super Lig",
+  "espn_league": "tur.1",
+  "how": "manual",
+  "score": 0.645,
+  "note": "checked by hand 2026-10-21"
+ },
+ "11547": {
+  "espn_name": "JK Narva Trans",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "7922": {
+  "espn_name": "Jablonec",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "11505": {
+  "espn_name": "Jagiellonia Bialystok",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "17500": {
+  "espn_name": "Jagodina",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "2933": {
+  "espn_name": "Jeunesse Esch",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "8587": {
+  "espn_name": "Juvenes/Dogana",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "111": {
+  "espn_name": "Juventus",
+  "ours": "Juventus",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "3611": {
+  "espn_name": "KAA Gent",
+  "ours": "Gent",
+  "proposed": "Gent",
+  "league": "Belgian Pro League",
+  "espn_league": "bel.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "11022": {
+  "espn_name": "KF Laci",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "8151": {
+  "espn_name": "KF Shkëndija",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "2547": {
+  "espn_name": "KI Klaksvik",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "2694": {
+  "espn_name": "KR Reykjavik",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "club.friendly"
+ },
+ "7854": {
+  "espn_name": "KS Flamurtari Vlorë",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "5244": {
+  "espn_name": "KS Teuta",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "1032": {
+  "espn_name": "KSC Lokeren",
+  "ours": "Lokeren",
+  "proposed": "Lokeren",
+  "league": "Belgian Pro League",
+  "espn_league": "bel.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "3612": {
+  "espn_name": "KV Oostende",
+  "ours": "Oostende",
+  "proposed": "Oostende",
+  "league": "Belgian Pro League",
+  "espn_league": "bel.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "2528": {
+  "espn_name": "Kairat Almaty",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "11546": {
+  "espn_name": "Kalju",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "4738": {
+  "espn_name": "Karabükspor",
+  "ours": "Karabukspor",
+  "proposed": "Karabukspor",
+  "league": "Super Lig",
+  "espn_league": "tur.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "20028": {
+  "espn_name": "Kauno Zalgiris",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "260": {
+  "espn_name": "Kilmarnock",
+  "ours": "Kilmarnock",
+  "proposed": "Kilmarnock",
+  "league": "Scottish Premiership",
+  "espn_league": "sco.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "7648": {
+  "espn_name": "Konyaspor",
+  "ours": "Konyaspor",
+  "proposed": "Konyaspor",
+  "league": "Super Lig",
+  "espn_league": "tur.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "11336": {
+  "espn_name": "Krasnodar",
+  "ours": "Krasnodar",
+  "proposed": "Krasnodar",
+  "league": "Russian Premier League",
+  "espn_league": "rus.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "8169": {
+  "espn_name": "KuPS Kuopio",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "4411": {
+  "espn_name": "LASK Linz",
+  "ours": "LASK",
+  "proposed": "LASK",
+  "league": "Austrian Bundesliga",
+  "espn_league": "aut.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "20039": {
+  "espn_name": "Larne",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "nir.1"
+ },
+ "11551": {
+  "espn_name": "Lausanne Sports",
+  "ours": "Lausanne",
+  "proposed": "Lausanne",
+  "league": "Swiss Super League",
+  "espn_league": "sui.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "112": {
+  "espn_name": "Lazio",
+  "ours": "Lazio",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "2990": {
+  "espn_name": "Lech Poznan",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "9658": {
+  "espn_name": "Lechia Gdansk",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "555": {
+  "espn_name": "Legia Warsaw",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "375": {
+  "espn_name": "Leicester City",
+  "ours": "Leicester",
+  "proposed": "Leicester",
+  "league": "EPL",
+  "espn_league": "eng.2",
+  "how": "auto",
+  "score": 1.0
+ },
+ "175": {
+  "espn_name": "Lens",
+  "ours": "Lens",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "490": {
+  "espn_name": "Levski Sofia",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "594": {
+  "espn_name": "Liberec",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "166": {
+  "espn_name": "Lille",
+  "ours": "Lille",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "987": {
+  "espn_name": "Lillestrom",
+  "ours": "Lillestrom",
+  "proposed": "Lillestrom",
+  "league": "Eliteserien",
+  "espn_league": "nor.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "17497": {
+  "espn_name": "Lincoln FC",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.champions"
+ },
+ "17856": {
+  "espn_name": "Lincoln Red Imps",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "2555": {
+  "espn_name": "Linfield",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "nir.1"
+ },
+ "364": {
+  "espn_name": "Liverpool",
+  "ours": "Liverpool",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "12945": {
+  "espn_name": "Llandudno Town",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "wal.1"
+ },
+ "442": {
+  "espn_name": "Lokomotiv Moscow",
+  "ours": "Lokomotiv Moscow",
+  "proposed": "Lokomotiv Moscow",
+  "league": "Russian Premier League",
+  "espn_league": "rus.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "2952": {
+  "espn_name": "Lokomotiv Plovdiv",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "8276": {
+  "espn_name": "Lovcen",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "13018": {
+  "espn_name": "Ludogorets Razgrad",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "12543": {
+  "espn_name": "Luftëtari Gjirokastër",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "8575": {
+  "espn_name": "Lusitanos",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "7860": {
+  "espn_name": "Lyngby Boldklub",
+  "ours": "Lyngby",
+  "proposed": "Lyngby",
+  "league": "Danish Superliga",
+  "espn_league": "den.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "167": {
+  "espn_name": "Lyon",
+  "ours": "Lyon",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "6937": {
+  "espn_name": "MFK Kosice",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "12207": {
+  "espn_name": "MFK Ruzomberok",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa_qual"
+ },
+ "2491": {
+  "espn_name": "MSK Zilina",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "4032": {
+  "espn_name": "MTK Budapest",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "611": {
+  "espn_name": "Maccabi Haifa",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "isr.1"
+ },
+ "524": {
+  "espn_name": "Maccabi Tel-Aviv",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "isr.1"
+ },
+ "2950": {
+  "espn_name": "Mainz",
+  "ours": "Mainz",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "2720": {
+  "espn_name": "Malmö FF",
+  "ours": "Malmo FF",
+  "proposed": "Malmo FF",
+  "league": "Allsvenskan",
+  "espn_league": "swe.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "382": {
+  "espn_name": "Manchester City",
+  "ours": "Man City",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "360": {
+  "espn_name": "Manchester United",
+  "ours": "Man United",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "552": {
+  "espn_name": "Maritimo",
+  "ours": "Maritimo",
+  "proposed": "Maritimo",
+  "league": "Primeira Liga",
+  "espn_league": "por.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "176": {
+  "espn_name": "Marseille",
+  "ours": "Marseille",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "11024": {
+  "espn_name": "Metalurg",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "507": {
+  "espn_name": "Mika Ashtarak",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "20301": {
+  "espn_name": "Mjällby AIF",
+  "ours": "Mjallby",
+  "proposed": "Mjallby",
+  "league": "Allsvenskan",
+  "espn_league": "swe.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "6758": {
+  "espn_name": "Mlada Boleslav",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "8283": {
+  "espn_name": "Mladost Lucani",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "8278": {
+  "espn_name": "Mladost Pogorica",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "2715": {
+  "espn_name": "Molde",
+  "ours": "Molde",
+  "proposed": "Molde",
+  "league": "Eliteserien",
+  "espn_league": "nor.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "266": {
+  "espn_name": "Motherwell",
+  "ours": "Motherwell",
+  "proposed": "Motherwell",
+  "league": "Scottish Premiership",
+  "espn_league": "sco.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "536": {
+  "espn_name": "MyPa",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "12200": {
+  "espn_name": "ND Gorica",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "147": {
+  "espn_name": "NEC Nijmegen",
+  "ours": "Nijmegen",
+  "proposed": "Nijmegen",
+  "league": "Eredivisie",
+  "espn_league": "ned.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "3362": {
+  "espn_name": "NK Celje",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "3360": {
+  "espn_name": "NK Domzale",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "4413": {
+  "espn_name": "NK Lokomotiva",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "club.friendly"
+ },
+ "619": {
+  "espn_name": "NK Maribor",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "20029": {
+  "espn_name": "NS Mura",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "2710": {
+  "espn_name": "NSI Runavik",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "165": {
+  "espn_name": "Nantes",
+  "ours": "Nantes",
+  "proposed": "Nantes",
+  "league": "Ligue 1",
+  "espn_league": "fra.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "114": {
+  "espn_name": "Napoli",
+  "ours": "Napoli",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "504": {
+  "espn_name": "Neftchi",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "12148": {
+  "espn_name": "Neftchi Baku PFC",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "12305": {
+  "espn_name": "Neman Grodno",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "361": {
+  "espn_name": "Newcastle United",
+  "ours": "Newcastle",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "4172": {
+  "espn_name": "Newtown",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "wal.1"
+ },
+ "2502": {
+  "espn_name": "Nice",
+  "ours": "Nice",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "10376": {
+  "espn_name": "Nomme Kalju",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "393": {
+  "espn_name": "Nottingham Forest",
+  "ours": "Nott'm Forest",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "1010": {
+  "espn_name": "OFI Crete",
+  "ours": "OFI Crete",
+  "proposed": "OFI Crete",
+  "league": "Greek Super League",
+  "espn_league": "gre.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "602": {
+  "espn_name": "Odds BK",
+  "ours": "Odd",
+  "proposed": "Odd",
+  "league": "Eliteserien",
+  "espn_league": "nor.1",
+  "how": "auto",
+  "score": 0.857
+ },
+ "500": {
+  "espn_name": "Olimpija Ljubljana",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.champions_qual"
+ },
+ "12718": {
+  "espn_name": "Olimpik Sarajevo",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "435": {
+  "espn_name": "Olympiacos",
+  "ours": "Olympiakos",
+  "proposed": "Olympiakos",
+  "league": "Greek Super League",
+  "espn_league": "gre.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "617": {
+  "espn_name": "Omonia Nicosia",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "cyp.1"
+ },
+ "7962": {
+  "espn_name": "Ordabasy Shymkent",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "567": {
+  "espn_name": "Osijek",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "18321": {
+  "espn_name": "Osmanlispor",
+  "ours": "Osmanlispor",
+  "proposed": "Osmanlispor",
+  "league": "Super Lig",
+  "espn_league": "tur.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "605": {
+  "espn_name": "PAOK",
+  "ours": "PAOK",
+  "proposed": "PAOK",
+  "league": "Greek Super League",
+  "espn_league": "gre.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "2565": {
+  "espn_name": "PEC Zwolle",
+  "ours": "Zwolle",
+  "proposed": "Zwolle",
+  "league": "Eredivisie",
+  "espn_league": "ned.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "3427": {
+  "espn_name": "PFC Litex Lovech",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "148": {
+  "espn_name": "PSV Eindhoven",
+  "ours": "PSV Eindhoven",
+  "proposed": "PSV Eindhoven",
+  "league": "Eredivisie",
+  "espn_league": "ned.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "22281": {
+  "espn_name": "Pafos",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "cyp.1"
+ },
+ "443": {
+  "espn_name": "Panathinaikos",
+  "ours": "Panathinaikos",
+  "proposed": "Panathinaikos",
+  "league": "Greek Super League",
+  "espn_league": "gre.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "6215": {
+  "espn_name": "Pandurii Targu-Jiu",
+  "ours": "Pandurii",
+  "proposed": "Pandurii",
+  "league": "Romanian Liga I",
+  "espn_league": "rou.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "2789": {
+  "espn_name": "Panionios",
+  "ours": "Panionios",
+  "proposed": "Panionios",
+  "league": "Greek Super League",
+  "espn_league": "gre.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "160": {
+  "espn_name": "Paris Saint-Germain",
+  "ours": "Paris SG",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "541": {
+  "espn_name": "Partizan Belgrade",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "2551": {
+  "espn_name": "Partizani Tirana",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "6848": {
+  "espn_name": "Pas Giannina",
+  "ours": "Giannina",
+  "proposed": "Giannina",
+  "league": "Greek Super League",
+  "espn_league": "gre.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "8152": {
+  "espn_name": "Pelister Bitola",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "19250": {
+  "espn_name": "Petrocub",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "12603": {
+  "espn_name": "Petrolul Ploiesti",
+  "ours": "Petrolul",
+  "proposed": "Petrolul",
+  "league": "Romanian Liga I",
+  "espn_league": "rou.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "9657": {
+  "espn_name": "Piast Gliwice",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa_qual"
+ },
+ "18320": {
+  "espn_name": "Politehnica Iasi",
+  "ours": "Poli Iasi",
+  "proposed": "Poli Iasi",
+  "league": "Romanian Liga I",
+  "espn_league": "rou.1",
+  "how": "auto",
+  "score": 0.72
+ },
+ "18752": {
+  "espn_name": "Prishtina",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa_qual"
+ },
+ "17861": {
+  "espn_name": "Progres Niederkorn",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "2493": {
+  "espn_name": "Pyunik",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "11420": {
+  "espn_name": "RB Leipzig",
+  "ours": "RB Leipzig",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "2790": {
+  "espn_name": "RB Salzburg",
+  "ours": "Salzburg",
+  "proposed": "Salzburg",
+  "league": "Austrian Bundesliga",
+  "espn_league": "aut.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "11461": {
+  "espn_name": "RNK Split",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "938": {
+  "espn_name": "Racing Genk",
+  "ours": "Genk",
+  "proposed": "Genk",
+  "league": "Belgian Pro League",
+  "espn_league": "bel.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "8309": {
+  "espn_name": "Racing Luxembourg",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "19251": {
+  "espn_name": "Radnicki Nis",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "12710": {
+  "espn_name": "Radnik Bijeljina",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "21005": {
+  "espn_name": "Raków Czestochowa",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "3132": {
+  "espn_name": "Randers FC",
+  "ours": "Randers FC",
+  "proposed": "Randers FC",
+  "league": "Danish Superliga",
+  "espn_league": "den.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "257": {
+  "espn_name": "Rangers",
+  "ours": "Rangers",
+  "proposed": "Rangers",
+  "league": "Scottish Premiership",
+  "espn_league": "sco.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "519": {
+  "espn_name": "Rapid Vienna",
+  "ours": "SK Rapid",
+  "proposed": "SK Rapid",
+  "league": "Austrian Bundesliga",
+  "espn_league": "aut.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "101": {
+  "espn_name": "Rayo Vallecano",
+  "ours": "Vallecano",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "244": {
+  "espn_name": "Real Betis",
+  "ours": "Betis",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "86": {
+  "espn_name": "Real Madrid",
+  "ours": "Real Madrid",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "89": {
+  "espn_name": "Real Sociedad",
+  "ours": "Sociedad",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "2290": {
+  "espn_name": "Red Star Belgrade",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "11537": {
+  "espn_name": "Renova",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa_qual"
+ },
+ "19246": {
+  "espn_name": "Riga FC",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "12030": {
+  "espn_name": "Rigas Futbola Skola",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "2988": {
+  "espn_name": "Rijeka",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "3822": {
+  "espn_name": "Rio Ave",
+  "ours": "Rio Ave",
+  "proposed": "Rio Ave",
+  "league": "Primeira Liga",
+  "espn_league": "por.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "8166": {
+  "espn_name": "RoPS",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "438": {
+  "espn_name": "Rosenborg",
+  "ours": "Rosenborg",
+  "proposed": "Rosenborg",
+  "league": "Eliteserien",
+  "espn_league": "nor.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "3852": {
+  "espn_name": "Rostov",
+  "ours": "FK Rostov",
+  "proposed": "FK Rostov",
+  "league": "Russian Premier League",
+  "espn_league": "rus.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "3616": {
+  "espn_name": "Royal Charleroi SC",
+  "ours": "Charleroi",
+  "proposed": "Charleroi",
+  "league": "Belgian Pro League",
+  "espn_league": "bel.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "3851": {
+  "espn_name": "Rubin Kazan",
+  "ours": "Rubin Kazan",
+  "proposed": "Rubin Kazan",
+  "league": "Russian Premier League",
+  "espn_league": "rus.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "8098": {
+  "espn_name": "Ruch Chorzow",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "7823": {
+  "espn_name": "Rudar Pljevlja",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "10377": {
+  "espn_name": "Rudar Velenje",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "17499": {
+  "espn_name": "S.V. Zulte Waregem",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "21633": {
+  "espn_name": "SC Dnipro-1",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "126": {
+  "espn_name": "SC Freiburg",
+  "ours": "Freiburg",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "4405": {
+  "espn_name": "SC Rheindorf Altach",
+  "ours": "Altach",
+  "proposed": "Altach",
+  "league": "Austrian Bundesliga",
+  "espn_league": "aut.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "17862": {
+  "espn_name": "SJK",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "620": {
+  "espn_name": "SK Brann",
+  "ours": "Brann",
+  "proposed": "Brann",
+  "league": "Eliteserien",
+  "espn_league": "nor.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "3746": {
+  "espn_name": "SK Sturm Graz",
+  "ours": "Sturm Graz",
+  "proposed": "Sturm Graz",
+  "league": "Austrian Bundesliga",
+  "espn_league": "aut.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "526": {
+  "espn_name": "SK Tirana",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "17507": {
+  "espn_name": "SS Folgore Falciano",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "12654": {
+  "espn_name": "SV Grödig Amateure",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "club.friendly"
+ },
+ "21922": {
+  "espn_name": "Sabah FK",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.champions"
+ },
+ "20031": {
+  "espn_name": "Sabail",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "178": {
+  "espn_name": "Saint-Étienne",
+  "ours": "St Etienne",
+  "proposed": "St Etienne",
+  "league": "Ligue 1",
+  "espn_league": "fra.1",
+  "how": "auto",
+  "score": 0.87
+ },
+ "2734": {
+  "espn_name": "Sampdoria",
+  "ours": "Sampdoria",
+  "proposed": "Sampdoria",
+  "league": "Serie A",
+  "espn_league": "ita.2",
+  "how": "auto",
+  "score": 1.0
+ },
+ "11429": {
+  "espn_name": "Samsunspor",
+  "ours": "Samsunspor",
+  "proposed": "Samsunspor",
+  "league": "Super Lig",
+  "espn_league": "tur.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "542": {
+  "espn_name": "Santa Coloma",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "5002": {
+  "espn_name": "Sarpsborg FK",
+  "ours": "Sarpsborg 08",
+  "proposed": "Sarpsborg 08",
+  "league": "Eliteserien",
+  "espn_league": "nor.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "3997": {
+  "espn_name": "Sassuolo",
+  "ours": "Sassuolo",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "133": {
+  "espn_name": "Schalke 04",
+  "ours": "Schalke 04",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "20032": {
+  "espn_name": "Servette",
+  "ours": "Servette",
+  "proposed": "Servette",
+  "league": "Swiss Super League",
+  "espn_league": "sui.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "243": {
+  "espn_name": "Sevilla",
+  "ours": "Sevilla",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "493": {
+  "espn_name": "Shakhtar Donetsk",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.champions"
+ },
+ "6728": {
+  "espn_name": "Shakhter Karagandy",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "528": {
+  "espn_name": "Shakhter Soligorsk",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.champions_qual"
+ },
+ "2564": {
+  "espn_name": "Shamrock Rovers",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "irl.1"
+ },
+ "20297": {
+  "espn_name": "Shelbourne",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "irl.1"
+ },
+ "614": {
+  "espn_name": "Sheriff Tiraspol",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "2709": {
+  "espn_name": "Shirak",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa_qual"
+ },
+ "19252": {
+  "espn_name": "Shkupi",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "club.friendly"
+ },
+ "17505": {
+  "espn_name": "Shkëndija 79",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "609": {
+  "espn_name": "Sigma Olomouc",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf"
+ },
+ "607": {
+  "espn_name": "Silkeborg IF",
+  "ours": "Silkeborg",
+  "proposed": "Silkeborg",
+  "league": "Danish Superliga",
+  "espn_league": "den.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "12340": {
+  "espn_name": "Sillamae Kalev",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "936": {
+  "espn_name": "Sint-Truidense",
+  "ours": "St Truiden",
+  "proposed": "St Truiden",
+  "league": "Belgian Pro League",
+  "espn_league": "bel.1",
+  "how": "auto",
+  "score": 0.833
+ },
+ "2705": {
+  "espn_name": "Sioni Bolnisi",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "11541": {
+  "espn_name": "Siroki Brijeg",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "2542": {
+  "espn_name": "Siroki Brijeg",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "3691": {
+  "espn_name": "Sivasspor",
+  "ours": "Sivasspor",
+  "proposed": "Sivasspor",
+  "league": "Super Lig",
+  "espn_league": "tur.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "8348": {
+  "espn_name": "Skenderbeu",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.champions"
+ },
+ "17855": {
+  "espn_name": "Skenderbeu Korce",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "610": {
+  "espn_name": "Skonto Riga",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "9659": {
+  "espn_name": "Slask Wroclaw",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "494": {
+  "espn_name": "Slavia Prague",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.champions"
+ },
+ "6216": {
+  "espn_name": "Slavia Sofia",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa_qual"
+ },
+ "543": {
+  "espn_name": "Sliema Wanderers",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "mlt.1"
+ },
+ "7601": {
+  "espn_name": "Sligo Rovers",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "irl.1"
+ },
+ "8069": {
+  "espn_name": "Sloboda Tuzla",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "18327": {
+  "espn_name": "Slovacko",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "club.friendly"
+ },
+ "521": {
+  "espn_name": "Slovan Bratislava",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.champions"
+ },
+ "376": {
+  "espn_name": "Southampton",
+  "ours": "Southampton",
+  "proposed": "Southampton",
+  "league": "EPL",
+  "espn_league": "eng.2",
+  "how": "auto",
+  "score": 1.0
+ },
+ "433": {
+  "espn_name": "Sparta Prague",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "1941": {
+  "espn_name": "Spartak Moscow",
+  "ours": "Spartak Moscow",
+  "proposed": "Spartak Moscow",
+  "league": "Russian Premier League",
+  "espn_league": "rus.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "12822": {
+  "espn_name": "Spartak Myjava",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "12579": {
+  "espn_name": "Spartak Zlatibor Voda",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "8286": {
+  "espn_name": "Spartaki Tskhinvali",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "20030": {
+  "espn_name": "Speranta Nisporeni",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "2250": {
+  "espn_name": "Sporting CP",
+  "ours": "Sp Lisbon",
+  "proposed": "Casa Pia",
+  "league": "Primeira Liga",
+  "espn_league": "por.1",
+  "how": "manual",
+  "score": 0.4,
+  "note": "checked by hand 2026-10-21"
+ },
+ "267": {
+  "espn_name": "St Johnstone",
+  "ours": "St Johnstone",
+  "proposed": "St Johnstone",
+  "league": "Scottish Premiership",
+  "espn_league": "sco.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "7588": {
+  "espn_name": "St Patrick's Athletic",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "irl.1"
+ },
+ "557": {
+  "espn_name": "St. Gallen",
+  "ours": "St. Gallen",
+  "proposed": "St. Gallen",
+  "league": "Swiss Super League",
+  "espn_league": "sui.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "18751": {
+  "espn_name": "St. Joseph's",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "17519": {
+  "espn_name": "St. Pölten",
+  "ours": "St. Polten",
+  "proposed": "Austria Vienna",
+  "league": "Austrian Bundesliga",
+  "espn_league": "aut.1",
+  "how": "manual",
+  "score": 0.435,
+  "note": "checked by hand 2026-10-21"
+ },
+ "2554": {
+  "espn_name": "Stabaek",
+  "ours": "Stabaek",
+  "proposed": "Stabaek",
+  "league": "Eliteserien",
+  "espn_league": "nor.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "169": {
+  "espn_name": "Stade Rennais",
+  "ours": "Rennes",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "559": {
+  "espn_name": "Standard Liege",
+  "ours": "Standard",
+  "proposed": "Standard",
+  "league": "Belgian Pro League",
+  "espn_league": "bel.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "7949": {
+  "espn_name": "Stjarnan",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "180": {
+  "espn_name": "Strasbourg",
+  "ours": "Strasbourg",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "9811": {
+  "espn_name": "Stromsgodset",
+  "ours": "Stromsgodset",
+  "proposed": "Stromsgodset",
+  "league": "Eliteserien",
+  "espn_league": "nor.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "366": {
+  "espn_name": "Sunderland",
+  "ours": "Sunderland",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "8118": {
+  "espn_name": "Sønderjyske Fodbold",
+  "ours": "Sonderjyske",
+  "proposed": "Sonderjyske",
+  "league": "Danish Superliga",
+  "espn_league": "den.1",
+  "how": "auto",
+  "score": 0.69
+ },
+ "7911": {
+  "espn_name": "TSG Hoffenheim",
+  "ours": "Hoffenheim",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "17506": {
+  "espn_name": "Tartu FC Santos",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "576": {
+  "espn_name": "The New Saints",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "wal.1"
+ },
+ "6748": {
+  "espn_name": "Tobol Kostanay",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "239": {
+  "espn_name": "Torino",
+  "ours": "Torino",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "612": {
+  "espn_name": "Torpedo Kutaisi",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "8142": {
+  "espn_name": "Torpedo Zhodino",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "21615": {
+  "espn_name": "Torreense",
+  "ours": null,
+  "proposed": "Moreirense",
+  "league": "Primeira Liga",
+  "espn_league": "por.1.promotion.relegation",
+  "how": "manual",
+  "score": 0.737,
+  "note": "checked by hand 2026-10-21; not in our Portuguese data"
+ },
+ "367": {
+  "espn_name": "Tottenham Hotspur",
+  "ours": "Tottenham",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "179": {
+  "espn_name": "Toulouse",
+  "ours": "Toulouse",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "997": {
+  "espn_name": "Trabzonspor",
+  "ours": "Trabzonspor",
+  "proposed": "Trabzonspor",
+  "league": "Super Lig",
+  "espn_league": "tur.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "17864": {
+  "espn_name": "Trakai",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa_qual"
+ },
+ "8591": {
+  "espn_name": "Tre Fiori",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "8592": {
+  "espn_name": "Tre Penne",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "18750": {
+  "espn_name": "Trepca 89",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.champions"
+ },
+ "5270": {
+  "espn_name": "Tromso",
+  "ours": "Tromso",
+  "proposed": "Tromso",
+  "league": "Eliteserien",
+  "espn_league": "nor.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "7589": {
+  "espn_name": "UCD",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "irl.1"
+ },
+ "8576": {
+  "espn_name": "UE Engordany",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa_qual"
+ },
+ "5243": {
+  "espn_name": "UE Sant Julia",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "11441": {
+  "espn_name": "UE Santa Coloma",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "2548": {
+  "espn_name": "Ujpesti",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "11499": {
+  "espn_name": "Ulysses Yerevan",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "5807": {
+  "espn_name": "Union St.-Gilloise",
+  "ours": "St. Gilloise",
+  "proposed": "St. Gilloise",
+  "league": "Belgian Pro League",
+  "espn_league": "bel.1",
+  "how": "auto",
+  "score": 0.786
+ },
+ "13256": {
+  "espn_name": "VMFD Zalgiris",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.champions"
+ },
+ "4401": {
+  "espn_name": "VPS Vaasa",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "94": {
+  "espn_name": "Valencia",
+  "ours": "Valencia",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "2698": {
+  "espn_name": "Valletta",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "mlt.1"
+ },
+ "6742": {
+  "espn_name": "Valur Reykjavik",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "560": {
+  "espn_name": "Vardar",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "8097": {
+  "espn_name": "Vasas",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "134": {
+  "espn_name": "VfB Stuttgart",
+  "ours": "Stuttgart",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "138": {
+  "espn_name": "VfL Wolfsburg",
+  "ours": "Wolfsburg",
+  "proposed": "Wolfsburg",
+  "league": "Bundesliga",
+  "espn_league": "ger.2",
+  "how": "auto",
+  "score": 0.9
+ },
+ "12611": {
+  "espn_name": "Viitorul Constanta",
+  "ours": "Viitorul Constanta",
+  "proposed": "Viitorul Constanta",
+  "league": "Romanian Liga I",
+  "espn_league": "rou.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "510": {
+  "espn_name": "Viking FK",
+  "ours": "Viking",
+  "proposed": "Viking",
+  "league": "Eliteserien",
+  "espn_league": "nor.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "8249": {
+  "espn_name": "Vikingur Reykjavik",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "11706": {
+  "espn_name": "Viktoria Plzen",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "102": {
+  "espn_name": "Villarreal",
+  "ours": "Villarreal",
+  "how": "big5 map",
+  "score": 1.0
+ },
+ "154": {
+  "espn_name": "Vitesse",
+  "ours": "Vitesse",
+  "proposed": "Vitesse",
+  "league": "Eredivisie",
+  "espn_league": "ned.2",
+  "how": "auto",
+  "score": 1.0
+ },
+ "5309": {
+  "espn_name": "Vitória de Guimaraes",
+  "ours": "Guimaraes",
+  "proposed": "Guimaraes",
+  "league": "Primeira Liga",
+  "espn_league": "por.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "7825": {
+  "espn_name": "Vojvodina",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "8094": {
+  "espn_name": "Vorskla",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "13238": {
+  "espn_name": "Víkingur",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "371": {
+  "espn_name": "West Ham United",
+  "ours": "West Ham",
+  "proposed": "West Ham",
+  "league": "EPL",
+  "espn_league": "eng.2",
+  "how": "auto",
+  "score": 1.0
+ },
+ "13294": {
+  "espn_name": "Wolfsberger",
+  "ours": "Wolfsberger AC",
+  "proposed": "Wolfsberger AC",
+  "league": "Austrian Bundesliga",
+  "espn_league": "aut.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "380": {
+  "espn_name": "Wolverhampton Wanderers",
+  "ours": "Wolves",
+  "proposed": "Southampton",
+  "league": "EPL",
+  "espn_league": "eng.2",
+  "how": "manual",
+  "score": 0.471,
+  "note": "checked by hand 2026-10-21"
+ },
+ "18790": {
+  "espn_name": "Yeni Malatyaspor",
+  "ours": "Yeni Malatyaspor",
+  "proposed": "Yeni Malatyaspor",
+  "league": "Super Lig",
+  "espn_league": "tur.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "2722": {
+  "espn_name": "Young Boys",
+  "ours": "Young Boys",
+  "proposed": "Young Boys",
+  "league": "Swiss Super League",
+  "espn_league": "sui.1",
+  "how": "auto",
+  "score": 1.0
+ },
+ "4100": {
+  "espn_name": "Zaglebie Lubin",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "523": {
+  "espn_name": "Zalgiris Vilnius",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "17498": {
+  "espn_name": "Zawisa Bydgoszcz",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa"
+ },
+ "2494": {
+  "espn_name": "Zeljeznicar Sarajevo",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "2533": {
+  "espn_name": "Zenit St Petersburg",
+  "ours": "Zenit",
+  "proposed": "Zenit",
+  "league": "Russian Premier League",
+  "espn_league": "rus.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "540": {
+  "espn_name": "Zimbru Chisinau",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "18754": {
+  "espn_name": "Zira FK",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "5239": {
+  "espn_name": "Zrinjski Mostar",
+  "ours": null,
+  "how": "uncovered",
+  "espn_league": "uefa.europa.conf_qual"
+ },
+ "4691": {
+  "espn_name": "Zulte-Waregem",
+  "ours": "Waregem",
+  "proposed": "Waregem",
+  "league": "Belgian Pro League",
+  "espn_league": "bel.1",
+  "how": "auto",
+  "score": 0.9
+ },
+ "5043": {
+  "espn_name": "Östersunds FK",
+  "ours": "Ostersunds",
+  "proposed": "Ostersunds",
+  "league": "Allsvenskan",
+  "espn_league": "swe.1",
+  "how": "auto",
+  "score": 1.0
+ }
+}

@@ -451,7 +451,9 @@ OUTCOMES3 = ("home", "draw", "away")
 def soccer_form(conn, team, before_utc, n=5):
     rows = conn.execute(
         "SELECT * FROM hist_games WHERE sport = 'soccer_club' AND season = ? AND ? IN (home_team, away_team)"
-        " AND coalesce(kickoff_utc, game_date_et) < ? ORDER BY game_date_et DESC, kickoff_utc DESC",
+        " AND coalesce(kickoff_utc, game_date_et) < ? AND league NOT LIKE '%Champions League%'"
+        " AND league NOT LIKE '%Europa League%' AND league NOT LIKE '%Conference League%'"
+        " ORDER BY game_date_et DESC, kickoff_utc DESC",
         (current_season("soccer_club"), team, before_utc)).fetchall()
     games, w, d, l = [], 0, 0, 0
     for r in rows:

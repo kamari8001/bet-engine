@@ -31,6 +31,8 @@ SECOND = {"Championship": "EPL", "La Liga 2": "La Liga", "2. Bundesliga": "Bunde
           "Serie B": "Serie A", "Ligue 2": "Ligue 1"}
 TIER = {**{lg: 1 for lg in BIG5}, **{lg: 2 for lg in SECOND}}
 COUNTRY = {**{lg: lg for lg in BIG5}, **SECOND}
+EUROPE = ("Champions League", "Europa League", "Conference League",          # cross-league competitions
+          "Champions League qualifying", "Europa League qualifying", "Conference League qualifying")
 
 DEFAULT_PARAMS = {
     "k": 0.06,          # rating learning rate (log-goals per goal of surprise)
@@ -49,12 +51,14 @@ DEFAULT_PARAMS = {
 MAX_GOALS = 10
 
 
-def load_games(conn):
-    """All club soccer games in the history, oldest first, with rest days filled in."""
+def load_games(conn, include_europe=False):
+    """All club soccer games in the history, oldest first, with rest days filled in. European
+    competition games are left out unless include_europe (the domestic model doesn't use them)."""
     rows = conn.execute(
         "SELECT id, league, season, game_date_et, kickoff_utc, home_team, away_team, home_score, away_score,"
         " home_shots_ot, away_shots_ot, neutral_site FROM hist_games WHERE sport = 'soccer_club'"
-        " ORDER BY game_date_et, COALESCE(kickoff_utc, game_date_et), id").fetchall()
+        + ("" if include_europe else f" AND league NOT IN ({','.join(repr(x) for x in EUROPE)})")
+        + " ORDER BY game_date_et, COALESCE(kickoff_utc, game_date_et), id").fetchall()
     games = [dict(r) for r in rows]
     last = {}
     from datetime import date

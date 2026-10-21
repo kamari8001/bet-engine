@@ -122,6 +122,12 @@ Challengers and the promotion bar are fixed in `backtest_results/shadow_challeng
 | `python3 pull_basketball_history.py summary` | What basketball history is loaded (games and moneylines per season) |
 | `python3 pull_soccer_history.py past` | Loads club soccer 2005-06 to 2025-26 (Big 5 leagues + second divisions) from football-data.co.uk; free, cached in `cache/football_data/`. Add `--refresh` to re-download. |
 | `python3 pull_soccer_history.py current` | This season's finished Big 5 games from ESPN (last 4 days; `--from YYYY-MM-DD` to backfill) |
+| `python3 pull_soccer_history.py extra` | Other European top flights (Portugal, Netherlands, Belgium, Scotland, Turkey, Greece, Austria, Switzerland, Denmark, Norway, Sweden, Poland, Romania, Russia): history only, so Champions League clubs have ratings. `--refresh` re-downloads this season. |
+| `python3 pull_europe.py fetch` | Champions/Europa/Conference League games from ESPN into `cache/espn_europe/` (`--refresh` = this season) |
+| `python3 pull_europe.py teams` | Matches each ESPN club to our names within its own country; writes `soccer_europe_teams.json` (hand-checked entries are kept) and lists anything to review |
+| `python3 pull_europe.py load` | Saves European games (90-minute scores; neutral venues detected) where both clubs are covered |
+| `python3 pull_europe.py odds` | Champions League moneylines from ESPN, 2019-20 on |
+| `python3 pull_europe.py summary` | European games and odds loaded, per competition and season |
 | `python3 pull_soccer_history.py summary` | What club soccer history is loaded (games, odds, shots per league and season) |
 | `python3 pull_games.py soccer_club` | Club soccer schedule and results from ESPN. **Not in `all` until soccer goes live.** |
 | `python3 pull_odds.py soccer_club` | Club soccer moneylines with the Draw. **Costs 5 credits** (1 per league). Not in `all` until soccer goes live. |
