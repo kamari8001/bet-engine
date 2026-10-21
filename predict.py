@@ -1,6 +1,7 @@
 """Log engine and Claude predictions for upcoming games, then print the slate.
 
-Usage: python3 predict.py nfl | ncaaf  [--days N]   (default: next 7 days)
+Usage: python3 predict.py nfl | ncaaf | nba | ncaab | soccer_club  [--days N]   (default: next 7 days)
+(club soccer is three-way and handled by predict_soccer.py)
 
 Run first: pull_games.py, pull_odds.py, and pull_history.py <sport> --current.
 
@@ -249,11 +250,15 @@ def latest_odds(conn, game_id):
 
 def main():
     args = sys.argv[1:]
-    if not args or args[0] not in ("nfl", "ncaaf", "nba", "ncaab"):
+    if not args or args[0] not in ("nfl", "ncaaf", "nba", "ncaab", "soccer_club"):
         sys.exit(__doc__)
     sport = args[0]
     days = int(args[args.index("--days") + 1]) if "--days" in args else 7
     conn = db.connect()
+    if sport == "soccer_club":
+        import predict_soccer
+        predict_soccer.run(conn, days)
+        return
     waiting = missing_results(conn, sport)
 
     now = utc_now()

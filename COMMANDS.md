@@ -49,6 +49,8 @@ Typical order: `pull_games` → `pull_odds` → `pull_history --current` → `pr
 | `python3 rankings.py nfl --team KC` | One team's OVR, rank and record season by season |
 | `python3 rankings.py soccer_club` | Club soccer power rankings: all Big 5 clubs together, using UEFA league coefficients (`uefa_coefficients.json`); `--season`, `--all-time`, `--team "Man City"` work too. League strength setting: `SOCCER_LEAGUE_STRENGTH` in `config.py` |
 | `python3 rankings.py nfl --rebuild` | Rebuilds the saved season history (happens by itself when a model is retrained) |
+| `python3 predict.py soccer_club` | Club soccer: logs home/draw/away predictions for Big 5 games and prints edges for all three outcomes (one flag per game at most) |
+| `python3 grade.py soccer_club` | Club soccer scorecard: Brier, log loss, RPS, flagged bets, CLV per source |
 | `python3 predict.py nfl` | Logs engine and claude predictions and prints the slate with edges. Add `--days 3` to change how far ahead it looks. |
 
 ## Automation

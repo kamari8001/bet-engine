@@ -1,6 +1,7 @@
 """Grade finished games: a scorecard for each prediction source, by sport.
 
-Usage: python3 grade.py nfl | ncaaf  [--season YEAR]   (default: current season)
+Usage: python3 grade.py nfl | ncaaf | nba | ncaab | soccer_club  [--season YEAR]   (default: current season)
+(club soccer is three-way and graded by grade_soccer.py)
 
 For each game with a final result, the graded prediction from each source
 (engine, claude, me) is its latest row logged before kickoff (corrections
@@ -177,10 +178,14 @@ def print_scorecard(sport, season, games, stats, approx_close):
 
 def main():
     a = sys.argv[1:]
-    if not a or a[0] not in ("nfl", "ncaaf", "nba", "ncaab"):
+    if not a or a[0] not in ("nfl", "ncaaf", "nba", "ncaab", "soccer_club"):
         sys.exit(__doc__)
     season = int(a[a.index("--season") + 1]) if "--season" in a else current_season(a[0])
     conn = db.connect()
+    if a[0] == "soccer_club":
+        import grade_soccer
+        grade_soccer.print_scorecard(season, *grade_soccer.grade(conn, season))
+        return
     print_scorecard(a[0], season, *grade(conn, a[0], season))
 
 

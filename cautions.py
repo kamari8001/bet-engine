@@ -81,7 +81,10 @@ def game_warnings(conn, g, pred, mkt, now=None):
         if mkt["books"] < FEW_BOOKS:
             out.append(f"only {mkt['books']} book(s) priced this")
         if pred is not None:
-            edge = abs(pred["p_home"] - mkt["p_home"])
+            if pred["p_draw"] is not None and "p" in mkt:      # soccer: the largest gap of the three
+                edge = max(abs(x - m) for x, m in zip((pred["p_home"], pred["p_draw"], pred["p_away"]), mkt["p"]))
+            else:
+                edge = abs(pred["p_home"] - mkt["p_home"])
             if edge >= LARGE_EDGE:
                 out.append(f"edge of {edge * 100:.0f} pts: in backtests, edges this big were usually model error")
             reviewed = conn.execute("SELECT 1 FROM adjustments WHERE game_id = ?", (g["id"],)).fetchone()
@@ -89,6 +92,8 @@ def game_warnings(conn, g, pred, mkt, now=None):
                 out.append("news not checked for this game (the model can't see college injuries)")
             if g["sport"] == "nba" and not reviewed:
                 out.append("injury report not checked (the model can't see who's sitting out)")
+            if g["sport"] == "soccer_club" and not reviewed:
+                out.append("team news not checked (the model can't see injuries or suspensions)")
 
     # Early season: ratings still settling
     for side in ("away", "home"):
