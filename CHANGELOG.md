@@ -4,6 +4,10 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 2.3.1 (2026-10-21)
+- Odds pulls no longer fail (and notify) when The Odds API still lists a game as upcoming after
+  our schedule's kickoff; that game is skipped as "already started" and the other prices save.
+
 ## 2.3.0 (2026-10-20): OVR on one scale, past seasons
 - OVR now works like a FIFA rating and means the same thing in every season: 62 = an average team,
   80+ = great (top ~7% of all team-seasons in our history), 90+ = historically great (top ~1%).

@@ -41,6 +41,7 @@ _(nothing)_
 
 ## Done
 
+- 2026-10-21 v2.3.1: odds pulls skip games our schedule says already started (was a false failure)
 - 2026-10-21: club soccer final exam (works, calibrated, trails market, no money edge; ClubElo untested, API down 3 days) and refit `soccer-v2-refit-20261021`
 - 2026-10-21: basketball shakedown passed (predictions before every tip, scheduled checks ran, grading works; one pull-failure bug found)
 - 2026-10-20 v2.3.0: OVR on one scale across seasons; past seasons, all-time top 25, team history

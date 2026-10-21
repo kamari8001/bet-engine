@@ -92,6 +92,9 @@ def pull(conn, sport):
         if game is None:
             untracked += 1  # not in our schedule (lower division, or kickoff not announced)
             continue
+        if parse_time(game["start_time_utc"].replace(" ", "T") + "Z") <= now:
+            started += 1  # our schedule says it already kicked off (the feed's time can lag)
+            continue
         if swapped and not game["neutral_site"]:
             problems.append(f"{label}: home and away are reversed vs our schedule "
                             "and it's not a neutral site")
