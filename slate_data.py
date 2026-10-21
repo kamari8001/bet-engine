@@ -60,6 +60,9 @@ def logo_for(sport, team, college):
         return nfl_logo_url(team)
     if sport == "nba":
         return nba_logo_url(team)
+    if sport == "soccer_club":
+        from teams import soccer_logo_url
+        return soccer_logo_url(team)
     return college.get(team) or _cbb_logos().get(team)
 
 

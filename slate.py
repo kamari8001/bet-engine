@@ -69,7 +69,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         url = urllib.parse.urlparse(self.path)
         q = {k: v[0] for k, v in urllib.parse.parse_qs(url.query).items()}
-        sport = q.get("sport") if q.get("sport") in SPORTS else "nfl"
+        sport = q.get("sport") if q.get("sport") in SPORTS or (
+            url.path == "/rankings" and q.get("sport") == "soccer_club") else "nfl"
         now = datetime.now(timezone.utc)
         conn = db.connect()
         try:

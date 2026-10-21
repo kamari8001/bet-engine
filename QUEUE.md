@@ -14,8 +14,7 @@ _(nothing)_
 
 ## Up next
 
-1. **Soccer power rankings**: ClubElo is still down, so choose: UEFA league coefficients (all clubs together) or within each league.
-2. **Club soccer: live (v3.0.0)**, needs the $30 Odds API plan. Add soccer to `pull_games`/`pull_odds` `all`, the morning routine (`pull_soccer_history.py current`), and pre-kickoff windows.
+1. **Club soccer: live (v3.0.0)**, needs the $30 Odds API plan. Add soccer to `pull_games`/`pull_odds` `all`, the morning routine (`pull_soccer_history.py current`), and pre-kickoff windows.
 
 ## Waiting on a date or on data
 
@@ -41,6 +40,7 @@ _(nothing)_
 
 ## Done
 
+- 2026-10-21 v2.4.0: soccer power rankings (Big 5 together via UEFA coefficients; adjustable league strength)
 - 2026-10-21 v2.3.1: odds pulls skip games our schedule says already started (was a false failure)
 - 2026-10-21: club soccer final exam (works, calibrated, trails market, no money edge; ClubElo untested, API down 3 days) and refit `soccer-v2-refit-20261021`
 - 2026-10-21: basketball shakedown passed (predictions before every tip, scheduled checks ran, grading works; one pull-failure bug found)

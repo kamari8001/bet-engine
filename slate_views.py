@@ -1,6 +1,7 @@
 """HTML for the slate page (dark theme). Data comes from slate_data.py."""
 
 import html
+import urllib.parse
 import json
 
 import config
@@ -131,7 +132,7 @@ a.tlink { color:inherit; text-decoration:none; } a.tlink:hover { text-decoration
 .ovrchart .pt:hover .dot { r:6; }
 .mv.up { color:var(--good); } .mv.down { color:var(--bad); } .mv { font-size:12px; white-space:nowrap; }
 .form span { display:inline-block; width:14px; text-align:center; font-size:12px; font-weight:700; }
-.form .W { color:var(--good); } .form .L { color:var(--bad); } .form .T { color:var(--muted); }
+.form .W { color:var(--good); } .form .L { color:var(--bad); } .form .T, .form .D { color:var(--muted); }
 .filters { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
 .toggle { display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin-bottom:14px; }
 .toggle a { color:var(--muted); text-decoration:none; padding:6px 14px; }
@@ -602,10 +603,14 @@ def ovr_chart(points):
             f'<polyline points="{line}" class="ln"/>{dots}</svg>')
 
 
+RANK_SPORTS = {**SHORT_NAMES, "soccer_club": "Soccer"}
+
+
 def rankings_page(sport, d):
+    soccer = sport == "soccer_club"
     switch = ('<div class="toggle">' + "".join(
         f'<a class="{"on" if sport == k else ""}" href="/rankings?sport={k}">{n}</a>'
-        for k, n in SHORT_NAMES.items()) + "</div>")
+        for k, n in RANK_SPORTS.items()) + "</div>")
     if d["error"]:
         return page("Rankings", "rank", switch + f'<p class="note">Rankings unavailable: {esc(d["error"])}</p>')
     college = sport in ("ncaaf", "ncaab")
@@ -618,7 +623,7 @@ def rankings_page(sport, d):
              '90+ = historically great (top ~1%). It starts from the model&rsquo;s chance that the team beats an '
              'average team of its league that season on a neutral field. Past seasons use each team&rsquo;s rating '
              'after its last game; records include playoffs. Tap a team for its history.</p>')
-    link = lambda team, text: f'<a class="tlink" href="/rankings?sport={sport}&amp;team={esc(team)}">{text}</a>'
+    link = lambda team, text: f'<a class="tlink" href="/rankings?sport={sport}&amp;team={esc(urllib.parse.quote(team))}">{text}</a>'
     script = """
 (function () {
   var s = document.getElementById('rk-s');
@@ -638,6 +643,8 @@ def rankings_page(sport, d):
 
     def rec(r):
         w, l, t = r["record"]
+        if soccer:
+            return f"{w}-{t}-{l}"          # soccer convention: wins-draws-losses
         return f"{w}-{l}" + (f"-{t}" if t else "")
 
     def badge(v):
@@ -674,28 +681,35 @@ def rankings_page(sport, d):
             + f'</td><td class="num">{badge(r["ovr"])}</td><td class="num">{rec(r)}</td></tr>'
             for i, r in enumerate(d["rows"], 1))
         filters += "</div>"
-        return page(f"{SHORT_NAMES[sport]} all-time", "rank", switch + intro + filters
+        return page(f"{RANK_SPORTS[sport]} all-time", "rank", switch + intro + filters
                     + f'<div class="panel"><table class="rk">{head}{body}</table></div>', scripts=script)
 
     live = d["season"] == d["current"]
     rows = d["rows"]
     if sport == "nfl" and live:
         intro += '<p class="note">NFL ratings include the starting QB the engine expects for each team&rsquo;s next game.</p>'
+    if soccer:
+        intro += ('<p class="note">Big 5 leagues in one list. Each club&rsquo;s rating within its own league is '
+                  'shifted by its league&rsquo;s strength from UEFA&rsquo;s country coefficients (an outside '
+                  'assumption, adjustable), then compared with an average Big 5 club: a win counts 1, a draw &frac12;. '
+                  '<b>Net</b> = goals per game better than an average Big 5 club. Records are wins-draws-losses '
+                  '(league games). Seasons from 2012-13.</p>')
     if sport == "ncaaf":
         intro += '<p class="note">FBS teams only. Early in a season, preseason information (talent, returning players, last season) counts too, as in the predictions.</p>'
     if d["early"]:
         intro += '<p class="note warn">Early season: ratings are still mostly last season&rsquo;s, pulled toward average.</p>'
     filters += '<input id="rk-q" placeholder="Search teams" autocomplete="off">'
-    show_conf = college and live
+    show_conf = (college and live) or soccer
+    group = "league" if soccer else "conference"
     if show_conf:
         confs = sorted({r["conference"] for r in rows if r.get("conference")})
-        filters += ('<select id="rk-c"><option value="">All conferences</option>'
+        filters += (f'<select id="rk-c"><option value="">All {group}s</option>'
                     + "".join(f'<option>{esc(c)}</option>' for c in confs) + "</select>")
     filters += "</div>"
     head = ('<tr><th class="num">#</th>' + ('<th></th>' if live else "") + '<th style="text-align:left">team</th><th class="num">OVR</th>'
             '<th class="num hide-sm">net</th><th class="num">record</th><th style="text-align:left">last 5</th>'
             '<th class="num hide-sm">off</th><th class="num hide-sm">def</th>'
-            + ('<th class="hide-sm" style="text-align:left">conference</th>' if show_conf else "") + "</tr>")
+            + (f'<th class="hide-sm" style="text-align:left">{group}</th>' if show_conf else "") + "</tr>")
     body = ""
     for r in rows:
         mv = r.get("move")
@@ -708,12 +722,12 @@ def rankings_page(sport, d):
         form = "".join(f'<span class="{c}">{c}</span>' for c in r["form"]) or '<span class="T">&ndash;</span>'
         body += (f'<tr data-name="{esc(r["team"].lower())}" data-conf="{esc(r.get("conference") or "")}">'
                  f'<td class="rank">{r["rank"]}</td>{mv_html}<td class="team">{logo}{link(r["team"], esc(r["team"]))}{qb}</td>'
-                 f'<td class="num">{badge(r["ovr"])}</td><td class="num hide-sm">{r["net"]:+.1f}</td>'
+                 f'<td class="num">{badge(r["ovr"])}</td><td class="num hide-sm">{r["net"]:+.{2 if soccer else 1}f}</td>'
                  f'<td class="num">{rec(r)}</td><td class="form">{form}</td><td class="num hide-sm">{r["off_rank"]}</td>'
                  f'<td class="num hide-sm">{r["def_rank"]}</td>'
                  + (f'<td class="conf hide-sm">{esc(r.get("conference") or "")}</td>' if show_conf else "") + "</tr>")
     title = "" if live else f'<p class="note">Final ratings for {esc(rows[0]["season_label"]) if rows else ""}, after each team&rsquo;s last game.</p>'
-    return page(f"{SHORT_NAMES[sport]} rankings", "rank", switch + intro + filters + title
+    return page(f"{RANK_SPORTS[sport]} rankings", "rank", switch + intro + filters + title
                 + f'<div class="panel"><table class="rk">{head}{body}</table></div>', scripts=script)
 
 

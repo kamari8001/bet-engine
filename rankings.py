@@ -18,6 +18,12 @@ Usage: python3 rankings.py nfl | ncaaf | nba | ncaab  [--top N]
 - Movement compares with the ranking a week ago (current season only).
 Display only: nothing goes into the logbook.
 
+Club soccer (soccer_club): all Big 5 clubs in one ranking. A club's own-league rating (from the
+soccer model) is shifted by its league's strength from UEFA's country coefficients
+(uefa_coefficients.json; the ranking known before that season), by config.SOCCER_LEAGUE_STRENGTH,
+then compared with an average Big 5 club on a neutral field: chance = P(win) + half of P(draw).
+That league shift is an outside assumption, not measured from our data. Seasons 2012-13 on.
+
 Also: python3 rankings.py <sport> --season 2017 | --all-time | --team KC | --rebuild
 """
 
@@ -42,7 +48,9 @@ SCALE_PATH = Path(__file__).parent / "rankings_scale.json"
 OVR_MID, OVR_PER_SD = 62, 12
 _memo = {}          # (sport, as-of date) -> (computed at, rows)
 MEMO_SECONDS = 600
-EARLY = {"nfl": 3, "ncaaf": 3, "nba": 10, "ncaab": 10}   # games played before ratings are "settled"
+EARLY = {"nfl": 3, "ncaaf": 3, "nba": 10, "ncaab": 10, "soccer_club": 5}
+SOCCER_FIRST_SEASON = 2013      # first season with a UEFA ranking in uefa_coefficients.json (ranking 2012)
+UEFA_PATH = Path(__file__).parent / "uefa_coefficients.json"   # games played before ratings are "settled"
 
 
 def fbs_teams(season):
@@ -158,6 +166,10 @@ def compute(conn, sport, as_of=None, season=None, games=None):
     if hit and time.time() - hit[0] < MEMO_SECONDS:
         return hit[1]
 
+    if sport == "soccer_club":
+        rows = soccer_compute(conn, season, live, as_of, games)
+        _memo[key] = (time.time(), rows)
+        return rows
     params = model.load_params(sport)
     games = games if games is not None else model.load_games(conn, sport)
     if live:
@@ -259,6 +271,72 @@ def with_movement(conn, sport):
     return now
 
 
+# ---------- club soccer ----------
+
+def _model_version(sport):
+    """The model version the cached history and frozen scale belong to (soccer: plus the league
+    strength setting, since changing it changes every club's chance)."""
+    if sport == "soccer_club":
+        import soccer_model as sm
+        return f'{sm.load_params()["version"]}+league{config.SOCCER_LEAGUE_STRENGTH}'
+    return model.load_params(sport)["version"]
+
+
+def uefa_shift(season):
+    """{league: log-goal shift} for a season, from the UEFA ranking known before it started."""
+    data = json.loads(UEFA_PATH.read_text())["rankings"]
+    coef = data.get(str(season - 1))
+    if coef is None:
+        raise RuntimeError(f"no UEFA ranking for {season - 2}-{(season - 1) % 100:02d} in uefa_coefficients.json; "
+                           "add it (with its source) before ranking this season")
+    avg = statistics.mean(coef.values())
+    return {lg: config.SOCCER_LEAGUE_STRENGTH * math.log(c / avg) for lg, c in coef.items()}
+
+
+def soccer_compute(conn, season, live, as_of, games=None):
+    import soccer_model as sm
+    params = sm.load_params()["ratings"]
+    games = games if games is not None else sm.load_games(conn)
+    history = ([g for g in games if g["game_date_et"] < as_of.isoformat()] if live
+               else [g for g in games if g["season"] <= season])
+    _, r = sm.walk_forward(history, params, keep=lambda g: False)
+    shift = uefa_shift(season)
+    base = statistics.mean(r.base[lg] for lg in sm.BIG5)     # an average Big 5 scoring level
+    rho = r.p["rho"]
+
+    played, record, form = {}, {}, {}
+    for g in history:
+        if g["season"] != season or g["league"] not in sm.BIG5:
+            continue
+        for side, other in (("home", "away"), ("away", "home")):
+            t = g[f"{side}_team"]
+            res = "W" if g[f"{side}_score"] > g[f"{other}_score"] else "L" if g[f"{side}_score"] < g[f"{other}_score"] else "D"
+            played[t] = played.get(t, 0) + 1
+            w, l, d = record.get(t, (0, 0, 0))
+            record[t] = (w + (res == "W"), l + (res == "L"), d + (res == "D"))
+            form[t] = (form.get(t, "") + res)[-5:]
+
+    rows = []
+    for t, lg in r.team_league.items():
+        if lg not in sm.BIG5 or r.team_season.get(t) != season:
+            continue
+        o = shift[lg] / 2
+        att, dfn = r.att[t] + o, r.dfn[t] + o
+        xg_for, xg_against = math.exp(base + att), math.exp(base - dfn)
+        ph, pd, pa = sm.outcome_probs(xg_for, xg_against, rho)
+        rows.append({"team": t, "conference": lg, "off": att, "def": dfn, "qb": None, "p": ph + pd / 2,
+                     "net": xg_for - xg_against, "played": played.get(t, 0), "record": record.get(t, (0, 0, 0)),
+                     "form": form.get(t, "")})
+    rows.sort(key=lambda x: -x["p"])
+    for i, x in enumerate(rows, 1):
+        x["rank"] = i
+        x["season"] = season
+    for key_, field in (("off_rank", "off"), ("def_rank", "def")):
+        for i, x in enumerate(sorted(rows, key=lambda x: -x[field]), 1):
+            x[key_] = i
+    return rows
+
+
 # ---------- OVR scale and past seasons ----------
 
 def logit(p):
@@ -272,7 +350,7 @@ def _history_path(sport):
 
 def past_seasons(conn, sport, rebuild=False):
     """{season: rows} for every finished season (warm-up season excluded), cached per model version."""
-    version = model.load_params(sport)["version"]
+    version = _model_version(sport)
     path = _history_path(sport)
     if not rebuild and path.exists():
         try:
@@ -281,16 +359,22 @@ def past_seasons(conn, sport, rebuild=False):
                 return {int(k): v for k, v in data["seasons"].items()}
         except (json.JSONDecodeError, KeyError):
             pass
-    games = model.load_games(conn, sport)
-    seasons = sorted({g["season"] for g in games})
+    if sport == "soccer_club":
+        import soccer_model as sm
+        games = sm.load_games(conn)
+        seasons = [s for s in sorted({g["season"] for g in games}) if s >= SOCCER_FIRST_SEASON]
+        version = sm.load_params()["version"]
+    else:
+        games = model.load_games(conn, sport)
+        seasons = sorted({g["season"] for g in games})[1:]   # the first season is the model's warm-up
     out = {}
-    for s in seasons[1:]:                       # the first season is the model's warm-up
+    for s in seasons:
         if s == current_season(sport):
             continue
         print(f"  {sport} {season_label(sport, s)}...", file=sys.stderr, flush=True)
         rows = compute(conn, sport, season=s, games=games)
-        out[s] = [{k: r[k] for k in ("team", "p", "rank", "record", "form", "net", "off_rank", "def_rank", "season")}
-                  for r in rows]
+        out[s] = [{k: r[k] for k in ("team", "p", "rank", "record", "form", "net", "off_rank", "def_rank", "season",
+                                     "conference")} for r in rows]
     CACHE.mkdir(exist_ok=True)
     path.write_text(json.dumps({"model_version": version, "built_utc": db.to_utc(datetime.now(timezone.utc)),
                                 "seasons": out}))
@@ -305,7 +389,7 @@ def scale(conn, sport):
     1,001 evenly spaced quantiles (0th, 0.1th, ... 100th percentile). Built from all finished seasons
     the first time, and again only when the model version changes; stored in rankings_scale.json."""
     saved = json.loads(SCALE_PATH.read_text()) if SCALE_PATH.exists() else {}
-    version = model.load_params(sport)["version"]
+    version = _model_version(sport)
     if sport in saved and saved[sport]["model_version"] == version and "quantiles" in saved[sport]:
         return saved[sport]
     seasons = past_seasons(conn, sport)
@@ -355,7 +439,10 @@ def season_rows(conn, sport, season):
     """Rows for one season with OVR: the current season live (with movement), a past one final."""
     if season == current_season(sport):
         return with_movement(conn, sport)
-    rows = [dict(r, conference=None, qb=None, move=None) for r in past_seasons(conn, sport).get(season, [])]
+    rows = [dict(r, qb=None, move=None) for r in past_seasons(conn, sport).get(season, [])]
+    if sport != "soccer_club":
+        for r in rows:
+            r["conference"] = None          # conferences change over the years; only today's list is known
     return rate(conn, sport, rows)
 
 
@@ -383,7 +470,7 @@ def early_season(rows, sport):
 
 def main():
     args = sys.argv[1:]
-    if not args or args[0] not in ("nfl", "ncaaf", "nba", "ncaab"):
+    if not args or args[0] not in ("nfl", "ncaaf", "nba", "ncaab", "soccer_club"):
         sys.exit(__doc__)
     sport = args[0]
     top = int(args[args.index("--top") + 1]) if "--top" in args else 25

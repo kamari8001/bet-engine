@@ -4,6 +4,13 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 2.4.0 (2026-10-21): soccer power rankings
+- Rankings tab has **Soccer**: every Big 5 club in one list, with the same OVR scale, season picker
+  (2012-13 on), all-time top 25, and team pages. Clubs from different leagues are compared using
+  UEFA's country coefficients (downloaded with sources to `uefa_coefficients.json`): an outside
+  assumption, adjustable with `SOCCER_LEAGUE_STRENGTH` in `config.py`. Records are wins-draws-losses.
+- The 9 AM routine now refreshes this season's soccer results (last step, so it can't block the others).
+
 ## 2.3.1 (2026-10-21)
 - Odds pulls no longer fail (and notify) when The Odds API still lists a game as upcoming after
   our schedule's kickoff; that game is skipped as "already started" and the other prices save.

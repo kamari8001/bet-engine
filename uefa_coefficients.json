@@ -1,0 +1,127 @@
+{
+ "about": "UEFA country ranking (sum of the last 5 seasons' country coefficients) for the Big 5 leagues. Key = ranking year Y, covering seasons Y-5/Y-4 ... Y-1/Y. A soccer season ending in year S uses ranking S-1 (the ranking known before it started). Source: Bert Kassies' UEFA coefficients site (kassiesa.net), downloaded 2026-10-21; each total checked against the sum of its 5 seasons.",
+ "rankings": {
+  "2012": {
+   "EPL": 84.41,
+   "La Liga": 84.186,
+   "Bundesliga": 75.186,
+   "Serie A": 59.981,
+   "Ligue 1": 54.178
+  },
+  "2013": {
+   "La Liga": 88.025,
+   "EPL": 82.963,
+   "Bundesliga": 79.614,
+   "Serie A": 64.147,
+   "Ligue 1": 59.0
+  },
+  "2014": {
+   "La Liga": 97.713,
+   "EPL": 84.748,
+   "Bundesliga": 81.641,
+   "Serie A": 66.938,
+   "Ligue 1": 56.5
+  },
+  "2015": {
+   "La Liga": 99.999,
+   "EPL": 80.391,
+   "Bundesliga": 79.415,
+   "Serie A": 70.51,
+   "Ligue 1": 52.416
+  },
+  "2016": {
+   "La Liga": 105.713,
+   "Bundesliga": 80.177,
+   "EPL": 76.284,
+   "Serie A": 70.439,
+   "Ligue 1": 52.749
+  },
+  "2017": {
+   "La Liga": 104.998,
+   "Bundesliga": 79.498,
+   "EPL": 75.962,
+   "Serie A": 73.332,
+   "Ligue 1": 56.665
+  },
+  "2018": {
+   "La Liga": 106.998,
+   "EPL": 79.605,
+   "Serie A": 76.249,
+   "Bundesliga": 71.427,
+   "Ligue 1": 56.415
+  },
+  "2019": {
+   "La Liga": 103.569,
+   "EPL": 85.462,
+   "Serie A": 74.725,
+   "Bundesliga": 71.927,
+   "Ligue 1": 58.498
+  },
+  "2020": {
+   "La Liga": 102.283,
+   "EPL": 90.462,
+   "Bundesliga": 74.784,
+   "Serie A": 70.653,
+   "Ligue 1": 59.248
+  },
+  "2021": {
+   "EPL": 100.569,
+   "La Liga": 97.855,
+   "Serie A": 75.438,
+   "Bundesliga": 73.57,
+   "Ligue 1": 56.081
+  },
+  "2022": {
+   "EPL": 106.641,
+   "La Liga": 96.141,
+   "Serie A": 76.902,
+   "Bundesliga": 75.213,
+   "Ligue 1": 60.081
+  },
+  "2023": {
+   "EPL": 109.57,
+   "La Liga": 92.998,
+   "Bundesliga": 82.481,
+   "Serie A": 81.926,
+   "Ligue 1": 61.164
+  },
+  "2024": {
+   "EPL": 104.303,
+   "Serie A": 90.284,
+   "La Liga": 89.489,
+   "Bundesliga": 86.624,
+   "Ligue 1": 66.831
+  },
+  "2025": {
+   "EPL": 115.196,
+   "Serie A": 97.231,
+   "La Liga": 94.453,
+   "Bundesliga": 86.331,
+   "Ligue 1": 73.093
+  },
+  "2026": {
+   "EPL": 119.519,
+   "Serie A": 99.946,
+   "La Liga": 97.046,
+   "Bundesliga": 92.902,
+   "Ligue 1": 83.498
+  }
+ },
+ "sources": {
+  "2012": "https://kassiesa.net/uefa/data/method4/crank2012.html",
+  "2013": "https://kassiesa.net/uefa/data/method4/crank2013.html",
+  "2014": "https://kassiesa.net/uefa/data/method4/crank2014.html",
+  "2015": "https://kassiesa.net/uefa/data/method4/crank2015.html",
+  "2016": "https://kassiesa.net/uefa/data/method4/crank2016.html",
+  "2017": "https://kassiesa.net/uefa/data/method4/crank2017.html",
+  "2018": "https://kassiesa.net/uefa/data/method5/crank2018.html",
+  "2019": "https://kassiesa.net/uefa/data/method5/crank2019.html",
+  "2020": "https://kassiesa.net/uefa/data/method5/crank2020.html",
+  "2021": "https://kassiesa.net/uefa/data/method5/crank2021.html",
+  "2022": "https://kassiesa.net/uefa/data/method5/crank2022.html",
+  "2023": "https://kassiesa.net/uefa/data/method5/crank2023.html",
+  "2024": "https://kassiesa.net/uefa/data/method5/crank2024.html",
+  "2025": "https://kassiesa.net/uefa/data/method5/crank2025.html",
+  "2026": "https://kassiesa.net/uefa/data/method5/crank2026.html"
+ }
+}

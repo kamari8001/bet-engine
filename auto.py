@@ -48,7 +48,8 @@ SPORTS = ("nfl", "ncaaf", "nba", "ncaab")
 MORNING = [["pull_games.py", "all"], ["pull_history.py", "all", "--current"],
            ["pull_basketball_history.py", "nba", "current"], ["pull_basketball_history.py", "ncaab", "current"],
            ["pull_odds.py", "all"]] + [["predict.py", s] for s in SPORTS] + [["shadow.py", "log", "all"]] \
-          + [["grade.py", s] for s in SPORTS]
+          + [["grade.py", s] for s in SPORTS] \
+          + [["pull_soccer_history.py", "current"]]   # soccer rankings stay fresh; last, so it can't block the rest
 NIGHT = [["pull_games.py", "all"]] + [["grade.py", s] for s in SPORTS]
 
 

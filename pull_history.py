@@ -40,7 +40,7 @@ def current_season(sport):
 
 def season_label(sport, season):
     """2026 for football; '2026-27' for a basketball season ending in 2027."""
-    return f"{season - 1}-{str(season)[2:]}" if sport in ("nba", "ncaab") else str(season)
+    return f"{season - 1}-{str(season)[2:]}" if sport in ("nba", "ncaab", "soccer_club") else str(season)
 
 
 def fetch(url, headers=None):

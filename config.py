@@ -39,3 +39,9 @@ ODDS_API_KEY = _env.get("ODDS_API_KEY", "")
 ODDS_BOOKMAKERS = ["fanduel", "draftkings", "polymarket", "polymarket_us", "betmgm",
                    "betus", "betrivers", "bovada", "lowvig", "betonlineag"]
 MY_BOOKS = ["FanDuel", "DraftKings", "Polymarket", "Polymarket (US)"]
+
+# Soccer power rankings across leagues (display only; never used in predictions):
+# a league's strength shift, in log-goals, = this x ln(its UEFA coefficient / the Big 5 average),
+# split between attack and defense. 0.5: a league 20% above average gets ~10% more goals for and
+# ~10% fewer against. An assumption, not measured from our data; adjust if the rankings look off.
+SOCCER_LEAGUE_STRENGTH = 0.5
