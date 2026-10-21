@@ -124,6 +124,8 @@ def market_snapshots(conn, game_id):
 
 def game_view(conn, g, now, college):
     """Everything one game card needs."""
+    if g["sport"] == "soccer_club":
+        return soccer_game_view(conn, g, now)
     rows = latest_rows(conn, g["id"])
     final = rows["claude"] or rows["engine"]
     mkt = latest_odds(conn, g["id"])
@@ -260,6 +262,10 @@ def live(conn, now, college, sport=None):
              "home_logo": logo_for(g["sport"], g["home_team"], college),
              "kickoff": db.fmt_et(g["start_time_utc"]), "live": info, "state": state, "picks": []}
         rows = {s: (grade.graded_prediction(conn, g, s) if started else latest_rows(conn, g["id"])[s]) for s in SOURCES}
+        if g["sport"] == "soccer_club":
+            v["picks"] = soccer_live_picks(conn, g, rows, info)
+            groups[state if state in groups else "pre"].append(v)
+            continue
         mkt = latest_odds(conn, g["id"])
         entries = [(s, rows[s]["p_home"]) for s in SOURCES if rows[s]] + ([("market", mkt["p_home"])] if mkt else [])
         for src, p in entries:
@@ -300,19 +306,42 @@ def my_picks(conn, now, college):
                 "kickoff": db.fmt_et(g["start_time_utc"]), "start": g["start_time_utc"], "logos": (logo_for(g["sport"], g["away_team"], college),
                                                                     logo_for(g["sport"], g["home_team"], college))}
 
+        soccer = g["sport"] == "soccer_club"
+        if soccer:
+            import grade_soccer
+
         def side(p):
+            if soccer:                       # p = (home, draw, away): the most likely outcome
+                i = max(range(3), key=lambda k: p[k])
+                return ((g["home_team"], "Draw", g["away_team"])[i], whole(p[i]))
             return (g["home_team"], whole(p)) if p >= 0.5 else (g["away_team"], whole(1 - p))
-        base["me"] = side(mine["p_home"])
-        base["engine"] = side(eng["p_home"]) if eng else None
+
+        def probs(row):
+            return (row["p_home"], row["p_draw"], row["p_away"]) if soccer else row["p_home"]
+        base["me"] = side(probs(mine))
+        base["engine"] = side(probs(eng)) if eng else None
         if mine["odds_id"]:
             snap = conn.execute("SELECT captured_at FROM odds WHERE id = ?", (mine["odds_id"],)).fetchone()
-            m = grade.market_at(conn, g["id"], snap["captured_at"]) if snap else None
+            m = (grade_soccer if soccer else grade).market_at(conn, g["id"], snap["captured_at"]) if snap else None
         else:
             m = None
-        base["market"] = side(m["p_home"]) if m else None
+        base["market"] = side(m["p"] if soccer else m["p_home"]) if m else None
 
         if not started:
             upcoming.append(base)
+        elif soccer and g["result_status"] == "final":
+            # three-way: right if your outcome happened; Brier over three outcomes (shown per pick,
+            # kept out of the averages, which are two-outcome scores on a different scale)
+            y = 0 if g["home_score"] > g["away_score"] else 1 if g["home_score"] == g["away_score"] else 2
+            happened = (g["home_team"], "Draw", g["away_team"])[y]
+            base["final"] = f"{g['away_team']} {g['away_score']} - {g['home_team']} {g['home_score']}"
+            base["correct"] = base["me"][0] == happened
+            right += base["correct"]
+            base["brier"] = {"me": grade_soccer.scores(probs(mine), y)[0]}
+            if eng and m:
+                base["brier"]["engine"] = grade_soccer.scores(probs(eng), y)[0]
+                base["brier"]["market"] = grade_soccer.scores(m["p"], y)[0]
+            finished.append(base)
         elif g["result_status"] == "final" and g["home_score"] != g["away_score"]:
             y = int(g["home_score"] > g["away_score"])
             winner = g["home_team"] if y else g["away_team"]
@@ -374,6 +403,8 @@ def rankings(conn, sport, college, season=None, team=None):
 
 
 def scorecard(conn, sport):
+    if sport == "soccer_club":
+        return soccer_scorecard(conn)
     games, stats, approx = grade.grade(conn, sport, current_season(sport))
     tiles = {}
     for s in ("market",) + SOURCES:
@@ -410,3 +441,178 @@ def scorecard(conn, sport):
     import shadow
     return {"finished": len(games), "approx": approx, "tiles": tiles, "h2h": h2h,
             "graded": len(stats["engine"]["rows"]), "shadow": shadow.report_data(conn, sport)}
+
+
+# ---------- club soccer (three outcomes: home, draw, away) ----------
+
+OUTCOMES3 = ("home", "draw", "away")
+
+
+def soccer_form(conn, team, before_utc, n=5):
+    rows = conn.execute(
+        "SELECT * FROM hist_games WHERE sport = 'soccer_club' AND season = ? AND ? IN (home_team, away_team)"
+        " AND coalesce(kickoff_utc, game_date_et) < ? ORDER BY game_date_et DESC, kickoff_utc DESC",
+        (current_season("soccer_club"), team, before_utc)).fetchall()
+    games, w, d, l = [], 0, 0, 0
+    for r in rows:
+        home = r["home_team"] == team
+        us, them = (r["home_score"], r["away_score"]) if home else (r["away_score"], r["home_score"])
+        res = "W" if us > them else "L" if us < them else "D"
+        w, d, l = w + (res == "W"), d + (res == "D"), l + (res == "L")
+        if len(games) < n:
+            games.append({"result": res, "score": f"{us}-{them}", "where": "vs" if home else "at",
+                          "opp": r["away_team"] if home else r["home_team"], "date": r["game_date_et"]})
+    return {"record": f"{w}-{d}-{l}", "games": games}
+
+
+def soccer_game_view(conn, g, now):
+    """A soccer game card: same shape as game_view, with Draw as a third choice everywhere."""
+    from predict_soccer import flag_outcome, latest_odds as latest_odds3
+    from teams import soccer_logo_url
+    rows = latest_rows(conn, g["id"])
+    final = rows["claude"] or rows["engine"]
+    mkt = latest_odds3(conn, g["id"])
+    away, home = g["away_team"], g["home_team"]
+    names = (home, "Draw", away)
+    stale = mkt is not None and now - parse_utc(mkt["captured_at"]) > ODDS_MAX_AGE
+    view = {
+        "id": g["id"], "sport": g["sport"], "league": g["league"], "away": away, "home": home,
+        "away_logo": soccer_logo_url(away), "home_logo": soccer_logo_url(home),
+        "kickoff": db.fmt_et(g["start_time_utc"]), "started": parse_utc(g["start_time_utc"]) <= now,
+        "neutral": bool(g["neutral_site"]), "market": None, "picks": [], "prices": [],
+        "warnings": game_warnings(conn, g, final, mkt, now), "projected": None, "qbs": None, "rest": None,
+        "my_pick": None, "books": [], "movement": None, "odds_time": None, "three_way": True,
+        "cancelled": conn.execute("SELECT 1 FROM results WHERE game_id = ? AND status = 'cancelled'",
+                                  (g["id"],)).fetchone() is not None,
+    }
+    if mkt:
+        i = max(range(3), key=lambda k: mkt["p"][k])
+        view["market"] = {"team": names[i], "pct": whole(mkt["p"][i]), "books": mkt["books"],
+                          "time": db.fmt_et(mkt["captured_at"]), "stale": stale}
+        view["odds_time"] = db.fmt_et(mkt["captured_at"])
+    for src in SOURCES:
+        r = rows[src]
+        if r is None:
+            view["picks"].append({"source": src, "team": None})
+            continue
+        p = (r["p_home"], r["p_draw"], r["p_away"])
+        i = max(range(3), key=lambda k: p[k])
+        edge = round((p[i] - mkt["p"][i]) * 100) if mkt else None
+        disagrees = bool(mkt) and i != max(range(3), key=lambda k: mkt["p"][k])
+        view["picks"].append({"source": src, "team": names[i], "pct": whole(p[i]), "edge": edge,
+                              "disagrees": disagrees, "logo": soccer_logo_url(names[i])})
+        if src == "me":
+            view["my_pick"] = f"{names[i]} {whole(p[i])}%"
+    if final:
+        p = (final["p_home"], final["p_draw"], final["p_away"])
+        flag = flag_outcome(p, mkt, stale) if mkt else None
+        for i in (2, 1, 0):                      # card order: away, draw, home
+            price = {"team": names[i], "fair": fair_moneyline(p[i]), "best": None, "book": None,
+                     "edge": None, "ev": None, "flag": flag == i}
+            if mkt:
+                price["edge"] = round((p[i] - mkt["p"][i]) * 100)
+                best = mkt["best"].get(OUTCOMES3[i])
+                if best:
+                    price["best"], price["book"] = best
+                    price["ev"] = round(100 * (p[i] * decimal_odds(best[0]) - 1))
+            view["prices"].append(price)
+        if final["proj_home_score"] is not None:
+            view["projected"] = (f'{final["proj_away_score"]:.1f}', f'{final["proj_home_score"]:.1f}')
+        inp = json.loads(final["note"] or "{}").get("inputs", {})
+        if inp.get("away_rest_days") is not None:
+            view["rest"] = (inp["away_rest_days"], inp.get("home_rest_days"))
+    if mkt:
+        book_rows = [b for b in conn.execute("SELECT * FROM odds WHERE game_id = ? AND captured_at = ? ORDER BY bookmaker",
+                                             (g["id"], mkt["captured_at"])) if b["draw_ml"] is not None]
+        best = {o: max((b[f"{o}_ml"] for b in book_rows), key=decimal_odds) for o in OUTCOMES3}
+        for b in book_rows:
+            view["books"].append({"book": b["bookmaker"], "away": b["away_ml"], "draw": b["draw_ml"],
+                                  "home": b["home_ml"], "mine": b["bookmaker"] in config.MY_BOOKS,
+                                  "best_away": b["away_ml"] == best["away"], "best_draw": b["draw_ml"] == best["draw"],
+                                  "best_home": b["home_ml"] == best["home"]})
+    first = conn.execute("SELECT MIN(captured_at) FROM odds WHERE game_id = ?", (g["id"],)).fetchone()[0]
+    if mkt and first and first != mkt["captured_at"]:
+        then = latest_odds3_at(conn, g["id"], first)
+        if then:
+            moves = [mkt["p"][i] - then[i] for i in range(3)]
+            i = max(range(3), key=lambda k: moves[k])
+            view["movement"] = {"since": db.fmt_et(first), "pts": round(moves[i] * 100), "toward": names[i],
+                                "then": [whole(x) for x in (then[2], then[1], then[0])],
+                                "now": [whole(x) for x in (mkt["p"][2], mkt["p"][1], mkt["p"][0])]}
+    view["news"] = [{"points": round(a["d_home"] * 100, 1), "reason": a["reason"], "source": a["source_url"],
+                     "time": db.fmt_et(a["created_at"])}
+                    for a in conn.execute("SELECT * FROM adjustments WHERE game_id = ? ORDER BY created_at", (g["id"],))]
+    view["form"] = {side: soccer_form(conn, g[f"{side}_team"], g["start_time_utc"]) for side in ("away", "home")}
+    return view
+
+
+def latest_odds3_at(conn, game_id, captured_at):
+    rows = [r for r in conn.execute("SELECT * FROM odds WHERE game_id = ? AND captured_at = ?", (game_id, captured_at))
+            if r["draw_ml"] is not None]
+    if not rows:
+        return None
+    fair = [no_vig(r["home_ml"], r["draw_ml"], r["away_ml"]) for r in rows]
+    return tuple(statistics.mean(f[i] for f in fair) for i in range(3))
+
+
+def soccer_live_picks(conn, g, rows, info):
+    """Live tab picks for a soccer game: each source's most likely outcome and how it's going."""
+    from predict_soccer import latest_odds as latest_odds3
+    from teams import soccer_logo_url
+    names = (g["home_team"], "Draw", g["away_team"])
+    mkt = latest_odds3(conn, g["id"])
+    entries = [(s, (rows[s]["p_home"], rows[s]["p_draw"], rows[s]["p_away"])) for s in SOURCES if rows[s]]
+    entries += [("market", mkt["p"])] if mkt else []
+    out = []
+    for src, p in entries:
+        i = max(range(3), key=lambda k: p[k])
+        status = None
+        if info and info["state"] != "pre":
+            h, a = info["home_score"], info["away_score"]
+            now_i = 0 if h > a else 1 if h == a else 2
+            if info["state"] == "post":
+                status = "won" if now_i == i else "lost"
+            else:
+                status = "ahead" if now_i == i else "behind"
+        out.append({"source": src, "team": names[i], "pct": whole(p[i]), "logo": soccer_logo_url(names[i]),
+                    "status": status})
+    return out
+
+
+def soccer_scorecard(conn):
+    import grade_soccer
+    import shadow
+    games, stats, approx = grade_soccer.grade(conn, current_season("soccer_club"))
+    tiles = {}
+    for s in ("market",) + SOURCES:
+        st = stats[s]
+        n = len(st["rows"])
+        tile = {"n": n}
+        if n:
+            _, tile["brier"], tile["log_loss"], tile["rps"] = grade_soccer.summary(st["rows"])
+        bets = st["bets"]
+        if bets and s != "market":
+            wins = sum(1 for b in bets if b > 0)
+            tile["bets"] = {"w": wins, "l": len(bets) - wins, "units": sum(bets), "roi": sum(bets) / len(bets)}
+        if st["clv"] and s != "market":
+            tile["clv"] = {"avg": statistics.mean(st["clv"]), "pos": sum(c > 0 for c in st["clv"]) / len(st["clv"]),
+                           "n": len(st["clv"])}
+        if n and s != "market":           # calibration chart: the home-win chance
+            bins = []
+            for lo in range(0, 100, 10):
+                b = [(p[0], int(y == 0)) for p, y in st["rows"] if lo / 100 <= p[0] < (lo + 10) / 100]
+                if b:
+                    bins.append({"lo": lo, "n": len(b), "pred": sum(x for x, _ in b) / len(b),
+                                 "actual": sum(z for _, z in b) / len(b)})
+            tile["bins"] = bins
+        tiles[s] = tile
+    h2h = []
+    for a, b in (("me", "engine"), ("claude", "engine"), ("me", "claude")):
+        common = [x for x in stats["per_game"] if a in x and b in x and "market" in x]
+        if common:
+            row = {"pair": (a, b), "n": len(common)}
+            for src in (a, b, "market"):
+                row[src] = grade_soccer.summary([(x[src], x["y"]) for x in common])[1]
+            h2h.append(row)
+    return {"finished": len(games), "approx": approx, "tiles": tiles, "h2h": h2h,
+            "graded": len(stats["engine"]["rows"]), "shadow": [], "three_way": True}

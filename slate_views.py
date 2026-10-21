@@ -152,6 +152,8 @@ a { color:var(--accent); }
 .lcard .picks tr.me td { background:rgba(88,166,255,.08); }
 .bad { color:var(--bad); }
 details summary { color:var(--accent); cursor:pointer; font-size:12px; margin-top:8px; }
+.card.three .inner { height:calc(var(--card-h) + 40px); } .card.three .prices .tm { max-width:96px; }
+.card.three .prices td, .card.three .prices th { padding-left:4px; padding-right:4px; }
 .models { } .hint .touch { display:none; }
 @media (hover: none) { .hint .mouse { display:none; } .hint .touch { display:inline; } }
 
@@ -265,9 +267,11 @@ def card(v):
     sub = []
     if v["neutral"]:
         sub.append("neutral site")
+    three = v.get("three_way")
     if v["projected"]:
-        sub.append(f"projected {esc(v['away'])} {v['projected'][0]} &ndash; {esc(v['home'])} {v['projected'][1]}")
-    logos = {v["away"]: v["away_logo"], v["home"]: v["home_logo"]}
+        sub.append(f"{'expected goals' if three else 'projected'} {esc(v['away'])} {v['projected'][0]} "
+                   f"&ndash; {esc(v['home'])} {v['projected'][1]}")
+    logos = {v["away"]: v["away_logo"], v["home"]: v["home_logo"], "Draw": None}
 
     rows = ""
     for p in v["picks"]:
@@ -306,14 +310,14 @@ def card(v):
     else:
         form = f"""<form class="pick" method="post" action="/pick">
 <input type="hidden" name="game_id" value="{v['id']}"><input type="hidden" name="sport" value="{esc(v['sport'])}">
-<select name="team"><option value="{esc(v['away'])}">{esc(v['away'])}</option><option value="{esc(v['home'])}">{esc(v['home'])}</option></select>
-<input type="number" name="pct" min="1" max="99" step="1" placeholder="win %" required>
+<select name="team"><option value="{esc(v['away'])}">{esc(v['away'])}</option>{'<option value="Draw">Draw</option>' if three else ''}<option value="{esc(v['home'])}">{esc(v['home'])}</option></select>
+<input type="number" name="pct" min="1" max="99" step="1" placeholder="{'chance %' if three else 'win %'}" required>
 <button class="go" type="submit">Log pick</button></form>"""
 
     front = f"""<div class="face front">
 <div class="matchup">{away}<span class="at">at</span>{home}</div>
 <div class="sub2"><span class="time">{'<b style="color:var(--bad)">CANCELLED</b> &middot; ' if v.get('cancelled') else ''}{esc(v['kickoff'])}{' &middot; ' + ' &middot; '.join(sub) if sub else ''}</span>{badge}</div>
-<table class="picks"><tr><th>source</th><th class="l">pick</th><th>win %</th><th>vs market</th></tr>{rows}</table>
+<table class="picks"><tr><th>source</th><th class="l">pick</th><th>{'chance' if three else 'win %'}</th><th>vs market</th></tr>{rows}</table>
 {prices_html}{form}<div class="hint"><span class="mouse">click</span><span class="touch">tap</span> card for details &#8635;</div></div>"""
 
     # back
@@ -321,19 +325,26 @@ def card(v):
     for b in v["books"]:
         books += (f'<tr class="{"my" if b["mine"] else ""}"><td>{esc(b["book"])}{" &#9733;" if b["mine"] else ""}</td>'
                   f'<td class="{"best" if b["best_away"] else ""}">{b["away"]:+d}</td>'
-                  f'<td class="{"best" if b["best_home"] else ""}">{b["home"]:+d}</td></tr>')
+                  + (f'<td class="{"best" if b["best_draw"] else ""}">{b["draw"]:+d}</td>' if three else "")
+                  + f'<td class="{"best" if b["best_home"] else ""}">{b["home"]:+d}</td></tr>')
     books_html = (f'<div class="section"><h4>Odds by book &middot; {esc(v["odds_time"] or "")}</h4>'
                   f'<table class="books"><tr><th>book (&#9733; = yours)</th><th>{esc(v["away"])}</th>'
-                  f'<th>{esc(v["home"])}</th></tr>{books}</table></div>') if books else \
+                  + ("<th>Draw</th>" if three else "")
+                  + f'<th>{esc(v["home"])}</th></tr>{books}</table></div>') if books else \
         '<div class="section"><h4>Odds by book</h4><div class="note">no odds yet</div></div>'
     mv = v["movement"]
     move_html = ""
     if mv:
         what = "no real move" if mv["pts"] == 0 else f'moved {mv["pts"]} pts toward {esc(mv["toward"])}'
+        if three:
+            then, now_ = " / ".join(f"{x}%" for x in mv["then"]), " / ".join(f"{x}%" for x in mv["now"])
+            line = (f'<div class="kv"><span>{esc(v["away"])} / Draw / {esc(v["home"])} (no vig)</span>'
+                    f'<span>{then} &rarr; {now_}</span></div>')
+        else:
+            line = (f'<div class="kv"><span>{esc(v["away"])} / {esc(v["home"])} (no vig)</span>'
+                    f'<span>{mv["away_then"]}% / {mv["home_then"]}% &rarr; {mv["away_now"]}% / {mv["home_now"]}%</span></div>')
         move_html = (f'<div class="section"><h4>Line movement</h4>'
-                     f'<div class="kv"><span>since {esc(mv["since"])}</span><span>{what}</span></div>'
-                     f'<div class="kv"><span>{esc(v["away"])} / {esc(v["home"])} (no vig)</span>'
-                     f'<span>{mv["away_then"]}% / {mv["home_then"]}% &rarr; {mv["away_now"]}% / {mv["home_now"]}%</span></div></div>')
+                     f'<div class="kv"><span>since {esc(mv["since"])}</span><span>{what}</span></div>{line}</div>')
     form_rows = ""
     for side in ("away", "home"):
         f = v["form"][side]
@@ -341,7 +352,7 @@ def card(v):
             f'<span class="chip {g["result"]}" title="{g["result"]} {g["score"]} {g["where"]} {esc(g["opp"])} ({g["date"]})">'
             f'{g["result"]}</span>' for g in reversed(f["games"]))
         form_rows += (f'<div class="form-row">{team(v[side], v[side + "_logo"], True)}'
-                      f'<span class="note">{f["record"]} this season</span><span class="chips">{chips or "<span class=note>no games yet</span>"}</span></div>')
+                      f'<span class="note">{f["record"]}{" (W-D-L)" if three else ""} this season</span><span class="chips">{chips or "<span class=note>no games yet</span>"}</span></div>')
     form_html = f'<div class="section"><h4>Form (last 5, oldest &rarr; newest; hover for scores)</h4>{form_rows}</div>'
     extra = ""
     if v["qbs"]:
@@ -363,7 +374,8 @@ def card(v):
     back = f"""<div class="face back">
 <div class="top"><div class="matchup">{away}<span class="at">at</span>{home}</div><span class="time">{esc(v['kickoff'])}</span></div>
 {warn_html}{news_html}{books_html}{move_html}{form_html}{extra_html}<div class="hint">click to flip back &#8634;</div></div>"""
-    return f'<div class="card" id="g{v["id"]}"><div class="inner">{front}{back}</div></div>'
+    return (f'<div class="card{" three" if three else ""}" id="g{v["id"]}" data-league="{esc(v.get("league") or "")}">'
+            f'<div class="inner">{front}{back}</div></div>')
 
 
 def slate_page(sport, days, groups, msg):
@@ -381,7 +393,29 @@ def slate_page(sport, days, groups, msg):
     intro = (f"<p class='note'>{len(groups)} {label} games, next {days} days. &#9888; = warnings on the back. "
              f"An orange edge on a row means that source picks a different team than the market. "
              f"Flags need an edge of {config.EDGE_THRESHOLD:.0%}+ and fresh odds.</p>")
-    return page(f"{label} slate", f"slate-{sport}", intro + body, msg)
+    script = ""
+    if sport == "soccer_club":
+        intro += ("<p class='note'>Three outcomes: each source&rsquo;s pick is its most likely result (a team or Draw). "
+                  "At most one flag per game (the largest edge). Your pick: choose a team or Draw and your chance "
+                  "for it; the other two split the rest in the market&rsquo;s proportions.</p>")
+        leagues = sorted({v["league"] for _, v in groups})
+        intro += ('<div class="filters"><select id="lg"><option value="">All leagues</option>'
+                  + "".join(f"<option>{esc(lg)}</option>" for lg in leagues) + "</select></div>")
+        script = """
+(function () {
+  var s = document.getElementById('lg'); if (!s) return;
+  s.addEventListener('change', function () {
+    document.querySelectorAll('.card[data-league]').forEach(function (c) {
+      c.style.display = !s.value || c.dataset.league === s.value ? '' : 'none';
+    });
+    document.querySelectorAll('.grid').forEach(function (g) {
+      var any = [].some.call(g.children, function (c) { return c.style.display !== 'none'; });
+      g.style.display = any ? '' : 'none'; g.previousElementSibling.style.display = any ? '' : 'none';
+    });
+  });
+})();
+"""
+    return page(f"{label} slate", f"slate-{sport}", intro + body, msg, scripts=script)
 
 
 # ---------- live ----------
@@ -460,7 +494,7 @@ def mine_page(upcoming, finished, summary):
         `label` is shown before the pick on phones, where rows stack."""
         if not x:
             return f'<td class="l neg pk" data-label="{label}">&ndash;</td><td class="pp"></td>'
-        logo = logos[0] if x[0] == names[0] else logos[1]
+        logo = None if x[0] == "Draw" else logos[0] if x[0] == names[0] else logos[1]
         return f'<td class="l pk" data-label="{label}">{team(x[0], logo, True)}</td><td class="pp">{x[1]}%</td>'
 
     s = summary
@@ -746,6 +780,8 @@ def scorecard_page(sport, sc):
             continue
         rows = f'<div class="kv"><span>graded games</span><span>{x["n"]}</span></div>'
         rows += f'<div class="kv"><span>log loss</span><span>{x["log_loss"]:.3f}</span></div>'
+        if "rps" in x:
+            rows += f'<div class="kv"><span>RPS</span><span>{x["rps"]:.3f}</span></div>'
         if "bets" in x:
             b = x["bets"]
             cls = "ok" if b["units"] > 0 else "bad"
@@ -763,6 +799,11 @@ def scorecard_page(sport, sc):
     tiles += "</div>"
     approx = (f'<p class="note">{sc["approx"]} game(s) had no odds pull within an hour of kickoff, so their '
               f'closing-line value is approximate.</p>') if sc["approx"] else ""
+    if sc.get("three_way"):
+        approx = ('<p class="note">Three outcomes (home, draw, away): Brier is summed over all three, so about 0.58 is '
+                  'typical here and isn&rsquo;t comparable with the other sports. RPS (ranked probability score) treats a '
+                  'draw as between a home and an away win; lower is better. The calibration chart below is for the '
+                  'home-win chance.</p>') + approx
 
     h2h = "".join(
         f'<tr><td>{SOURCE_LABEL[r["pair"][0]]} vs {SOURCE_LABEL[r["pair"][1]]}</td><td>{r["n"]}</td>'

@@ -28,7 +28,7 @@ import slate_data
 import slate_views
 from my_pick import PickError, log_pick
 
-SPORTS = ("nfl", "ncaaf", "nba", "ncaab")
+SPORTS = ("nfl", "ncaaf", "nba", "ncaab", "soccer_club")
 HERE = Path(__file__).parent
 
 

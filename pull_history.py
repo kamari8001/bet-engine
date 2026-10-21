@@ -30,8 +30,9 @@ CURRENT_SEASON = 2026   # football (seasons are labeled by the year they start)
 SEASONS = {"nfl": 2026, "ncaaf": 2026, "nba": 2027, "ncaab": 2027, "soccer_club": 2027}
 
 
-SPORT_NAMES = {"nfl": "NFL", "ncaaf": "College football", "nba": "NBA", "ncaab": "College basketball"}
-SHORT_NAMES = {"nfl": "NFL", "ncaaf": "NCAAF", "nba": "NBA", "ncaab": "NCAAM"}
+SPORT_NAMES = {"nfl": "NFL", "ncaaf": "College football", "nba": "NBA", "ncaab": "College basketball",
+               "soccer_club": "Club soccer"}
+SHORT_NAMES = {"nfl": "NFL", "ncaaf": "NCAAF", "nba": "NBA", "ncaab": "NCAAM", "soccer_club": "Soccer"}
 
 
 def current_season(sport):

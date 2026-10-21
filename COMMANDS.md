@@ -15,7 +15,7 @@ cd ~/bet-engine
 | http://localhost:8765 | **The slate page** (dark theme), always running in the background: a Live tab (ESPN scores with each source's pick, refreshing every minute), flip cards for every game (front: each source's pick, prices at your books, pick box; back: warnings, odds by book, line movement, form), a Positions page (your picks), a Rankings tab (power rankings with OVR), and a visual scorecard. It restarts itself after code changes. |
 | `python3 show_picks.py nfl` | Every source's current pick side by side (engine, claude, you, market). Add `--days 3` to change how far ahead it looks. |
 | `python3 my_pick.py list nfl` | Upcoming games with their id numbers |
-| `python3 my_pick.py 3 CHI 60` | Log your pick: game 3, Chicago, 60% to win. College teams use the full name in quotes, e.g. `"Ohio State"`. |
+| `python3 my_pick.py 3 CHI 60` | Log your pick: game 3, Chicago, 60% to win. College teams use the full name in quotes, e.g. `"Ohio State"`. Club soccer: a team or `Draw` and your chance for it, e.g. `python3 my_pick.py 512 Draw 35`; the other two outcomes split the rest in the market's proportions (`list soccer_club` for ids). |
 | `python3 grade.py nfl` | Scorecard: accuracy, calibration, paper bets, closing-line value, head-to-head. Add `--season 2026` for a specific season. |
 | `python3 auto.py --status` | What automation has done and what's coming, plus credits left |
 

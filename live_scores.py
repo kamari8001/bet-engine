@@ -20,6 +20,7 @@ URLS = {
     "ncaab": ("https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard"
               "?dates={date}&groups=50&limit=400"),
 }
+SOCCER_URL = "https://site.api.espn.com/apis/site/v2/sports/soccer/{slug}/scoreboard?dates={date}"
 CACHE_SECONDS = 30
 _cache = {}  # (sport, date) -> (fetched at, {espn id: info})
 
@@ -28,16 +29,27 @@ class LiveUnavailable(Exception):
     pass
 
 
+def _get(url):
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        return json.load(urllib.request.urlopen(req, timeout=15))
+    except Exception as e:
+        raise LiveUnavailable(f"ESPN scoreboard unavailable ({e})")
+
+
 def _fetch(sport, date):
     key = (sport, date)
     hit = _cache.get(key)
     if hit and time.time() - hit[0] < CACHE_SECONDS:
         return hit[1]
-    try:
-        req = urllib.request.Request(URLS[sport].format(date=date), headers={"User-Agent": "Mozilla/5.0"})
-        data = json.load(urllib.request.urlopen(req, timeout=15))
-    except Exception as e:
-        raise LiveUnavailable(f"ESPN scoreboard unavailable ({e})")
+    if sport == "soccer_club":
+        from teams import SOCCER_LEAGUES
+        events = []
+        for _, _, slug, _ in SOCCER_LEAGUES.values():
+            events += _get(SOCCER_URL.format(slug=slug, date=date)).get("events", [])
+        data = {"events": events}
+    else:
+        data = _get(URLS[sport].format(date=date))
     out = {}
     for e in data.get("events", []):
         comp = e["competitions"][0]
