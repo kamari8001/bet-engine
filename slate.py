@@ -113,7 +113,8 @@ class Handler(BaseHTTPRequestHandler):
         finally:
             conn.close()
         anchor = f"#g{form.get('game_id', '')}"
-        self._redirect(f"/slate?sport={sport}&kind={kind}&msg={urllib.parse.quote(text)}{anchor}")
+        league = f"&league={urllib.parse.quote(form['league'])}" if form.get("league") else ""
+        self._redirect(f"/slate?sport={sport}{league}&kind={kind}&msg={urllib.parse.quote(text)}{anchor}")
 
     def log_message(self, fmt, *args):
         pass  # keep the terminal quiet

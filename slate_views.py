@@ -15,8 +15,9 @@ SOURCE_LABEL = {"engine": "Engine", "claude": "Claude", "me": "You", "market": "
 SERIES = {"engine": "#3987e5", "me": "#d95926", "claude": "#199e70"}
 
 CSS = """
-:root { --card-h:470px; --bg:#0e1116; --card:#161b22; --raise:#1c222b; --line:#262d36; --text:#e6edf3; --muted:#8b949e;
-        --soft:#c3c9d1; --accent:#58a6ff; --good:#3fb950; --flag:#d29922; --warn:#f0883e; --bad:#f85149; }
+:root { --card-h:495px; --bg:#0a0d13; --card:#121821; --raise:#19202b; --line:#222a36; --text:#e8edf4; --muted:#909aa8;
+        --soft:#c6ccd5; --accent:#5aa9ff; --good:#3fb950; --flag:#d8a12a; --warn:#f0883e; --bad:#f85149;
+        --glow:rgba(90,169,255,.35); --ease:cubic-bezier(.2,.8,.2,1); color-scheme:dark; }
 * { box-sizing:border-box; }
 body { margin:0; background:var(--bg); color:var(--text);
        font:14px/1.45 "Doppio One", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -157,6 +158,81 @@ details summary { color:var(--accent); cursor:pointer; font-size:12px; margin-to
 .models { } .hint .touch { display:none; }
 @media (hover: none) { .hint .mouse { display:none; } .hint .touch { display:inline; } }
 
+
+/* ---------- modern look (v3.1.1) ---------- */
+body { background:
+         radial-gradient(1100px 520px at 8% -8%, rgba(90,169,255,.09), transparent 60%),
+         radial-gradient(900px 480px at 100% -4%, rgba(63,185,80,.05), transparent 60%), var(--bg);
+       background-repeat:no-repeat; min-height:100vh; }
+header { background:rgba(10,13,19,.72); backdrop-filter:blur(16px) saturate(150%); -webkit-backdrop-filter:blur(16px) saturate(150%);
+         border-bottom:1px solid rgba(255,255,255,.06); }
+header h1 { letter-spacing:.01em; }
+nav a { transition:color .2s, background-color .2s; }
+nav a:hover { color:var(--text); background:rgba(255,255,255,.04); }
+nav a.on { background:rgba(90,169,255,.13); border-color:rgba(90,169,255,.35); color:var(--text); view-transition-name:navpill; }
+.toggle { background:rgba(255,255,255,.02); }
+.toggle a { transition:color .2s, background-color .2s; }
+.toggle a.on { background:rgba(90,169,255,.13); color:var(--text); }
+.face, .panel, .tile, .lcard {
+  background:linear-gradient(180deg, rgba(255,255,255,.028), rgba(255,255,255,0) 38%), var(--card);
+  border:1px solid var(--line); border-radius:14px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035), 0 10px 28px -16px rgba(0,0,0,.7); }
+.inner { transition:transform .65s var(--ease); }
+.card { scroll-margin-top:96px; transition:transform .25s var(--ease); }
+@media (hover: hover) {
+  .card:hover { transform:translateY(-3px); }
+  .card:hover .face { border-color:rgba(90,169,255,.32); box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 16px 34px -18px rgba(0,0,0,.85), 0 0 0 1px rgba(90,169,255,.08); }
+  .tile:hover, .lcard:hover { border-color:rgba(90,169,255,.28); }
+  .rk tr:hover td { background:rgba(255,255,255,.025); }
+  button.go:hover { filter:brightness(1.08); box-shadow:0 6px 18px -8px var(--glow); }
+}
+.card:target .face { border-color:rgba(90,169,255,.55); }
+button.go { transition:transform .12s var(--ease), filter .2s, box-shadow .2s; }
+button.go:active, .badge:active, .toggle a:active, nav a:active { transform:scale(.96); }
+.badge { transition:transform .12s var(--ease), background-color .2s; }
+select, input { transition:border-color .2s, box-shadow .2s; }
+select:focus, input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(90,169,255,.18); }
+.face::-webkit-scrollbar { width:6px; } .face::-webkit-scrollbar-thumb { background:var(--line); border-radius:6px; }
+.face { scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
+.chip, .ovr { transition:transform .2s var(--ease); }
+.msg { animation:msg-in .45s var(--ease) both; }
+.msg.ok { animation:msg-in .45s var(--ease) both, msg-out .6s ease 6s forwards; }
+
+/* entrance: cards and panels rise in, one after another (--i set by the page script) */
+.anim .card, .anim .lcard, .anim .tile, .anim .panel { animation:rise .5s var(--ease) both; animation-delay:calc(var(--i, 0) * 40ms); }
+.anim .ovr { animation:pop .45s var(--ease) both; animation-delay:calc(var(--i, 0) * 40ms + 120ms); }
+.picks tr.dis td.src { animation:edge-pulse 1.4s ease .6s 1; }
+@keyframes rise { from { opacity:0; translate:0 10px; } to { opacity:1; translate:0 0; } }
+@keyframes pop { from { opacity:0; scale:.8; } to { opacity:1; scale:1; } }
+@keyframes msg-in { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:none; } }
+@keyframes msg-out { to { opacity:0; transform:translateY(-6px); height:0; padding-top:0; padding-bottom:0; margin:0; border-width:0; } }
+@keyframes edge-pulse { 0%, 100% { box-shadow:none; } 40% { box-shadow:inset 4px 0 0 var(--flag), -6px 0 14px -6px var(--flag); } }
+@keyframes face-in { from { opacity:0; scale:.82 1; } to { opacity:1; scale:1 1; } }
+
+/* lighter, cleaner details */
+td { border-top-color:rgba(255,255,255,.055); }
+.kv, .form-row { border-top-color:rgba(255,255,255,.055); }
+select, input { border-radius:10px; background:rgba(255,255,255,.03); }
+button.go { border-radius:10px; background:linear-gradient(180deg, #6db3ff, #4a9df5); }
+.flag { border-radius:999px; padding:0 7px; background:rgba(216,161,42,.12); }
+.picks td:last-child span.pos { background:rgba(63,185,80,.12); border-radius:999px; padding:1px 7px; }
+.prices .flag { padding:0 5px; }
+.prices .tm { max-width:96px; } .prices td, .prices th { padding-left:4px; padding-right:4px; }
+.prices td .note { display:block; line-height:1.1; } .prices th { white-space:normal; line-height:1.15; }
+.day { display:flex; align-items:center; gap:10px; }
+.day::after { content:""; flex:1; height:1px; background:linear-gradient(90deg, var(--line), transparent); }
+.section h4 { color:#7f8a99; letter-spacing:.08em; }
+.chip { border-radius:7px; }
+.ovr { border-radius:8px; box-shadow:0 2px 10px -4px rgba(0,0,0,.6); }
+.msg { border-radius:12px; backdrop-filter:blur(6px); }
+
+/* smooth page-to-page changes in browsers that support it (the tab highlight slides) */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration:.22s; }
+  ::view-transition-group(navpill) { animation-duration:.32s; animation-timing-function:cubic-bezier(.2,.8,.2,1); }
+}
+
 /* ---------- phones ---------- */
 @media (max-width: 640px) {
   :root { --card-h:565px; }
@@ -209,13 +285,41 @@ details summary { color:var(--accent); cursor:pointer; font-size:12px; margin-to
   table.mt td.pp { flex:0 0 auto; text-align:right; width:auto; }
   table.mt td.res, table.mt td[data-label="Status"] { flex:1 0 100%; text-align:left; display:flex; gap:6px; }
 }
+/* ---------- touch screens and phones: flat cards ----------
+   iPhone Safari often won't scroll the page when a swipe starts on a 3D-flipped card with its own
+   scroll area. So on touch devices the cards are flat: no 3D, no inner scrolling, each face as tall
+   as its content; tapping swaps front and back with a quick 2D flip. */
+@media (hover: none), (max-width: 640px) {
+  .card { perspective:none; touch-action:manipulation; }
+  .inner, .card.three .inner { height:auto; transform:none !important; transform-style:flat; transition:none; }
+  .face { position:relative; inset:auto; overflow:visible; backface-visibility:visible; -webkit-backface-visibility:visible; }
+  .back { transform:none; display:none; }
+  .card.flipped .front { display:none; }
+  .card.flipped .back { display:block; }
+  .card.flipping .face { animation:face-in .32s var(--ease) both; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+}
 """
 
 JS = """
+// entrance animation only when the page is on screen as it loads (a page opened in a background
+// tab would otherwise hold its cards invisible until viewed); done after 2 s either way
+if (document.visibilityState === 'visible') {
+  document.documentElement.classList.add('anim');
+  setTimeout(function () { document.documentElement.classList.remove('anim'); }, 2000);
+}
+// stagger the entrance animation (first dozen items per kind; the rest appear together)
+['.card', '.lcard', '.tile', '.panel', '.ovr'].forEach(function (sel) {
+  document.querySelectorAll(sel).forEach(function (el, i) { el.style.setProperty('--i', Math.min(i, 12)); });
+});
 document.querySelectorAll('.card').forEach(function (c) {
   c.addEventListener('click', function (e) {
     if (e.target.closest('form, input, select, button.go, a')) return;
+    c.classList.add('flipping');
     c.classList.toggle('flipped');
+    setTimeout(function () { c.classList.remove('flipping'); }, 350);
   });
 });
 """
@@ -309,7 +413,7 @@ def card(v):
         form = '<div class="locked">Game has started: picks are locked.</div>'
     else:
         form = f"""<form class="pick" method="post" action="/pick">
-<input type="hidden" name="game_id" value="{v['id']}"><input type="hidden" name="sport" value="{esc(v['sport'])}">
+<input type="hidden" name="game_id" value="{v['id']}"><input type="hidden" name="sport" value="{esc(v['sport'])}"><input type="hidden" name="league" value="" class="keep-league">
 <select name="team"><option value="{esc(v['away'])}">{esc(v['away'])}</option>{'<option value="Draw">Draw</option>' if three else ''}<option value="{esc(v['home'])}">{esc(v['home'])}</option></select>
 <input type="number" name="pct" min="1" max="99" step="1" placeholder="{'chance %' if three else 'win %'}" required>
 <button class="go" type="submit">Log pick</button></form>"""
@@ -400,11 +504,11 @@ def slate_page(sport, days, groups, msg):
                   "for it; the other two split the rest in the market&rsquo;s proportions.</p>")
         leagues = sorted({v["league"] for _, v in groups})
         intro += ('<div class="filters"><select id="lg"><option value="">All leagues</option>'
-                  + "".join(f"<option>{esc(lg)}</option>" for lg in leagues) + "</select></div>")
+                  + "".join(f'<option value="{esc(lg)}">{esc(lg)}</option>' for lg in leagues) + "</select></div>")
         script = """
 (function () {
   var s = document.getElementById('lg'); if (!s) return;
-  s.addEventListener('change', function () {
+  function apply(push) {
     document.querySelectorAll('.card[data-league]').forEach(function (c) {
       c.style.display = !s.value || c.dataset.league === s.value ? '' : 'none';
     });
@@ -412,7 +516,18 @@ def slate_page(sport, days, groups, msg):
       var any = [].some.call(g.children, function (c) { return c.style.display !== 'none'; });
       g.style.display = any ? '' : 'none'; g.previousElementSibling.style.display = any ? '' : 'none';
     });
-  });
+    document.querySelectorAll('input.keep-league').forEach(function (i) { i.value = s.value; });
+    if (push) {   // remember the filter in the address, so reloads and pick logging keep it
+      var u = new URL(location.href);
+      if (s.value) u.searchParams.set('league', s.value); else u.searchParams.delete('league');
+      u.searchParams.delete('msg'); u.searchParams.delete('kind'); u.hash = '';
+      history.replaceState(null, '', u);
+    }
+  }
+  var want = new URLSearchParams(location.search).get('league');
+  if (want && [].some.call(s.options, function (o) { return o.value === want; })) s.value = want;
+  apply(false);
+  s.addEventListener('change', function () { apply(true); });
 })();
 """
     return page(f"{label} slate", f"slate-{sport}", intro + body, msg, scripts=script)

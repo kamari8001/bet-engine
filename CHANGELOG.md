@@ -4,6 +4,18 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 3.1.1 (2026-10-22): smoother slate
+- Logging a pick keeps your league filter (it's now part of the page address, so reloads and
+  bookmarks keep it too) and brings you back to the card you picked.
+- Phones and tablets: cards no longer trap swipes. They're flat (no 3D layers, no scroll area inside
+  the card) and as tall as their content; tapping swaps front and back with a quick flip. iPhone
+  Safari often wouldn't scroll the page when a swipe started on a 3D card. Desktop keeps the 3D flip.
+- New look: frosted header, softer glowing cards that lift under the mouse, cards fading in one after
+  another, a smoother flip, pill-shaped edges and FLAG tags, day headings with a rule line, focus
+  rings, messages that slide in (success messages fade away), smooth page-to-page transitions in
+  browsers that support them. Animations switch off with the system's Reduce Motion setting.
+- Price tables show the book under the price on every screen; desktop cards are a bit taller.
+
 ## 3.1.0 (2026-10-22): Champions League
 - Champions League games are predicted (home/draw/away) when both clubs come from leagues we cover
   (about 80% of games; 32 of this season's 36 clubs). New probabilities only for these new games;

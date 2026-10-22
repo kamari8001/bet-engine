@@ -42,6 +42,7 @@ _(nothing)_
 
 ## Done
 
+- 2026-10-22 v3.1.1: filter kept after logging a pick; phone scrolling fix (flat cards on touch screens); modern look and light animations
 - 2026-10-22 v3.1.0: Champions League live (learned league strengths; final exam -1.0%); soccer rankings use learned strengths
 - 2026-10-21 v3.0.0: club soccer live (Big 5, three-way predictions, grading with RPS, Soccer tab, automation, 8 AM news check); $30 Odds API plan bought
 - 2026-10-21 v2.4.0: soccer power rankings (Big 5 together via UEFA coefficients; adjustable league strength)
