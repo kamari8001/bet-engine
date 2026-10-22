@@ -19,10 +19,10 @@ Usage: python3 rankings.py nfl | ncaaf | nba | ncaab  [--top N]
 Display only: nothing goes into the logbook.
 
 Club soccer (soccer_club): all Big 5 clubs in one ranking. A club's own-league rating (from the
-soccer model) is shifted by its league's strength from UEFA's country coefficients
-(uefa_coefficients.json; the ranking known before that season), by config.SOCCER_LEAGUE_STRENGTH,
-then compared with an average Big 5 club on a neutral field: chance = P(win) + half of P(draw).
-That league shift is an outside assumption, not measured from our data. Seasons 2012-13 on.
+soccer model) is shifted by its league's strength LEARNED FROM EUROPEAN GAMES (the same strengths the
+Champions League predictions use; soccer_model.py European branch), then compared with an average Big 5
+club on a neutral field: chance = P(win) + half of P(draw). Seasons 2015-16 on (2014-15 is the
+European warm-up season).
 
 Also: python3 rankings.py <sport> --season 2017 | --all-time | --team KC | --rebuild
 """
@@ -49,8 +49,7 @@ OVR_MID, OVR_PER_SD = 62, 12
 _memo = {}          # (sport, as-of date) -> (computed at, rows)
 MEMO_SECONDS = 600
 EARLY = {"nfl": 3, "ncaaf": 3, "nba": 10, "ncaab": 10, "soccer_club": 5}
-SOCCER_FIRST_SEASON = 2013      # first season with a UEFA ranking in uefa_coefficients.json (ranking 2012)
-UEFA_PATH = Path(__file__).parent / "uefa_coefficients.json"   # games played before ratings are "settled"
+SOCCER_FIRST_SEASON = 2016      # first season after the European warm-up (2014-15)   # games played before ratings are "settled"
 
 
 def fbs_teams(season):
@@ -278,29 +277,21 @@ def _model_version(sport):
     strength setting, since changing it changes every club's chance)."""
     if sport == "soccer_club":
         import soccer_model as sm
-        return f'{sm.load_params()["version"]}+league{config.SOCCER_LEAGUE_STRENGTH}'
+        p = sm.load_params()
+        return f'{p["version"]}+{p["europe"]["version"]}'
     return model.load_params(sport)["version"]
-
-
-def uefa_shift(season):
-    """{league: log-goal shift} for a season, from the UEFA ranking known before it started."""
-    data = json.loads(UEFA_PATH.read_text())["rankings"]
-    coef = data.get(str(season - 1))
-    if coef is None:
-        raise RuntimeError(f"no UEFA ranking for {season - 2}-{(season - 1) % 100:02d} in uefa_coefficients.json; "
-                           "add it (with its source) before ranking this season")
-    avg = statistics.mean(coef.values())
-    return {lg: config.SOCCER_LEAGUE_STRENGTH * math.log(c / avg) for lg, c in coef.items()}
 
 
 def soccer_compute(conn, season, live, as_of, games=None):
     import soccer_model as sm
-    params = sm.load_params()["ratings"]
-    games = games if games is not None else sm.load_games(conn)
+    sp = sm.load_params()
+    params = {**sp["ratings"], **sp["europe"]["settings"]}
+    games = games if games is not None else sm.load_games(conn, include_europe=True)
     history = ([g for g in games if g["game_date_et"] < as_of.isoformat()] if live
                else [g for g in games if g["season"] <= season])
     _, r = sm.walk_forward(history, params, keep=lambda g: False)
-    shift = uefa_shift(season)
+    big5 = statistics.mean(r.strength[lg] for lg in sm.BIG5)
+    shift = {lg: r.strength[lg] - big5 for lg in sm.BIG5}     # learned, relative to the average Big 5 league
     base = statistics.mean(r.base[lg] for lg in sm.BIG5)     # an average Big 5 scoring level
     rho = r.p["rho"]
 
@@ -361,7 +352,7 @@ def past_seasons(conn, sport, rebuild=False):
             pass
     if sport == "soccer_club":
         import soccer_model as sm
-        games = sm.load_games(conn)
+        games = sm.load_games(conn, include_europe=True)
         seasons = [s for s in sorted({g["season"] for g in games}) if s >= SOCCER_FIRST_SEASON]
         version = sm.load_params()["version"]
     else:

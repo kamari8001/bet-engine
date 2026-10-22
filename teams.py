@@ -276,13 +276,38 @@ SOCCER_TEAMS = {
         'Troyes': ('170', 'Troyes', 'Troyes'),
     },
 }
+# European competitions predicted live: name -> (ESPN slug, Odds API key)
+SOCCER_EUROPE_LIVE = {"Champions League": ("uefa.champions", "soccer_uefa_champs_league")}
+# Odds API names of this season's Champions League clubs outside the Big 5 (checked 2026-10-22 against
+# The Odds API's event list and ESPN's league phase; clubs from uncovered leagues are left out)
+SOCCER_EXTRA_ODDS = {"AEK Athens": "AEK", "Bodø/Glimt": "Bodo/Glimt", "Club Brugge": "Club Brugge",
+                     "Fenerbahce": "Fenerbahce", "Feyenoord": "Feyenoord", "Galatasaray": "Galatasaray",
+                     "LASK": "LASK", "PSV Eindhoven": "PSV Eindhoven", "Porto": "Porto",
+                     "Sporting Lisbon": "Sp Lisbon", "Viking FK": "Viking"}
 SOCCER_BY_ESPN_ID = {e: (lg, ours) for lg, teams in SOCCER_TEAMS.items() for ours, (e, _, _) in teams.items()}
+_europe_map = {}
+
+
+def europe_clubs():
+    """{ESPN id: our name} for European competition clubs we cover (soccer_europe_teams.json)."""
+    if not _europe_map:
+        import json
+        from pathlib import Path
+        path = Path(__file__).parent / "soccer_europe_teams.json"
+        if path.exists():
+            _europe_map.update({tid: v["ours"] for tid, v in json.loads(path.read_text()).items() if v.get("ours")})
+    return _europe_map
 SOCCER_BY_ODDS_NAME = {o: ours for teams in SOCCER_TEAMS.values() for ours, (_, _, o) in teams.items()}
 assert len(SOCCER_BY_ODDS_NAME) == sum(map(len, SOCCER_TEAMS.values())), "Odds API names must be unique"
+assert not set(SOCCER_EXTRA_ODDS) & set(SOCCER_BY_ODDS_NAME), "extra Odds API names must not clash with Big 5 names"
+SOCCER_BY_ODDS_NAME.update(SOCCER_EXTRA_ODDS)
 
 
 def soccer_logo_url(team):
     for teams in SOCCER_TEAMS.values():
         if team in teams:
             return f"https://a.espncdn.com/i/teamlogos/soccer/500/{teams[team][0]}.png"
+    for tid, ours in europe_clubs().items():
+        if ours == team:
+            return f"https://a.espncdn.com/i/teamlogos/soccer/500/{tid}.png"
     return None

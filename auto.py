@@ -47,10 +47,12 @@ SPORTS = ("nfl", "ncaaf", "nba", "ncaab", "soccer_club")
 
 MORNING = [["pull_games.py", "all"], ["pull_history.py", "all", "--current"],
            ["pull_basketball_history.py", "nba", "current"], ["pull_basketball_history.py", "ncaab", "current"],
-           ["pull_soccer_history.py", "current"],
+           ["pull_soccer_history.py", "current"], ["pull_soccer_history.py", "extra", "--refresh"],
+           ["pull_europe.py", "fetch", "--refresh"], ["pull_europe.py", "load"],
            ["pull_odds.py", "all"]] + [["predict.py", s] for s in SPORTS] + [["shadow.py", "log", "all"]] \
           + [["grade.py", s] for s in SPORTS]
-NIGHT = [["pull_games.py", "all"], ["pull_soccer_history.py", "current"]] + [["grade.py", s] for s in SPORTS]
+NIGHT = [["pull_games.py", "all"], ["pull_soccer_history.py", "current"],
+         ["pull_europe.py", "fetch", "--refresh"], ["pull_europe.py", "load"]] + [["grade.py", s] for s in SPORTS]
 
 
 def window_steps(sport):

@@ -174,7 +174,12 @@ def extra(conn, refresh=False):
         n_league = 0
         for season in EXTRA_SEASONS:
             current = season == current_season("soccer_club")
-            for r in fd_file(div, season, refresh and current):
+            try:
+                rows = fd_file(div, season, refresh and current)
+            except Exception as err:
+                print(f"  NOTE: couldn't refresh {league} {season}: {err}; using the cached copy")
+                rows = fd_file(div, season) if (CACHE / f"{div}_{season_code(season)}.csv").exists() else []
+            for r in rows:
                 n = insert_fd(conn, div, league, season, r)
                 if n is not None:
                     added, n_league, odds_rows = added + 1, n_league + 1, odds_rows + n
@@ -182,7 +187,12 @@ def extra(conn, refresh=False):
         print(f"  {league}: {n_league} games added", flush=True)
     for code, league in EXTRA_NEW.items():
         n_league = 0
-        for r in fd_new_file(code, refresh):
+        try:
+            rows = fd_new_file(code, refresh)
+        except Exception as err:
+            print(f"  NOTE: couldn't refresh {league}: {err}; using the cached copy")
+            rows = fd_new_file(code) if (CACHE / f"new_{code}.csv").exists() else []
+        for r in rows:
             season = int(r["Season"].split("/")[-1])          # "2012/2013" -> 2013; "2026" -> 2026
             row = {"Date": r["Date"], "Time": r.get("Time", ""), "HomeTeam": r["Home"], "AwayTeam": r["Away"],
                    "FTHG": r["HG"], "FTAG": r["AG"], **{k: v for k, v in r.items() if k[:3] in ("PSC", "Avg", "B36")}}

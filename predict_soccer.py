@@ -31,18 +31,32 @@ OUTCOMES = ("home", "draw", "away")
 
 
 class SoccerEngine:
+    """The domestic model plus the European branch (league strengths learned from European games).
+    European games don't change domestic ratings (eu_k_team = 0), so league predictions are the same
+    as the domestic model alone."""
     def __init__(self, conn):
         self.params = sm.load_params()
-        self.version = self.params["version"]
-        _, self.r = sm.walk_forward(sm.load_games(conn), self.params["ratings"], keep=lambda g: False)
+        self.europe = self.params.get("europe")
+        settings = {**self.params["ratings"], **(self.europe["settings"] if self.europe else {})}
+        games = sm.load_games(conn, include_europe=bool(self.europe))
+        _, self.r = sm.walk_forward(games, settings, keep=lambda g: False)
         self.season = current_season(SPORT)
 
+    def version_for(self, g):
+        if g["league"] in sm.EUROPE and self.europe:
+            return f'{self.params["version"]}+{self.europe["version"]}'
+        return self.params["version"]
+
     def predict(self, g, inputs):
-        """(xG home, xG away, P home, P draw, P away) for a live game."""
+        """(xG home, xG away, P home, P draw, P away) for a live game, or None for a European game
+        with a club we have no domestic history for."""
         gd = {"league": g["league"], "season": self.season, "home_team": g["home_team"],
               "away_team": g["away_team"], "neutral_site": g["neutral_site"],
               "home_rest": inputs.get("home_rest_days"), "away_rest": inputs.get("away_rest_days")}
-        lh, la = self.r.expected_goals(gd)
+        xg = self.r.expected_goals(gd)
+        if xg is None:
+            return None
+        lh, la = xg
         return (lh, la, *sm.outcome_probs(lh, la, self.r.p["rho"]))
 
 
@@ -144,7 +158,8 @@ def run(conn, days=7):
     engine = SoccerEngine(conn)
     inputs = soccer_inputs(conn, games)
     counts = {"logged": 0, "unchanged": 0}
-    print(f"Club soccer slate, next {days} days | model {engine.version} | flag threshold "
+    print(f"Club soccer slate, next {days} days | model {engine.params['version']}"
+          + (f" (+ {engine.europe['version']} for European games)" if engine.europe else "") + " | flag threshold "
           f"{config.EDGE_THRESHOLD:.0%} (one per game) | your books: {', '.join(config.MY_BOOKS)}")
     print("All flags are LOW CONFIDENCE, PAPER ONLY: this model failed its final exam's money test "
           "(see backtest_results/criteria_soccer.md).\n")
@@ -157,7 +172,11 @@ def run(conn, days=7):
         odds_id = mkt["odds_id"] if mkt else None
         inp = inputs[g["id"]]
         pred = engine.predict(g, inp)
-        status, eng = maybe_log(conn, g, "engine", pred, inp, odds_id, engine.version)
+        if pred is None:
+            print(f"Skipped (a club has no domestic history to rate it): {db.fmt_et(g['start_time_utc'])}  "
+                  f"{g['away_team']} at {g['home_team']}")
+            continue
+        status, eng = maybe_log(conn, g, "engine", pred, inp, odds_id, engine.version_for(g))
         counts[status] += 1
         adjust = conn.execute("SELECT * FROM adjustments WHERE game_id = ? ORDER BY created_at, id",
                               (g["id"],)).fetchall()
@@ -168,7 +187,7 @@ def run(conn, days=7):
             dd = sum(a["d_draw"] or 0 for a in adjust)
             da = sum(a["d_away"] for a in adjust)
             status, cl = maybe_log(conn, g, "claude", (lh, la, ph + dh, pd + dd, pa + da), inp, odds_id,
-                                   engine.version, {"adjustment_ids": [a["id"] for a in adjust],
+                                   engine.version_for(g), {"adjustment_ids": [a["id"] for a in adjust],
                                                     "adjustment_total": [dh, dd, da]})
             counts[status] += 1
         print_game(conn, g, eng, cl, mkt, now)

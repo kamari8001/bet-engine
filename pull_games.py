@@ -141,6 +141,45 @@ def soccer_games():
     for name in sorted(unknown):
         print(f"  NOTE: unknown soccer team {name}: its games are skipped until it's added to "
               "SOCCER_TEAMS in teams.py (checked against all three sources)")
+    yield from europe_games(today)
+
+
+def europe_games(today):
+    """Champions League games (main competition) where both clubs come from leagues we cover
+    (soccer_europe_teams.json). Others are skipped and counted."""
+    from pull_basketball_history import espn_get
+    from pull_soccer_history import ESPN_DAY
+    from teams import SOCCER_EUROPE_LIVE, europe_clubs
+    clubs = europe_clubs()
+    skipped = 0
+    for comp, (slug, _) in SOCCER_EUROPE_LIVE.items():
+        for offset in range(-3, 8):
+            d = today + timedelta(days=offset)
+            for e in (espn_get(ESPN_DAY.format(slug=slug, d=d.strftime("%Y%m%d"))) or {}).get("events", []):
+                if e["date"][:10] < f"{int(e['season']['year'])}-09-01":
+                    continue                              # qualifying rounds
+                comp_ = e["competitions"][0]
+                teams = {t["homeAway"]: t for t in comp_["competitors"]}
+                names = {side: clubs.get(teams[side]["team"]["id"]) for side in ("home", "away")}
+                if None in names.values():
+                    skipped += 1
+                    continue
+                done = e["status"]["type"].get("completed")
+                score = None
+                if done:
+                    from pull_europe import regulation_score
+                    score = regulation_score(e)           # 90-minute score (how the bet settles)
+                    if score is None:
+                        print(f"  NOTE: {names['away']} at {names['home']}: no 90-minute score available yet")
+                        continue
+                kickoff = datetime.strptime(e["date"][:16], "%Y-%m-%dT%H:%M").replace(tzinfo=timezone.utc)
+                yield dict(external_id=e["id"], league=comp, kickoff=kickoff, espn_id=e["id"],
+                           home_team=names["home"], away_team=names["away"],
+                           neutral_site=bool(comp_.get("neutralSite")) or e["season"].get("slug") == "final",
+                           live_eligible=True,
+                           home_score=score[0] if score else None, away_score=score[1] if score else None)
+    if skipped:
+        print(f"  NOTE: {skipped} Champions League game(s) in the window skipped: a club from a league we don't cover")
 
 
 SOURCES = {"nfl": ("nflverse", nfl_games), "ncaaf": ("cfbd", ncaaf_games),

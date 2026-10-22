@@ -14,7 +14,7 @@ _(nothing)_
 
 ## Up next
 
-1. **Champions League step 3: live (v3.1.0)**, target matchday 4 (Nov 4-5). Steps 1 (data) and 2 (model, final exam) done 2026-10-21.
+1. **Club soccer + Champions League shakedown** (after Nov 3-4, matchday 4): Champions League games added about Oct 27 (7 days ahead), predictions before kickoff, 90-minute results loaded overnight, grading.
 2. **Club soccer shakedown check** (after the first weekend, around Mon Oct 26): early-kickoff closing pulls (6:50 AM wake), predictions before every game, results and grading, the 8 AM news check.
 
 ## Waiting on a date or on data
@@ -32,7 +32,8 @@ _(nothing)_
   instead of the 3-point cap. Wait for a few weeks of live NBA results first.
 - **Basketball preseason roster data:** better early-season ratings.
 - **Data-driven college football QB model** (the 3-point cap is small for a QB change).
-- **Champions League and Europa League**, after club soccer: needs cross-league strength.
+- **Europa League predictions** (its results already feed the league strengths).
+- **More covered leagues** for Champions League clubs we skip (Czechia, Ukraine, Croatia, Serbia, Cyprus, ...): needs a history source.
 - **MLS** (its season runs March to November).
 - **Three-way shadow mode** for soccer challengers (the current table is two-way only).
 - **Soccer xG model**, once a few seasons of expected-goals data exist.
@@ -41,6 +42,7 @@ _(nothing)_
 
 ## Done
 
+- 2026-10-22 v3.1.0: Champions League live (learned league strengths; final exam -1.0%); soccer rankings use learned strengths
 - 2026-10-21 v3.0.0: club soccer live (Big 5, three-way predictions, grading with RPS, Soccer tab, automation, 8 AM news check); $30 Odds API plan bought
 - 2026-10-21 v2.4.0: soccer power rankings (Big 5 together via UEFA coefficients; adjustable league strength)
 - 2026-10-21 v2.3.1: odds pulls skip games our schedule says already started (was a false failure)

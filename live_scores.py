@@ -43,9 +43,10 @@ def _fetch(sport, date):
     if hit and time.time() - hit[0] < CACHE_SECONDS:
         return hit[1]
     if sport == "soccer_club":
-        from teams import SOCCER_LEAGUES
+        from teams import SOCCER_EUROPE_LIVE, SOCCER_LEAGUES
         events = []
-        for _, _, slug, _ in SOCCER_LEAGUES.values():
+        slugs = [slug for _, _, slug, _ in SOCCER_LEAGUES.values()] + [slug for slug, _ in SOCCER_EUROPE_LIVE.values()]
+        for slug in slugs:
             events += _get(SOCCER_URL.format(slug=slug, date=date)).get("events", [])
         data = {"events": events}
     else:

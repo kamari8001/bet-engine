@@ -4,6 +4,20 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 3.1.0 (2026-10-22): Champions League
+- Champions League games are predicted (home/draw/away) when both clubs come from leagues we cover
+  (about 80% of games; 32 of this season's 36 clubs). New probabilities only for these new games;
+  Big 5 league predictions are unchanged (checked to be identical).
+- The model learns each league's strength from European results (Champions, Europa and Conference
+  League since 2014-15, with history for 14 more European leagues). Final exam (2022-23 to 2025-26,
+  521 games): works and is calibrated, trails the market, -1.0% on flagged bets, so paper only.
+- Soccer tab: "Champions League" in the league filter; logos for clubs outside the Big 5; Live tab
+  scores. Odds pulls add the Champions League feed (6 credits per soccer pull).
+- The routines refresh the other European leagues and the European results every day.
+- The 8 AM team news check covers Champions League games (incl. UEFA suspensions and rotation).
+- Soccer power rankings now use the league strengths learned from European games instead of UEFA
+  coefficients (seasons from 2015-16; the OVR scale was rebuilt).
+
 ## 3.0.0 (2026-10-21): club soccer is live
 New sport (MAJOR): the Big 5 European leagues (Premier League, La Liga, Bundesliga, Serie A,
 Ligue 1), with three outcomes: home, draw, away.

@@ -724,10 +724,10 @@ def rankings_page(sport, d):
         intro += '<p class="note">NFL ratings include the starting QB the engine expects for each team&rsquo;s next game.</p>'
     if soccer:
         intro += ('<p class="note">Big 5 leagues in one list. Each club&rsquo;s rating within its own league is '
-                  'shifted by its league&rsquo;s strength from UEFA&rsquo;s country coefficients (an outside '
-                  'assumption, adjustable), then compared with an average Big 5 club: a win counts 1, a draw &frac12;. '
+                  'shifted by its league&rsquo;s strength as learned from European games (the same strengths the '
+                  'Champions League predictions use), then compared with an average Big 5 club: a win counts 1, a draw &frac12;. '
                   '<b>Net</b> = goals per game better than an average Big 5 club. Records are wins-draws-losses '
-                  '(league games). Seasons from 2012-13.</p>')
+                  '(league games). Seasons from 2015-16.</p>')
     if sport == "ncaaf":
         intro += '<p class="note">FBS teams only. Early in a season, preseason information (talent, returning players, last season) counts too, as in the predictions.</p>'
     if d["early"]:

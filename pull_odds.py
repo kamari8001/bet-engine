@@ -29,8 +29,8 @@ ALL_SPORTS = ("nfl", "ncaaf", "nba", "ncaab", "soccer_club")
 def api_keys(sport):
     """The Odds API sport keys for one of our sports (club soccer: one per league)."""
     if sport == "soccer_club":
-        from teams import SOCCER_LEAGUES
-        return [k for _, _, _, k in SOCCER_LEAGUES.values()]
+        from teams import SOCCER_EUROPE_LIVE, SOCCER_LEAGUES
+        return [k for _, _, _, k in SOCCER_LEAGUES.values()] + [k for _, k in SOCCER_EUROPE_LIVE.values()]
     return [SPORT_KEYS[sport]]
 MIN_CREDITS = 50
 KICKOFF_TOLERANCE = timedelta(minutes=15)   # warn if the two sources disagree by more
@@ -71,7 +71,7 @@ def pull(conn, sport):
     for key in api_keys(sport):
         got, headers = odds_api(f"/sports/{key}/odds", bookmakers=",".join(config.ODDS_BOOKMAKERS),
                                 markets="h2h", oddsFormat="american")
-        events += got
+        events += [dict(e, _key=key) for e in got]
     three_way = sport.startswith("soccer")
     now = datetime.now(timezone.utc)
     saved_games = saved_rows = started = untracked = 0
@@ -84,6 +84,9 @@ def pull(conn, sport):
             started += 1  # live in-game prices; we only keep pregame odds
             continue
         home, away = names.lookup(e["home_team"]), names.lookup(e["away_team"])
+        if (home is None or away is None) and e["_key"].startswith("soccer_uefa"):
+            untracked += 1  # a club from a league we don't cover: its European games aren't predicted
+            continue
         if home is None or away is None:
             bad = [n for n, v in ((e["home_team"], home), (e["away_team"], away)) if v is None]
             problems.append(f"{label}: unknown team name {bad}")
