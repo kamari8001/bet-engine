@@ -373,10 +373,15 @@ CREATE TABLE IF NOT EXISTS hist_player_games (
     team          TEXT NOT NULL,
     player_id     TEXT NOT NULL,
     player_name   TEXT NOT NULL,
+    position      TEXT,              -- G, F, C (ESPN's abbreviation)
     starter       INTEGER NOT NULL DEFAULT 0 CHECK (starter IN (0, 1)),
     played        INTEGER NOT NULL CHECK (played IN (0, 1)),
     minutes       REAL,
     points        INTEGER,
+    fg_made       INTEGER, fg_att INTEGER,
+    tp_made       INTEGER, tp_att INTEGER,      -- three-pointers
+    ft_made       INTEGER, ft_att INTEGER,
+    oreb          INTEGER, dreb INTEGER, ast INTEGER, tov INTEGER, stl INTEGER, blk INTEGER, pf INTEGER,
     plus_minus    INTEGER,
     reason        TEXT,              -- ESPN's did-not-play reason, when given
     PRIMARY KEY (hist_game_id, team, player_id)

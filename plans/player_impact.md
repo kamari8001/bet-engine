@@ -53,3 +53,37 @@ A **missing-value** feature per team and game, built walk-forward from box score
   for everything else (rest decisions, returns from injury), still capped.
 - Slate: absent players shown on the card back. Released as `nba-v2` (MAJOR).
 - College basketball follows if the NBA version passes (CBBD box scores; a separate plan).
+
+## Amendment (2026-10-23, Talal's changes, before any fitting): player ratings and OVR
+Talal asked for each player to carry a rating that drives the absence impact, corrects itself from
+results, and is shown on the slate. Incorporated as follows (pre-registered before the fit):
+
+**Player rating (model unit: points of team margin per 36 minutes, above a replacement player).**
+Built walk-forward from box scores only:
+- *Production*: a box-score composite per minute (points, shooting efficiency, rebounds, assists,
+  turnovers, steals, blocks, fouls; Hollinger game score per 36 as the starting form, coefficients
+  fixed, not tuned per player).
+- *Impact*: plus-minus per 36 minutes on court.
+- The rating is a recency-weighted average of (production, impact) with a prior at replacement level:
+  a player with few minutes sits near replacement and moves only as evidence accumulates (this is the
+  "not a fluke" rule: how fast it moves is one tuned learning rate, chosen on tune seasons). The mix of
+  production vs impact is one tuned weight.
+- *Value to the roster* (per game) = rating x expected minutes (the player's recent minutes per game)
+  / 36. This is what an absence costs. **Player OVR** = that per-game value placed on the same frozen
+  bell curve as team OVR (62 average, 80+ top ~7%, 90+ top ~1%), over all past rotation-player seasons.
+  Two scales: 2014-15 is warm-up, so the scale uses 2015-16 on.
+
+**Absence impact and its correction.** Missing value = sum of absent rotation players' per-game values;
+projected margin += c x (home missing − away missing). c is tuned on tune seasons and then also
+*corrected online*: after each game, c moves a small step toward what the result implied for games
+with absences (gradient step, rate tuned, clipped); pre-registered as idea #4 and kept only if it
+improves check-season log loss by the usual >= 0.002 over a fixed c.
+
+**Ideas, in order (each kept only if it beats the previous best on check seasons by >= 0.002):**
+#1 minutes only; #2 production rating; #3 production + impact mix; #4 online correction of c.
+
+**Display (a later, MINOR release; display only, nothing stored in the logbook):** tapping a team
+on the slate opens its roster with player OVRs, injury status (ESPN's list) and recent games; each
+player has a profile (OVR, position, status, recent games and stats, Claude's recorded notes, ESPN
+headshot with a generic icon as fallback). The Rankings tab gets player rankings under each league,
+sortable by position. College basketball follows the NBA if the model passes.

@@ -5,8 +5,8 @@ Usage:
   python3 pull_nba_players.py current     games from the last 7 days (for the daily routine)
   python3 pull_nba_players.py summary     what's loaded
 
-One ESPN request per game: each player's minutes, points, plus-minus, starter flag, and whether he
-didn't play and why. Games with no box score are remembered so they aren't asked again.
+One ESPN request per game: each player's position, minutes, full box-score line (shooting, rebounds,
+assists, turnovers, steals, blocks, fouls), plus-minus, starter flag, and whether he didn't play and why. Games with no box score are remembered so they aren't asked again.
 """
 
 import sys
@@ -40,6 +40,15 @@ def number(text):
         return None
 
 
+def made_att(text):
+    """'5-9' -> (5, 9)."""
+    try:
+        m, a = str(text).split("-")
+        return int(m), int(a)
+    except (TypeError, ValueError, AttributeError):
+        return None, None
+
+
 def fetch_game(conn, g):
     """Fetch and store one game's box score. Returns the number of player rows, or None if ESPN failed."""
     try:
@@ -59,10 +68,15 @@ def fetch_game(conn, g):
                 get = lambda key: stats[idx[key]] if key in idx and idx[key] < len(stats) else None
                 dnp = bool(a.get("didNotPlay"))
                 mins = minutes_of(get("MIN")) if not dnp else 0.0
-                rows.append((g["id"], code, str(a["athlete"]["id"]), a["athlete"]["displayName"],
+                fg, tp, ft = made_att(get("FG")), made_att(get("3PT")), made_att(get("FT"))
+                pos = ((a["athlete"].get("position") or {}).get("abbreviation"))
+                rows.append((g["id"], code, str(a["athlete"]["id"]), a["athlete"]["displayName"], pos,
                              int(bool(a.get("starter"))), int(not dnp and (mins or 0) > 0), mins,
-                             number(get("PTS")), number(get("+/-")), a.get("reason") if dnp else None))
-    conn.executemany("INSERT OR REPLACE INTO hist_player_games VALUES (?,?,?,?,?,?,?,?,?,?)", rows)
+                             number(get("PTS")), fg[0], fg[1], tp[0], tp[1], ft[0], ft[1],
+                             number(get("OREB")), number(get("DREB")), number(get("AST")), number(get("TO")),
+                             number(get("STL")), number(get("BLK")), number(get("PF")),
+                             number(get("+/-")), a.get("reason") if dnp else None))
+    conn.executemany("INSERT OR REPLACE INTO hist_player_games VALUES (" + ",".join("?" * 24) + ")", rows)
     conn.execute("INSERT OR REPLACE INTO hist_box_pulled (hist_game_id, players) VALUES (?, ?)", (g["id"], len(rows)))
     return len(rows)
 
