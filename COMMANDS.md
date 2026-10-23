@@ -42,6 +42,7 @@ Typical order: `pull_games` → `pull_odds` → `pull_history --current` → `pr
 | `python3 pull_odds.py all` | Current moneylines from 10 books. **Costs 1 credit per sport.** |
 | `python3 pull_history.py all --current` | Refreshes this season's history so the model's ratings are current |
 | `python3 pull_basketball_history.py nba current` | Same for the NBA (recent days from ESPN) |
+| `python3 pull_nba_players.py current` | NBA box scores (who played, minutes, plus-minus, did-not-play reasons) for the last 7 days, for the player-impact model; `history` loads every past game (resumable), `summary` shows what's loaded |
 | `python3 pull_basketball_history.py ncaab current` | Same for college basketball (1 CBBD call) |
 | `python3 rankings.py nfl` | Power rankings in the terminal (rank, OVR, net points, record, last 5, offense/defense ranks, movement since last week). Add `--top 50` for more teams; also `ncaaf`, `nba`, `ncaab`. |
 | `python3 rankings.py nfl --season 2017` | Final rankings for a past season (each team's rating after its last game) |

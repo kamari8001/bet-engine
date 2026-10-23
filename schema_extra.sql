@@ -366,3 +366,24 @@ BEGIN SELECT RAISE(ABORT, 'expert signals can never be changed'); END;
 
 CREATE TRIGGER IF NOT EXISTS expert_signals_no_delete BEFORE DELETE ON expert_signals
 BEGIN SELECT RAISE(ABORT, 'expert signals can never be deleted'); END;
+
+-- NBA box scores for the player-impact model (plans/player_impact.md): one row per player and game.
+CREATE TABLE IF NOT EXISTS hist_player_games (
+    hist_game_id  INTEGER NOT NULL REFERENCES hist_games(id) ON DELETE CASCADE,
+    team          TEXT NOT NULL,
+    player_id     TEXT NOT NULL,
+    player_name   TEXT NOT NULL,
+    starter       INTEGER NOT NULL DEFAULT 0 CHECK (starter IN (0, 1)),
+    played        INTEGER NOT NULL CHECK (played IN (0, 1)),
+    minutes       REAL,
+    points        INTEGER,
+    plus_minus    INTEGER,
+    reason        TEXT,              -- ESPN's did-not-play reason, when given
+    PRIMARY KEY (hist_game_id, team, player_id)
+);
+CREATE INDEX IF NOT EXISTS hist_player_games_player ON hist_player_games(player_id, hist_game_id);
+CREATE TABLE IF NOT EXISTS hist_box_pulled (
+    hist_game_id  INTEGER PRIMARY KEY REFERENCES hist_games(id) ON DELETE CASCADE,
+    players       INTEGER NOT NULL,
+    pulled_at     TEXT NOT NULL DEFAULT (datetime('now'))
+);
