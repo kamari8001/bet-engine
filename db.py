@@ -134,6 +134,12 @@ def add_lineup_fact(conn, game_id, team, role, player_name, status, source_url, 
                    source_url=source_url, reason=reason)
 
 
+def add_player_fact(conn, game_id, team, player_name, status, source_url, reason, player_id=None):
+    """NBA: a player Claude confirmed out (or playing, overriding ESPN's injury list) for a game."""
+    return _insert(conn, "player_facts", game_id=game_id, team=team, player_name=player_name,
+                   player_id=player_id, status=status, source_url=source_url, reason=reason)
+
+
 def add_qb_check(conn, game_id, team, player_name, source_url, reason, player_id=None):
     return _insert(conn, "qb_checks", game_id=game_id, team=team, player_name=player_name,
                    player_id=player_id, source_url=source_url, reason=reason)

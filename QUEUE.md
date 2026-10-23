@@ -10,7 +10,10 @@ first (CLAUDE.md).
 
 ## In progress
 
-- **Basketball player-impact model (item 7, started 2026-10-23)**: plan `plans/player_impact.md`. Step 1: NBA box scores (who played, minutes, DNP reasons) into `hist_player_games`.
+- **Basketball player-impact model (started 2026-10-23)**: plan `plans/player_impact.md`. Steps 1-2 done
+  (box scores loaded; idea 2, the production rating, passed: check log loss 0.6433 -> 0.6340). Step 3
+  wired and tested; **waiting for Talal to run `python3 backtest_players.py apply`** to put
+  nba-v2-refit-20261023 live (v4.0.0).
 
 ## Up next
 
@@ -24,9 +27,15 @@ can't become an edge against the market. What can is information the market does
 measured player availability and sourced news before the line moves. Talal chose to keep the engine as
 is (option 1); the anchored model is recorded, not deployed.
 
-3. **Basketball player-impact model** (in progress, see above): estimate each player's value from
-   minutes and box-score data, subtract absent players before predicting, replacing the 3-point cap
-   for missing stars. NBA first, college basketball after.
+3. **Basketball player-impact model** (in progress, see above). Follow-ups, in order:
+   - **Player display release (MINOR)**: player OVR (frozen bell curve of rotation-player seasons),
+     tap a team for its roster, player profiles (OVR, position, status, recent games, Claude's notes,
+     ESPN headshot or a generic icon), player rankings under each league, sortable by position.
+   - **Early-season player values (needs a pre-registered test)**: ratings are pulled toward
+     replacement level over the summer, so stars count for little in a season's first 15-20 games, and
+     players who haven't played yet this season aren't counted as missing. Idea: regress toward the
+     league average and carry last season's value into the first games.
+   - **College basketball player model** (CBBD box scores; its own plan).
 4. **Sharper news timing**: use the morning line as the reference and get Claude's sourced absences
    recorded before the line moves (after item 3 shows which absences matter).
 5. **Soccer xG model**: shadow-only until a few seasons of expected-goals data exist.

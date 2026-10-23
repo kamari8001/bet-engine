@@ -1,0 +1,54 @@
+{
+  "combiner": null,
+  "calibration": {
+    "a": 1.0,
+    "b": 0.0
+  },
+  "fit_seasons": [
+    2015,
+    2026
+  ],
+  "anchor": {
+    "version": "anchor-v1-20261023",
+    "terms": {
+      "c": -0.00763
+    },
+    "early_games": 10,
+    "tune_seasons": [
+      2015,
+      2020
+    ],
+    "check_seasons": [
+      2021,
+      2023
+    ],
+    "note": "Market-anchored engine (plans/anchor.md); shadow-tested live, not the engine."
+  },
+  "version": "nba-v2-refit-20261023",
+  "ratings": {
+    "k": 0.02954,
+    "hfa_start": 1.89925,
+    "hfa_rate": 0.0,
+    "regress": 0.4478,
+    "cap": 30.24087,
+    "sigma": 11.00501,
+    "new_team": 0.0,
+    "avg_rate": 0.002,
+    "rest_coef": 0.61971,
+    "rest_cap": 3,
+    "abs_coef": 1.03099
+  },
+  "players": {
+    "version": "players-v1-refit-20261023",
+    "idea": 2,
+    "params": {
+      "alpha": 0.06973,
+      "season_regress": 0.597,
+      "repl_z": -0.76494
+    },
+    "plan": "plans/player_impact.md",
+    "results": "backtest_results/players.md"
+  },
+  "previous": "nba-v1-refit-20261019",
+  "note": "nba-v2: team ratings + rest + player absences (production rating, idea 2). Refit on all seasons after the tune/check test; judged on live results only."
+}

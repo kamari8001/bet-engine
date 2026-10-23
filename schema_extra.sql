@@ -392,3 +392,49 @@ CREATE TABLE IF NOT EXISTS hist_box_pulled (
     players       INTEGER NOT NULL,
     pulled_at     TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+------------------------------------------------------------------------
+-- player_facts (NBA, nba-v2): absences Claude confirmed from the news, with a source.
+-- 'out' adds a rotation player to the team's missing list; 'playing' overrides ESPN's
+-- injury list when the news says the player will play. Facts for the formula (rule 3),
+-- not probability guesses. Same protections as lineup_facts.
+------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS player_facts (
+    id           INTEGER PRIMARY KEY,
+    game_id      INTEGER NOT NULL REFERENCES games(id),
+    team         TEXT NOT NULL,
+    player_name  TEXT NOT NULL CHECK (length(trim(player_name)) > 0),
+    player_id    TEXT,              -- ESPN athlete id
+    status       TEXT NOT NULL CHECK (status IN ('out', 'playing')),
+    source_url   TEXT NOT NULL CHECK (source_url LIKE 'http://_%' OR source_url LIKE 'https://_%'),
+    reason       TEXT NOT NULL CHECK (length(trim(reason)) > 0),
+    created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TRIGGER IF NOT EXISTS player_facts_must_be_current
+BEFORE INSERT ON player_facts
+WHEN abs(julianday(NEW.created_at) - julianday('now')) * 86400 > 5
+BEGIN
+    SELECT RAISE(ABORT, 'player facts must be stamped with the current time (no backdating)');
+END;
+
+CREATE TRIGGER IF NOT EXISTS player_facts_before_kickoff
+BEFORE INSERT ON player_facts
+WHEN datetime('now') >= (SELECT start_time_utc FROM games WHERE id = NEW.game_id)
+BEGIN
+    SELECT RAISE(ABORT, 'tip-off has passed: player facts must be logged before the game starts');
+END;
+
+CREATE TRIGGER IF NOT EXISTS player_facts_team_in_game
+BEFORE INSERT ON player_facts
+WHEN NOT EXISTS (SELECT 1 FROM games WHERE id = NEW.game_id
+                 AND NEW.team IN (home_team, away_team))
+BEGIN
+    SELECT RAISE(ABORT, 'that team is not playing in this game');
+END;
+
+CREATE TRIGGER IF NOT EXISTS player_facts_no_update BEFORE UPDATE ON player_facts
+BEGIN SELECT RAISE(ABORT, 'player facts can never be changed; add a new one instead'); END;
+
+CREATE TRIGGER IF NOT EXISTS player_facts_no_delete BEFORE DELETE ON player_facts
+BEGIN SELECT RAISE(ABORT, 'player facts can never be deleted'); END;

@@ -19,11 +19,23 @@ home-minus-away missing value into points of margin with one coefficient (abs_co
 
 Idea #1 ("minutes only") sets every rotation player's rating to a constant, so value = minutes / 36.
 Player OVR (display) places the per-game value on a frozen bell curve of past rotation-player seasons.
+
+Live (nba-v2, kept idea #2): the saved settings live under nba.players in model_params.json. History
+games get their missing values from box scores (`attach`, also used by model.load_games so rankings and
+predictions see the same ratings); upcoming games get theirs from ESPN's injury list (`espn_injuries`,
+players marked Out) plus Claude's sourced facts (`absences`).
 """
 
+import json
 import math
+import re
+import unicodedata
 from collections import defaultdict
 from datetime import date
+from pathlib import Path
+
+INJURIES_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/injuries"
+PARAMS_PATH = Path(__file__).parent / "model_params.json"
 
 PRIOR = {"prod": 7.0, "imp": -2.0}      # replacement-level starting points (game score / 36, +/- per 36)
 SCALE_DEFAULT = {"prod": (11.5, 4.5), "imp": (0.0, 6.0)}   # (mean, sd) used until a season has ended
@@ -81,6 +93,10 @@ class PlayerBook:
         if self.p["idea"] == 1:
             return s["mpg"] / 36
         return (self.z(s) - self.p["repl_z"]) * s["mpg"] / 36
+
+    def start_season(self, season):
+        """Public: roll the book into a season (live use before the season's first game)."""
+        self._start_season(season)
 
     def _start_season(self, season):
         if self.season is not None and season != self.season:
@@ -154,3 +170,89 @@ def features(games, box, params=None):
         if rows:
             book.after_game(g, rows)
     return out, book
+
+
+# ---------- live use (nba-v2) ----------
+
+def saved_settings():
+    """The live player settings (nba.players in model_params.json), or None (player feature off)."""
+    if not PARAMS_PATH.exists():
+        return None
+    return json.loads(PARAMS_PATH.read_text()).get("nba", {}).get("players")
+
+
+def attach(conn, games, settings=None):
+    """Give each NBA history game home_missing / away_missing (None where the box score is unknown),
+    walk-forward, with the saved settings. Returns the PlayerBook after the last game (today's player
+    ratings), or None when the player feature is off."""
+    settings = settings or saved_settings()
+    if not settings:
+        return None
+    feats, book = features(games, load_box(conn), dict(settings["params"], idea=settings["idea"]))
+    for g in games:
+        f = feats.get(g["id"])
+        g["home_missing"], g["away_missing"] = (f[0], f[1]) if f and f[2] else (None, None)
+    return book
+
+
+def espn_injuries():
+    """{team code: [{"id", "name", "status", "detail", "date"}]} from ESPN's public NBA injury list.
+    Raises RuntimeError if it can't be read: callers stop rather than guess (no fake data)."""
+    from pull_history import fetch
+    try:
+        data = json.loads(fetch(INJURIES_URL).decode())
+        teams = data["injuries"]
+    except Exception as e:                      # network, bad JSON, or a changed format
+        raise RuntimeError(f"ESPN's NBA injury list couldn't be read ({e}).") from e
+    out = defaultdict(list)
+    for t in teams:
+        for i in t.get("injuries") or []:
+            a = i.get("athlete") or {}
+            team = (a.get("team") or {}).get("abbreviation")
+            m = next((re.search(r"/id/(\d+)", l.get("href", "")) for l in a.get("links") or []
+                      if re.search(r"/id/(\d+)", l.get("href", ""))), None)
+            if not team or not m:
+                continue
+            d = i.get("details") or {}
+            detail = " ".join(x for x in (d.get("type"), f"({d['detail']})" if d.get("detail") else None) if x)
+            out[team].append({"id": m.group(1), "name": a.get("displayName", ""), "status": i.get("status", ""),
+                              "detail": detail, "date": i.get("date")})
+    return dict(out)
+
+
+def plain(name):
+    """Name for matching: no accents, punctuation or case ("Nikola Jokić" = "nikola jokic")."""
+    n = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z ]", "", n.lower()).strip()
+
+
+def absences(book, team, on_date, injuries=(), facts=()):
+    """What a team is missing for a game on `on_date`: rotation players marked Out on ESPN's injury
+    list, plus Claude's 'out' facts, minus Claude's 'playing' facts (the latest fact per player wins).
+    Returns (missing value, out list, listed list): out entries {id, name, value, source}; listed =
+    rotation players on the injury list with another status (e.g. Day-To-Day), counted as playing."""
+    rot = dict(book.rotation(team, on_date))
+    state = {}
+    for i in injuries:
+        if i["id"] in rot:
+            state[i["id"]] = ("out" if i["status"].lower() == "out" else i["status"], "ESPN injury list")
+    for f in facts:
+        pid = f["player_id"]
+        if pid in rot:
+            state[pid] = (f["status"], f"Claude, fact {f['id']}")
+    out, listed = [], []
+    for pid, (st, src) in state.items():
+        s = rot[pid]
+        if st == "out":
+            out.append({"id": pid, "name": s["name"], "value": round(book.value(s), 3), "source": src})
+        elif st != "playing":
+            listed.append({"id": pid, "name": s["name"], "status": st})
+    out.sort(key=lambda x: -x["value"])
+    return sum(x["value"] for x in out), out, listed
+
+
+def find_in_rotation(book, team, on_date, name):
+    """(player id, state) of the rotation player on `team` whose name matches, or None."""
+    want = plain(name)
+    hits = [(pid, s) for pid, s in book.rotation(team, on_date) if plain(s["name"]) == want]
+    return hits[0] if len(hits) == 1 else None

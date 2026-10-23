@@ -8,12 +8,15 @@ Run first: pull_games.py, pull_odds.py, and pull_history.py <sport> --current.
 - engine row: the base model with automatic data only. NFL starters come from
   nflverse; if nflverse doesn't list one, the team's most recent starter is
   assumed (marked "assumed" in the logged inputs).
+- NBA (nba-v2): each team's missing players come from ESPN's injury list (rotation
+  players marked Out), valued by their player ratings (player_model.py). If the list
+  can't be read, the run stops (no guessing).
 - claude row: the same formula rerun with starters Claude confirmed from the
-  news (lineup_facts), plus Claude's capped adjustments. Only logged when
-  such facts or adjustments exist.
+  news (lineup_facts), NBA absences Claude confirmed (player_facts), plus Claude's
+  capped adjustments. Only logged when such facts or adjustments exist.
 - A new row is logged only if there's no earlier one, the probability moved by
-  1 point or more, or the starters changed. The latest row before kickoff is
-  the one that gets graded.
+  1 point or more, the starters or missing players changed, or the model version
+  changed. The latest row before kickoff is the one that gets graded.
 - Past results must be loaded, or ratings would be stale: a game whose team has a
   finished game without a result is skipped (not logged) until it loads, and if any
   result is more than STALE_LIMIT late the whole run stops (the source is likely broken).
@@ -108,9 +111,10 @@ def nfl_inputs(conn, games):
     return out
 
 
-def basketball_inputs(conn, sport, games):
+def basketball_inputs(conn, sport, games, engine=None):
     """{game id: {rest days, kickoff}}: days since each team's previous game (scheduled or
-    finished), from the live schedule and this season's history. None after a 30+ day break."""
+    finished), from the live schedule and this season's history. None after a 30+ day break.
+    NBA with the player feature on: also each side's missing players (ESPN injury list)."""
     def last_game_date(team, before_utc):
         live = conn.execute("SELECT MAX(start_time_utc) FROM games WHERE sport = ? AND ? IN (home_team, away_team)"
                             " AND start_time_utc < ? AND NOT EXISTS (SELECT 1 FROM results r WHERE r.game_id = games.id"
@@ -127,6 +131,8 @@ def basketball_inputs(conn, sport, games):
             prev = last_game_date(g[f"{side}_team"], g["start_time_utc"])
             gap = (day - prev).days if prev else None
             inp[f"{side}_rest_days"] = gap if gap is not None and gap <= 30 else None
+        if engine is not None and engine.book is not None:
+            engine.set_absences(inp, g)
         out[g["id"]] = inp
     return out
 
@@ -157,10 +163,27 @@ class Engine:
     def __init__(self, conn, sport):
         self.conn, self.sport = conn, sport
         self.params = model.load_params(sport)
-        self.history = model.load_games(conn, sport)
+        self.history = model.load_games(conn, sport, players=False)
+        # NBA player feature (nba-v2): past absences from box scores, today's ratings in the book
+        self.book = self.injuries = None
+        self.box_lag = 0
+        if sport == "nba":
+            import player_model
+            self.pm = player_model
+            self.book = player_model.attach(conn, self.history)
         _, self.model = model.walk_forward(self.history, self.params["ratings"], sport)
         self.season = current_season(sport)
         self.model.start_season(self.season)
+        if self.book is not None:
+            self.book.start_season(self.season)
+            self.box_lag = conn.execute(
+                "SELECT COUNT(*) FROM hist_games h WHERE h.sport = 'nba' AND h.season = ? AND NOT EXISTS"
+                " (SELECT 1 FROM hist_box_pulled b WHERE b.hist_game_id = h.id)", (self.season,)).fetchone()[0]
+            try:
+                self.injuries = player_model.espn_injuries()
+            except RuntimeError as e:
+                sys.exit(f"STOP: {e} The NBA engine needs it to know who is out, so nothing was logged. "
+                         "Try again later; if it keeps failing, the feed may have changed.")
         self.cal = self.params.get("calibration") or {"a": 1.0, "b": 0.0}
         self.comb = self.params.get("combiner")
         if self.comb:
@@ -170,6 +193,30 @@ class Engine:
                 if h["season"] == self.season:
                     for t in (h["home_team"], h["away_team"]):
                         self.played[t] = self.played.get(t, 0) + 1
+
+    def set_absences(self, inp, g, facts=()):
+        """Fill each side's missing value, out list and listed (e.g. day-to-day) players for game g,
+        from ESPN's injury list plus Claude's facts (player_facts rows for this game)."""
+        day = db.utc_to_eastern(g["start_time_utc"]).date()
+        for side in ("home", "away"):
+            team = g[f"{side}_team"]
+            miss, out, listed = self.pm.absences(self.book, team, day, self.injuries.get(team, []),
+                                                 [f for f in facts if f["team"] == team])
+            inp[f"{side}_missing"], inp[f"{side}_out"], inp[f"{side}_listed"] = round(miss, 4), out, listed
+
+    def annotate(self, inputs, pred):
+        """Display only: each missing player's cost to their team, in points of margin and in percentage
+        points of win chance (positive = the team is worse without them; a small negative number means
+        the model rates the player below a replacement so far, e.g. early in the season)."""
+        if self.book is None:
+            return
+        coef, sigma = self.params["ratings"].get("abs_coef", 0.0), self.params["ratings"]["sigma"]
+        margin, p = pred[0] - pred[1], pred[2]
+        for side, sign in (("home", 1), ("away", -1)):
+            for x in inputs.get(f"{side}_out") or []:
+                pts = coef * x["value"]
+                x["pts"] = round(pts, 1)
+                x["pct"] = round(sign * (model.normal_cdf((margin + sign * pts) / sigma) - p) * 100, 1)
 
     def predict(self, g, inputs):
         """(home pts, away pts, P(home wins)) for a live game with given inputs."""
@@ -204,12 +251,14 @@ def latest_prediction(conn, game_id, source):
                         " ORDER BY created_at DESC, id DESC LIMIT 1", (game_id, source)).fetchone()
 
 
-def starters_of(note):
+def lineup_of(note):
+    """Who the prediction assumed: starting QBs and (NBA) the missing players."""
     try:
         inp = json.loads(note or "{}").get("inputs", {})
     except json.JSONDecodeError:
         return None
-    return (inp.get("home_starter_id"), inp.get("away_starter_id"))
+    return (inp.get("home_starter_id"), inp.get("away_starter_id"),
+            sorted(x["id"] for x in inp.get("home_out") or []), sorted(x["id"] for x in inp.get("away_out") or []))
 
 
 def maybe_log(conn, g, source, pred, inputs, odds_id, version, extra=None):
@@ -218,7 +267,8 @@ def maybe_log(conn, g, source, pred, inputs, odds_id, version, extra=None):
     p = min(max(p, 0.001), 0.999)
     note = json.dumps({"inputs": inputs, **(extra or {})}, default=str)
     old = latest_prediction(conn, g["id"], source)
-    if old and abs(old["p_home"] - p) < RELOG_MOVE and starters_of(old["note"]) == starters_of(note):
+    if (old and abs(old["p_home"] - p) < RELOG_MOVE and lineup_of(old["note"]) == lineup_of(note)
+            and old["model_version"] == version):
         return "unchanged", old
     p = round(p, 4)
     pid = db.add_prediction(conn, g["id"], source, p_home=p, p_away=round(1 - p, 4),
@@ -278,8 +328,11 @@ def main():
 
     engine = Engine(conn, sport)
     version = engine.params["version"]
+    if engine.box_lag:
+        print(f"Note: {engine.box_lag} finished NBA game(s) this season have no box score yet; player ratings "
+              "skip them until `python3 pull_nba_players.py current` loads them.\n")
     inputs = (nfl_inputs(conn, games) if sport == "nfl"
-              else basketball_inputs(conn, sport, games) if sport in ("nba", "ncaab")
+              else basketball_inputs(conn, sport, games, engine) if sport in ("nba", "ncaab")
               else {g["id"]: {} for g in games})
     counts = {"logged": 0, "unchanged": 0}
     print(f"{sport.upper()} slate, next {days} days | model {version} | "
@@ -291,8 +344,9 @@ def main():
         mkt = latest_odds(conn, g["id"])
         odds_id = mkt["odds_id"] if mkt else None
         eng_inputs = inputs[g["id"]]
-        status, eng_row = maybe_log(conn, g, "engine", engine.predict(g, eng_inputs), eng_inputs,
-                                    odds_id, version)
+        pred = engine.predict(g, eng_inputs)
+        engine.annotate(eng_inputs, pred)
+        status, eng_row = maybe_log(conn, g, "engine", pred, eng_inputs, odds_id, version)
         counts[status] += 1
 
         # Claude row: confirmed starters and/or capped adjustments
@@ -301,10 +355,15 @@ def main():
             "SELECT * FROM qb_checks WHERE game_id = ? ORDER BY created_at, id", (g["id"],))}
         adjust = conn.execute("SELECT * FROM adjustments WHERE game_id = ? ORDER BY created_at",
                               (g["id"],)).fetchall()
+        pfacts = conn.execute("SELECT * FROM player_facts WHERE game_id = ? ORDER BY created_at, id",
+                              (g["id"],)).fetchall() if engine.book is not None else []
         cl_row = None
-        if facts or checks or adjust:
-            cl_inputs = dict(eng_inputs)
+        if facts or checks or adjust or pfacts:
+            cl_inputs = json.loads(json.dumps(eng_inputs, default=str))   # a deep copy
             sources = []
+            if pfacts:
+                engine.set_absences(cl_inputs, g, pfacts)
+                sources += [f["source_url"] for f in pfacts]
             for side in ("home", "away"):
                 f = facts.get(g[f"{side}_team"])
                 if f:
@@ -317,6 +376,7 @@ def main():
                     cl_inputs[f"{side}_starter_status"] = f"verified (Claude check {c['id']})"
                     sources.append(c["source_url"])
             hp, ap, p = engine.predict(g, cl_inputs)
+            engine.annotate(cl_inputs, (hp, ap, p))
             shift = sum(a["d_home"] for a in adjust)
             status, cl_row = maybe_log(conn, g, "claude", (hp, ap, p + shift), cl_inputs, odds_id,
                                        version, {"adjustment_ids": [a["id"] for a in adjust],
@@ -337,6 +397,14 @@ def print_game(conn, g, eng, cl, mkt, now):
     if inp.get("home_starter_name") or inp.get("away_starter_name"):
         print(f"    QBs: {inp.get('away_starter_name')} [{inp.get('away_starter_status')}]"
               f" / {inp.get('home_starter_name')} [{inp.get('home_starter_status')}]")
+    for side in ("away", "home"):
+        out, listed = inp.get(f"{side}_out") or [], inp.get(f"{side}_listed") or []
+        if out:
+            print(f"    {g[f'{side}_team']} missing: " + ", ".join(
+                f"{x['name']} ({-x.get('pct', 0):+.1f}%{', Claude' if x['source'].startswith('Claude') else ''})" for x in out))
+        if listed:
+            print(f"    {g[f'{side}_team']} listed but counted as playing: " + ", ".join(
+                f"{x['name']} ({x['status']})" for x in listed))
     print(f"    projected score {g['away_team']} {final['proj_away_score']:.0f} - "
           f"{g['home_team']} {final['proj_home_score']:.0f}")
     line = (f"    engine {g['away_team']} {eng['p_away']:.1%} / {g['home_team']} {eng['p_home']:.1%}")

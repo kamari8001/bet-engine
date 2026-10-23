@@ -48,3 +48,8 @@ Information only: does the engine add anything beside the market price? Fit mark
 | team model only | 2024-2026 | -0.002 | 0.5799 | 0.5799 | 3962 |
 | with players | 2021-2023 | +0.054 | 0.6173 | 0.6174 | 3814 |
 | with players | 2024-2026 | +0.054 | 0.5799 | 0.5801 | 3962 |
+
+## Refit 2026-10-23 19:06 UTC: nba-v2-refit-20261023 (pending: live after `backtest_players.py apply`)
+
+Team {"k": 0.02954, "hfa_start": 1.89925, "hfa_rate": 0.0, "regress": 0.4478, "cap": 30.24087, "sigma": 11.00501, "new_team": 0.0, "avg_rate": 0.002, "rest_coef": 0.61971, "rest_cap": 3, "abs_coef": 1.03099}; players {"alpha": 0.06973, "season_regress": 0.597, "repl_z": -0.76494}.
+In-sample on 2015-2026 (used for fitting, so NOT a test): log loss 0.6095, worst bucket 2.0, vs market 0.6095 / 0.5941, flags 8905 ROI -4.6%. Replaces nba-v1-refit-20261019.

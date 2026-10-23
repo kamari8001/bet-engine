@@ -262,8 +262,10 @@ def add_rest_days(games):
     return games
 
 
-def load_games(conn, sport):
-    """All completed past games for a sport, oldest first."""
+def load_games(conn, sport, players=True):
+    """All completed past games for a sport, oldest first. NBA: each game also gets the missing
+    value of absent players (player_model.attach) when the player feature is on, so every user of
+    the live model (predictions, rankings) sees the same ratings; players=False skips that."""
     games = [dict(r) for r in conn.execute(
         "SELECT id, season, game_date_et, kickoff_et, kickoff_utc, home_team, away_team,"
         " home_division, away_division, home_score, away_score, neutral_site,"
@@ -271,7 +273,12 @@ def load_games(conn, sport):
         " home_coach, away_coach, home_off_epa, away_off_epa, home_pub_elo, away_pub_elo"
         " FROM hist_games WHERE sport = ?"
         " ORDER BY game_date_et, coalesce(kickoff_utc, ''), id", (sport,))]
-    return add_rest_days(games) if sport in BASKETBALL else games
+    if sport in BASKETBALL:
+        add_rest_days(games)
+    if sport == "nba" and players:
+        import player_model
+        player_model.attach(conn, games)
+    return games
 
 
 def walk_forward(games, ratings_params, sport):

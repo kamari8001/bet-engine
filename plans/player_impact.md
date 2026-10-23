@@ -94,3 +94,29 @@ calibration's worst bucket 13.9 -> 5.3. Ideas 3 (plus-minus) and 4 (online corre
 bar. Second look on the exam seasons: 0.6096 -> 0.6002. Still trails the market (0.6173 check, 0.5799
 exam); beside the market price it adds nothing in history. Going live as `nba-v2` (step 3) needs
 Talal's OK.
+
+## Step 3: live wiring (2026-10-23, Talal's OK)
+- `nba-v2-refit-20261023`: team and player settings refit on all seasons 2014-15 to 2025-26 (in-sample
+  log loss 0.6095 vs nba-v1-refit 0.6175 on the same seasons; not a test). Staged in
+  `backtest_results/nba_refit_pending.json`; `python3 backtest_players.py apply` puts it live. The
+  automatic safety check refused to let Claude write the live settings itself, so Talal runs `apply`.
+- Engine input: ESPN's injury list (rotation players marked Out). If it can't be read, NBA
+  predictions stop. Day-to-day and questionable players count as playing and show as a warning.
+- Claude's facts: `news.py out` / `news.py playing` (table `player_facts`, same protections as QB
+  facts); `news.py players <id>` lists each rotation with values and statuses. The scheduled NBA
+  injury check uses facts once the feature is on, and capped adjustments only for what the formula
+  can't see (returns from long absences, minutes limits).
+- Card back: "Missing players" with each player's effect on the team's win chance.
+- Rankings use the same absence-aware ratings (`model.load_games` attaches them for the NBA).
+- Pre-tip-off runs load new box scores first (`auto.window_steps`).
+
+**Known limitation (found while wiring, not a bug):** over the summer each player's rating is pulled
+most of the way back toward replacement level (the tuned `season_regress`, 0.6), so early in a season
+values are low: on 2026-10-23, after 1-2 games, Jokic is worth 1.2 points of margin vs 4.7 at the end
+of 2025-26, and about half the rotation players are rated slightly below replacement (a missing one
+nudges the team up a little). Values rebuild over roughly the first 15-20 games. This is how the
+tested model behaves (the backtest includes early-season games), so live matches what was tested.
+Also: a player counts only after playing this season (seen in the last 21 days), so someone injured
+since opening night isn't "missing" (the team's rating learns without them instead). A fix (regress
+toward the league average, carry last season's value into the first games) is a new idea that needs
+its own pre-registered test; it's in QUEUE.md.

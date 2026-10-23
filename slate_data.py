@@ -137,7 +137,7 @@ def game_view(conn, g, now, college):
         "kickoff": db.fmt_et(g["start_time_utc"]), "started": parse_utc(g["start_time_utc"]) <= now,
         "neutral": bool(g["neutral_site"]), "market": None, "picks": [], "prices": [],
         "warnings": game_warnings(conn, g, final, mkt, now), "projected": None, "qbs": None, "rest": None,
-        "my_pick": None, "books": [], "movement": None, "odds_time": None,
+        "absences": None, "my_pick": None, "books": [], "movement": None, "odds_time": None,
         "cancelled": conn.execute("SELECT 1 FROM results WHERE game_id = ? AND status = 'cancelled'",
                                   (g["id"],)).fetchone() is not None,
     }
@@ -195,6 +195,9 @@ def game_view(conn, g, now, college):
                            for side in ("away", "home")}
         if inp.get("away_rest_days") is not None:
             view["rest"] = (inp["away_rest_days"], inp.get("home_rest_days"))
+        if "home_out" in inp:      # NBA player feature (nba-v2): who the prediction counts as missing
+            view["absences"] = {side: {"out": inp.get(f"{side}_out") or [], "listed": inp.get(f"{side}_listed") or []}
+                                for side in ("away", "home")}
 
     # Back of the card: every book, line movement, form
     if mkt:
@@ -216,6 +219,9 @@ def game_view(conn, g, now, college):
     view["news"] = [{"points": round(a["d_home"] * 100, 1), "reason": a["reason"], "source": a["source_url"],
                      "time": db.fmt_et(a["created_at"])}
                     for a in conn.execute("SELECT * FROM adjustments WHERE game_id = ? ORDER BY created_at", (g["id"],))]
+    view["news"] += [{"player": f"{f['team']} {f['player_name']} {f['status']}", "reason": f["reason"],
+                      "source": f["source_url"], "time": db.fmt_et(f["created_at"])}
+                     for f in conn.execute("SELECT * FROM player_facts WHERE game_id = ? ORDER BY created_at, id", (g["id"],))]
     view["form"] = {side: team_form(conn, g["sport"], g[f"{side}_team"], g["start_time_utc"])
                     for side in ("away", "home")}
     return view

@@ -90,10 +90,22 @@ def game_warnings(conn, g, pred, mkt, now=None):
             reviewed = conn.execute("SELECT 1 FROM adjustments WHERE game_id = ?", (g["id"],)).fetchone()
             if g["sport"] in ("ncaaf", "ncaab") and edge >= 0.04 and not reviewed:
                 out.append("news not checked for this game (the model can't see college injuries)")
-            if g["sport"] == "nba" and not reviewed:
-                out.append("injury report not checked (the model can't see who's sitting out)")
+            if g["sport"] == "nba" and not reviewed and not conn.execute(
+                    "SELECT 1 FROM player_facts WHERE game_id = ?", (g["id"],)).fetchone():
+                uses_list = "home_out" in json.loads(pred["note"] or "{}").get("inputs", {})
+                out.append("late injury news not checked (the engine only sees ESPN's injury list)" if uses_list
+                           else "injury report not checked (the model can't see who's sitting out)")
             if g["sport"] == "soccer_club" and edge >= 0.04 and not reviewed:
                 out.append("team news not checked (the model can't see injuries or suspensions)")
+
+    # NBA: rotation players on the injury list who aren't ruled out are counted as playing
+    if pred is not None and g["sport"] == "nba":
+        inputs = json.loads(pred["note"] or "{}").get("inputs", {})
+        for side in ("away", "home"):
+            listed = inputs.get(f"{side}_listed") or []
+            if listed:
+                out.append(f"{g[f'{side}_team']}: " + ", ".join(f"{x['name']} ({x['status']})" for x in listed)
+                           + " counted as playing")
 
     # Early season: ratings still settling
     for side in ("away", "home"):

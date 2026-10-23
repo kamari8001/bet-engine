@@ -79,6 +79,9 @@ Typical order: `pull_games` → `pull_odds` → `pull_history --current` → `pr
 | `python3 news.py targets ncaaf [hours]` | College games that need a news check (engine vs market 4+ points apart, not yet reviewed); also `soccer_club` (4+ points on any of home/draw/away) |
 | `python3 news.py reviewed <id> "<link>" "<reason>"` | Records "news checked, nothing material" (a 0-point adjustment; logs a claude prediction) |
 | `python3 news.py adjust <id> <points> "<link>" "<reason>"` | Judgment adjustment for the home team, e.g. `1.5` or `-2`. Capped at 3 points per game. |
+| `python3 news.py players <id>` | NBA: both teams' rotations (the players the model counts), each player's value in points, ESPN's injury status, and absences already recorded |
+| `python3 news.py out <id> <team> "<Name>" "<link>" "<reason>"` | NBA: records that a rotation player will NOT play (a fact, like a confirmed QB; the formula turns it into the claude probability). For absences ESPN's injury list doesn't show as Out yet. |
+| `python3 news.py playing <id> <team> "<Name>" "<link>" "<reason>"` | NBA: records that a player ESPN lists as Out WILL play (overrides the injury list) |
 
 ## Cancelled or postponed games
 
@@ -120,6 +123,9 @@ Challengers and the promotion bar are fixed in `backtest_results/shadow_challeng
 | `python3 backtest.py refit nfl` | Refits on all seasons for live use (overwrites saved settings) |
 | `python3 factor_study.py nfl` | Factor study (plan `plans/factor_study.md`): which pre-game factors predict winning and which the market misses; `--out` appends to `backtest_results/factor_study.md`. Also `ncaaf`, `nba`, `ncaab`, `soccer_club`. |
 | `python3 backtest_anchor.py nfl` | Fits the market-anchored engine (plan `plans/anchor.md`) on the tune seasons and reports the check seasons; `--save` stores the weights under `anchor` in `model_params.json`, `--out` appends to `backtest_results/anchor.md` |
+| `python3 backtest_players.py ablate` | NBA player-impact test (plan `plans/player_impact.md`): tunes ideas 1-4 on the tune seasons, keeps each only if it beats the best so far on the check seasons by 0.002; results in `backtest_results/players.md`, the kept settings in `players_best.json`. Also `base`, `idea <n>`, `look` (second look on the exam seasons), `save`. |
+| `python3 backtest_players.py refit` | Refits nba-v2 (team + player settings) on every season for live use. Saves to `backtest_results/nba_refit_pending.json`; nothing goes live yet. |
+| `python3 backtest_players.py apply` | **Puts the pending NBA refit live** (replaces only the NBA block of `model_params.json`; refuses if a different NBA version is live than the one it was built to replace). Then run `python3 predict.py nba`. |
 | `python3 fix_college_lines.py` | Checks stored college football lines against CFBD's named favorite and reports reversed ones; `--apply` swaps them (219 fixed 2026-10-23). 6 CFBD calls. |
 | `python3 market_patterns.py` | Pre-registered tests of whether kinds of games (home underdogs, big favorites, etc.) are mispriced; see `backtest_results/market_patterns_plan.md` |
 | `python3 pull_history.py all` | Reloads *all* past seasons. Slow; about 50 college API calls. |

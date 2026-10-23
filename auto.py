@@ -57,9 +57,10 @@ NIGHT = [["pull_games.py", "all"], ["pull_soccer_history.py", "current"],
 
 
 def window_steps(sport):
-    """Steps for a pre-kickoff pull: odds, predictions, and shadow challengers (none for soccer yet)."""
-    return [["pull_odds.py", sport], ["predict.py", sport]] + (
-        [] if sport == "soccer_club" else [["shadow.py", "log", sport]])
+    """Steps for a pre-kickoff pull: odds, predictions, and shadow challengers (none for soccer yet).
+    NBA also loads any new box scores first, so player ratings include the latest games."""
+    return [["pull_odds.py", sport]] + ([["pull_nba_players.py", "current"]] if sport == "nba" else []) \
+        + [["predict.py", sport]] + ([] if sport == "soccer_club" else [["shadow.py", "log", sport]])
 
 
 def online():

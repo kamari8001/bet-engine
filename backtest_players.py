@@ -7,6 +7,10 @@ Usage:
   python3 backtest_players.py look              second look: the kept settings on the exam seasons (already used once
                                                 for nba-v1), plus whether the engine adds anything beside the market
   python3 backtest_players.py save              save the kept settings (players_best.json) under nba.players in model_params.json
+  python3 backtest_players.py refit             nba-v2 for live use: team + player settings refit on every season
+                                                (no seasons left untouched: judged on live results only). Saved to
+                                                backtest_results/nba_refit_pending.json, NOT live yet.
+  python3 backtest_players.py apply             puts the pending refit live (replaces the NBA block of model_params.json)
 
 Team settings are the pre-exam nba-v1 (from final_runs.jsonl) so nothing here saw the exam seasons.
 Ideas: 1 minutes only; 2 production rating; 3 production + impact; 4 online correction of the
@@ -30,6 +34,7 @@ from odds_math import decimal_odds
 
 TUNE, CHECK, FINAL = PERIODS["nba"]["tune"], PERIODS["nba"]["check"], PERIODS["nba"]["final"]
 BEST_PATH = RESULTS_DIR / "players_best.json"
+PENDING_PATH = RESULTS_DIR / "nba_refit_pending.json"
 MIN_GAIN = 0.002
 IDEA_PARAMS = {1: ["abs_coef"], 2: ["abs_coef", "alpha", "season_regress", "repl_z"],
                3: ["abs_coef", "alpha", "season_regress", "repl_z", "w_imp"],
@@ -170,19 +175,117 @@ def look(games, box, tparams, mkt, base_preds):
     return lines
 
 
+def refit(games, box, mkt):
+    """Tune the team settings and the kept idea's player settings together on every season, starting
+    from the live nba-v1-refit team settings and the tune-season player settings. Saves nba-v2-refit."""
+    import backtest
+    old = model.load_params("nba")
+    best = json.loads(BEST_PATH.read_text())
+    if best["idea"] != 2:
+        sys.exit("refit is written for idea 2 (production rating)")
+    allp = PERIODS["nba"]["all"]
+    team_names = backtest.TUNED + backtest.TUNED_EXTRA["nba"]
+    pl_names = ["alpha", "season_regress", "repl_z", "abs_coef"]
+    tp = {k: v for k, v in old["ratings"].items() if k != "abs_coef"}
+    pp = {k: best["params"][k] for k in pl_names}
+    cache = {}
+
+    def feats_for(p):
+        key = tuple(p[k] for k in pl_names if k != "abs_coef")
+        if key not in cache:
+            if len(cache) >= 3:
+                cache.pop(next(iter(cache)))
+            cache[key] = pm.features(games, box, {**{k: p[k] for k in pl_names if k != "abs_coef"}, "idea": 2})[0]
+        return cache[key]
+
+    def score(t, p):
+        attach(games, feats_for(p))
+        preds, _ = model.walk_forward(games, dict(t, abs_coef=p["abs_coef"]), "nba")
+        return period_ll(games, preds, allp)
+
+    bestll = score(tp, pp)
+    print(f"Refit on {allp[0]}-{allp[1]}: starting log loss {bestll:.4f}", flush=True)
+    for factors in ([0.5, 0.75, 1.33, 2.0], [0.85, 0.93, 1.07, 1.18], [0.96, 1.04]):
+        improved = True
+        while improved:
+            improved = False
+            for name in team_names + pl_names:
+                for f in factors:
+                    t, p = dict(tp), dict(pp)
+                    d = t if name in team_names else p
+                    v = d[name]
+                    d[name] = v * f if v else (0.001 * f if name in team_names else 0.01 * f)
+                    if name in ("regress", "season_regress"):
+                        d[name] = min(d[name], 1.0)
+                    sc = score(t, p)
+                    if sc < bestll - 1e-6:
+                        bestll, tp, pp, improved = sc, t, p, True
+        print(f"  after step size {factors}: {bestll:.4f}  team {json.dumps({k: round(v, 4) for k, v in tp.items()})}"
+              f"  players {json.dumps({k: round(v, 4) for k, v in pp.items()})}", flush=True)
+    day = f"{datetime.now(timezone.utc):%Y%m%d}"
+    saved = {"nba": None}
+    prev = old
+    saved["nba"] = {**{k: v for k, v in prev.items() if k not in ("version", "ratings", "players", "note", "previous")},
+                    "version": f"nba-v2-refit-{day}",
+                    "ratings": {**{k: round(v, 5) for k, v in tp.items()}, "abs_coef": round(pp["abs_coef"], 5)},
+                    "combiner": None, "calibration": {"a": 1.0, "b": 0.0}, "fit_seasons": list(allp),
+                    "players": {"version": f"players-v1-refit-{day}", "idea": 2,
+                                "params": {k: round(pp[k], 5) for k in pl_names if k != "abs_coef"},
+                                "plan": "plans/player_impact.md", "results": "backtest_results/players.md"},
+                    "previous": prev["version"],
+                    "note": "nba-v2: team ratings + rest + player absences (production rating, idea 2). Refit on all "
+                            "seasons after the tune/check test; judged on live results only."}
+    PENDING_PATH.write_text(json.dumps(saved["nba"], indent=2) + "\n")
+    attach(games, feats_for(pp))
+    preds, _ = model.walk_forward(games, saved["nba"]["ratings"], "nba")
+    mm, mk, nb, roi = market_gap(games, preds, mkt, allp)
+    line = (f"\n## Refit {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC: {saved['nba']['version']} "
+            f"(pending: live after `backtest_players.py apply`)\n\n"
+            f"Team {json.dumps(saved['nba']['ratings'])}; players {json.dumps(saved['nba']['players']['params'])}.\n"
+            f"In-sample on {allp[0]}-{allp[1]} (used for fitting, so NOT a test): log loss {bestll:.4f}, "
+            f"worst bucket {worst_bucket(games, preds, allp) * 100:.1f}, vs market {mm:.4f} / {mk:.4f}, "
+            f"flags {nb} ROI {roi:+.1%}. Replaces {prev['version']}.")
+    print(line)
+    path = RESULTS_DIR / "players.md"
+    path.write_text(path.read_text() + line + "\n")
+
+
+def apply():
+    """Put the pending refit live: replace the NBA block of model_params.json, nothing else."""
+    if not PENDING_PATH.exists():
+        sys.exit("No pending refit. Run `python3 backtest_players.py refit` first.")
+    new = json.loads(PENDING_PATH.read_text())
+    saved = json.loads(model.PARAMS_PATH.read_text())
+    live = saved["nba"]["version"]
+    if live == new["version"]:
+        sys.exit(f"{live} is already live.")
+    if live != new["previous"]:
+        sys.exit(f"STOP: the pending refit was built to replace {new['previous']}, but {live} is live now. Refit again.")
+    saved["nba"] = new
+    model.PARAMS_PATH.write_text(json.dumps(saved, indent=2) + "\n")
+    print(f"NBA model is now {new['version']} (was {live}). Every other sport is unchanged.")
+    print("Next NBA predictions use it; run `python3 predict.py nba` to log them now.")
+
+
 def main():
     a = sys.argv[1:]
-    if not a or a[0] not in ("base", "idea", "ablate", "look", "save"):
+    if a[:1] == ["apply"]:
+        apply()
+        return
+    if not a or a[0] not in ("base", "idea", "ablate", "look", "save", "refit", "apply"):
         sys.exit(__doc__)
     conn = db.connect()
     box = pm.load_box(conn)
-    games = model.load_games(conn, "nba")
+    games = model.load_games(conn, "nba", players=False)
     mkt = market_by_game(conn, "nba")
     tparams = team_params()
     print(f"{len(games)} games, {len(box)} with box scores; team settings nba-v1 (pre-exam)")
     base_preds, _ = model.walk_forward(games, tparams, "nba")
     base = report("base (no players)", games, base_preds, mkt)
     if a[0] == "base":
+        return
+    if a[0] == "refit":
+        refit(games, box, mkt)
         return
     if a[0] == "save":
         best = json.loads(BEST_PATH.read_text())

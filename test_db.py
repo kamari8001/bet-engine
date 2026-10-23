@@ -121,6 +121,23 @@ def main():
     expect_blocked("edit a check", lambda: conn.execute("UPDATE qb_checks SET player_name = 'X'"))
     expect_blocked("delete a check", lambda: conn.execute("DELETE FROM qb_checks"))
 
+    print("\n-- Confirmed absences (player facts, NBA) --")
+    pfact = lambda **kw: db.add_player_fact(conn, **dict(dict(
+        game_id=future, team="Test Home", player_name="Test Guard", status="out",
+        source_url="https://example.com/test-injury-report", reason="test: ruled out (ankle)"), **kw))
+    expect_ok("save a confirmed absence with a source", lambda: pfact())
+    expect_ok("save a 'playing' fact (overrides the injury list)", lambda: pfact(status="playing"))
+    expect_blocked("absence with no source link", lambda: pfact(source_url="nope"))
+    expect_blocked("absence with no reason", lambda: pfact(reason=" "))
+    expect_blocked("absence with an unknown status", lambda: pfact(status="questionable"))
+    expect_blocked("absence for a team not in the game", lambda: pfact(team="Some Other Team"))
+    expect_blocked("a backdated absence",
+                   lambda: conn.execute("INSERT INTO player_facts (game_id, team, player_name, status, source_url,"
+                                        " reason, created_at) VALUES (?, 'Test Home', 'X', 'out',"
+                                        " 'https://example.com/x', 'r', datetime('now', '-1 day'))", (future,)))
+    expect_blocked("edit an absence", lambda: conn.execute("UPDATE player_facts SET player_name = 'X'"))
+    expect_blocked("delete an absence", lambda: conn.execute("DELETE FROM player_facts"))
+
     print("\n-- Shadow challengers --")
     shadow_bet = lambda **kw: conn.execute(
         "INSERT INTO shadow_bets (challenger, game_id, side, team, price_ml, book, market_p, odds_captured_at)"
@@ -174,6 +191,9 @@ def main():
     expect_blocked("starter fact after kickoff",
                    lambda: db.add_lineup_fact(conn, soon, "Test Home B", "QB", "Late Passer",
                                               "confirmed", "https://example.com/x", "test"))
+    expect_blocked("player absence after tip-off",
+                   lambda: db.add_player_fact(conn, soon, "Test Home B", "Late Guard", "out",
+                                              "https://example.com/x", "test"))
     expect_blocked("QB check after kickoff",
                    lambda: db.add_qb_check(conn, soon, "Test Home B", "Late QB",
                                            "https://example.com/x", "test"))

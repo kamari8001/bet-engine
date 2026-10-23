@@ -470,14 +470,28 @@ def card(v):
                  else '<div class="section"><h4>Warnings</h4><div class="note">none</div></div>')
     news_items = ""
     for n in v.get("news", []):
-        what = "reviewed, no change" if n["points"] == 0 else f'{esc(v["home"])} {n["points"]:+.1f} pts'
+        what = (esc(n["player"]) if "player" in n else "reviewed, no change" if n["points"] == 0
+                else f'{esc(v["home"])} {n["points"]:+.1f} pts')
         news_items += (f'<div class="kv"><span>{esc(n["time"])}: {what}</span>'
                        f'<span><a href="{esc(n["source"])}" target="_blank" rel="noopener">source</a></span></div>'
                        f'<div class="note" style="padding:0 0 4px">{esc(n["reason"])}</div>')
     news_html = f'<div class="section"><h4>News check</h4>{news_items}</div>' if news_items else ""
+    miss_html = ""
+    if v.get("absences"):
+        rows = ""
+        for side in ("away", "home"):
+            a = v["absences"][side]
+            out = ", ".join(f'{esc(x["name"])} <span class="note">{-x.get("pct", 0):+.1f}%'
+                            f'{" (Claude)" if x["source"].startswith("Claude") else ""}</span>' for x in a["out"]) or \
+                '<span class="note">nobody in the rotation</span>'
+            listed = (f'<div class="note" style="padding:0 0 4px">listed, counted as playing: '
+                      + ", ".join(f'{esc(x["name"])} ({esc(x["status"])})' for x in a["listed"]) + "</div>") if a["listed"] else ""
+            rows += f'<div class="kv"><span>{esc(v[side])}</span><span>{out}</span></div>{listed}'
+        miss_html = (f'<div class="section"><h4>Missing players (ESPN injury list + Claude; '
+                     f'% = change in that team&rsquo;s win chance)</h4>{rows}</div>')
     back = f"""<div class="face back">
 <div class="top"><div class="matchup">{away}<span class="at">at</span>{home}</div><span class="time">{esc(v['kickoff'])}</span></div>
-{warn_html}{news_html}{books_html}{move_html}{form_html}{extra_html}<div class="hint">click to flip back &#8634;</div></div>"""
+{warn_html}{news_html}{miss_html}{books_html}{move_html}{form_html}{extra_html}<div class="hint">click to flip back &#8634;</div></div>"""
     return (f'<div class="card{" three" if three else ""}" id="g{v["id"]}" data-league="{esc(v.get("league") or "")}">'
             f'<div class="inner">{front}{back}</div></div>')
 

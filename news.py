@@ -1,4 +1,4 @@
-"""Record what Claude finds in the news: confirmed starters and capped adjustments.
+"""Record what Claude finds in the news: confirmed starters, NBA absences, and capped adjustments.
 
 Usage:
   python3 news.py games nfl|ncaaf
@@ -9,6 +9,14 @@ Usage:
       record that the news supports the starter the model already assumes
       ("verified": nothing contradicts him). Refused if the name doesn't match;
       record a `qb` fact instead in that case.
+  python3 news.py players <game id>
+      NBA: each team's rotation (players the model counts), each player's value to the team in
+      points, ESPN's injury status, and any absences already recorded.
+  python3 news.py out <game id> <team> "<player>" <source url> "<reason>"
+      NBA: record that a rotation player will NOT play (a fact; the formula turns it into the
+      claude probability). Use for absences ESPN's injury list doesn't show as Out yet.
+  python3 news.py playing <game id> <team> "<player>" <source url> "<reason>"
+      NBA: record that a player ESPN lists as Out WILL play (overrides the injury list).
   python3 news.py targets ncaaf|ncaab|nba|soccer_club [hours]
       games in the next N hours (default 24) that need a news check and have none recorded:
       college and club soccer games where the engine differs from the market by 4+ points
@@ -47,7 +55,10 @@ def list_games(conn, sport):
         checks = conn.execute("SELECT team, player_name FROM qb_checks WHERE game_id = ? ORDER BY created_at",
                               (g["id"],)).fetchall()
         adj = conn.execute("SELECT d_home FROM adjustments WHERE game_id = ? ORDER BY created_at", (g["id"],)).fetchall()
+        pf = conn.execute("SELECT team, player_name, status FROM player_facts WHERE game_id = ? ORDER BY created_at",
+                          (g["id"],)).fetchall()
         known = "; ".join([f"{f['team']} QB {f['player_name']} ({f['status']})" for f in facts]
+                          + [f"{f['team']} {f['player_name']} {f['status']}" for f in pf]
                           + [f"{c['team']} QB {c['player_name']} (verified)" for c in checks]
                           + [("news reviewed" if a["d_home"] == 0 else f"adjusted home {a['d_home'] * 100:+.1f}")
                              for a in adj])
@@ -117,7 +128,8 @@ def news_targets(conn, sport, hours=24, limit=15):
     games = conn.execute(
         "SELECT * FROM games WHERE sport = ? AND start_time_utc > ? AND start_time_utc <= ?"
         " AND NOT EXISTS (SELECT 1 FROM results r WHERE r.game_id = games.id)"
-        " AND NOT EXISTS (SELECT 1 FROM adjustments a WHERE a.game_id = games.id)",
+        " AND NOT EXISTS (SELECT 1 FROM adjustments a WHERE a.game_id = games.id)"
+        " AND NOT EXISTS (SELECT 1 FROM player_facts f WHERE f.game_id = games.id)",
         (sport, db.to_utc(now), db.to_utc(now + timedelta(hours=hours)))).fetchall()
     out = []
     if sport == "soccer_club":
@@ -149,6 +161,67 @@ def news_targets(conn, sport, hours=24, limit=15):
     return out[:limit]
 
 
+def nba_game(conn, game_id):
+    g = conn.execute("SELECT * FROM games WHERE id = ?", (game_id,)).fetchone()
+    if g is None or g["sport"] != "nba":
+        sys.exit("No NBA game with that id. Use `python3 news.py targets nba` or `news.py games nba`.")
+    return g
+
+
+def nba_engine(conn):
+    from predict import Engine
+    e = Engine(conn, "nba")
+    if e.book is None:
+        sys.exit("The NBA player feature is off (no nba.players settings), so absences can't be recorded as facts.")
+    return e
+
+
+def show_players(conn, game_id):
+    g = nba_game(conn, game_id)
+    e = nba_engine(conn)
+    day = db.utc_to_eastern(g["start_time_utc"]).date()
+    coef = e.params["ratings"].get("abs_coef", 0.0)
+    print(f"{g['away_team']} at {g['home_team']}, {db.fmt_et(g['start_time_utc'])}. Value = points of margin the "
+          "team loses if the player sits.")
+    for team in (g["away_team"], g["home_team"]):
+        listed = {i["id"]: i for i in e.injuries.get(team, [])}
+        facts = {f["player_id"]: f for f in conn.execute(
+            "SELECT * FROM player_facts WHERE game_id = ? AND team = ? ORDER BY created_at, id", (game_id, team))}
+        rot = sorted(e.book.rotation(team, day), key=lambda x: -e.book.value(x[1]))
+        print(f"\n  {team}: {len(rot)} rotation players")
+        for pid, st in rot:
+            i, f = listed.get(pid), facts.get(pid)
+            status = f"ESPN: {i['status']}" + (f" ({i['detail']})" if i["detail"] else "") if i else ""
+            if f:
+                status += f"{'; ' if status else ''}Claude: {f['status']}"
+            print(f"    {st['name']:<26} {st['mpg']:4.1f} min  value {coef * e.book.value(st):4.1f} pts  {status}")
+        others = [i for pid, i in listed.items() if pid not in dict(rot)]
+        if others:
+            print("    not in the rotation (the model already plays without them): "
+                  + ", ".join(f"{i['name']} ({i['status']})" for i in others))
+
+
+def record_player(conn, game_id, team, player, status, url, reason):
+    g = nba_game(conn, game_id)
+    if team not in (g["home_team"], g["away_team"]):
+        sys.exit(f"{team} isn't in this game ({g['away_team']} at {g['home_team']}).")
+    e = nba_engine(conn)
+    day = db.utc_to_eastern(g["start_time_utc"]).date()
+    hit = e.pm.find_in_rotation(e.book, team, day, player)
+    if hit is None:
+        sys.exit(f"{player} isn't in {team}'s rotation (10+ minutes a game and seen in the last 21 days; "
+                 f"`python3 news.py players {game_id}` lists it), so the model doesn't count them either way. "
+                 "If it still matters (e.g. a star returning from a long injury), use a capped `news.py adjust`.")
+    pid, st = hit
+    on_list = next((i for i in e.injuries.get(team, []) if i["id"] == pid), None)
+    if status == "playing" and not (on_list and on_list["status"].lower() == "out"):
+        sys.exit(f"ESPN doesn't list {st['name']} as Out, so the model already counts them as playing.")
+    db.add_player_fact(conn, game_id, team, st["name"], status, url, reason, player_id=pid)
+    coef = e.params["ratings"].get("abs_coef", 0.0)
+    print(f"Recorded: {team} {st['name']} {status.upper()} for {g['away_team']} at {g['home_team']} "
+          f"(value {coef * e.book.value(st):.1f} pts). Run `python3 predict.py nba` to log the claude prediction.")
+
+
 def record_adjustment(conn, game_id, shift_points, url, reason):
     base = conn.execute("SELECT id FROM predictions WHERE game_id = ? AND source = 'engine'"
                         " ORDER BY created_at DESC, id DESC LIMIT 1", (game_id,)).fetchone()
@@ -176,6 +249,10 @@ def main():
             record_qb(conn, int(a[1]), a[2], a[3], a[4], a[5], a[6])
         elif len(a) == 6 and a[0] == "check":
             record_check(conn, int(a[1]), a[2], a[3], a[4], a[5])
+        elif len(a) == 2 and a[0] == "players":
+            show_players(conn, int(a[1]))
+        elif len(a) == 6 and a[0] in ("out", "playing"):
+            record_player(conn, int(a[1]), a[2], a[3], a[0], a[4], a[5])
         elif a[:1] == ["targets"] and len(a) in (2, 3):
             rows = news_targets(conn, a[1], int(a[2]) if len(a) == 3 else 24)
             if not rows:
