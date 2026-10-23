@@ -64,6 +64,8 @@ def fetch_game(conn, g):
             names = block.get("names") or block.get("keys") or []
             idx = {n: i for i, n in enumerate(names)}
             for a in block.get("athletes") or []:
+                if not (a.get("athlete") or {}).get("id"):
+                    continue                        # a placeholder entry with no player behind it
                 stats = a.get("stats") or []
                 get = lambda key: stats[idx[key]] if key in idx and idx[key] < len(stats) else None
                 dnp = bool(a.get("didNotPlay"))
