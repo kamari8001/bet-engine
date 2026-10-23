@@ -438,3 +438,7 @@ BEGIN SELECT RAISE(ABORT, 'player facts can never be changed; add a new one inst
 
 CREATE TRIGGER IF NOT EXISTS player_facts_no_delete BEFORE DELETE ON player_facts
 BEGIN SELECT RAISE(ABORT, 'player facts can never be deleted'); END;
+
+-- Speed: the slate's per-card lookups (form, record, games played) filter past games by sport and
+-- season; without this index each one read the whole table (~4 s per page). Added 2026-10-23.
+CREATE INDEX IF NOT EXISTS hist_games_sport_season ON hist_games(sport, season);

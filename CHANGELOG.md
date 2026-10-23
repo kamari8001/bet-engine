@@ -4,6 +4,11 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 4.0.1 (2026-10-23): faster slate
+- Slate pages load in well under a second (NBA, college football and soccer took about 4 seconds).
+  Each card's form and record lookups were reading every past game of every sport; a database
+  index now takes them straight to the right season. Nothing on the cards changed.
+
 ## 4.0.0 (2026-10-23): the NBA model sees who's playing
 - New NBA model, `nba-v2-refit-20261023`. Every player gets a rating from their box scores (scoring,
   shooting efficiency, rebounds, assists, turnovers, steals, blocks, fouls), weighted by their
