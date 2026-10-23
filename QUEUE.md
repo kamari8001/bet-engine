@@ -10,34 +10,32 @@ first (CLAUDE.md).
 
 ## In progress
 
-- **Market-anchored engine (items 3 + 4 merged)**: fitted 2026-10-23 (`backtest_results/anchor.md`): every sport reduces to the market, zero flags. Waiting on Talal's decision (live shadow challenger? engine's role?).
+- **Basketball player-impact model (item 7, started 2026-10-23)**: plan `plans/player_impact.md`. Step 1: NBA box scores (who played, minutes, DNP reasons) into `hist_player_games`.
 
 ## Up next
 
 1. **Club soccer + Champions League shakedown** (after Nov 3-4, matchday 4): Champions League games added about Oct 27 (7 days ahead), predictions before kickoff, 90-minute results loaded overnight, grading.
 2. **Club soccer shakedown check** (after the first weekend, around Mon Oct 26): early-kickoff closing pulls (6:50 AM wake), predictions before every game, results and grading, the 8 AM news check.
 
-**Model accuracy program** (added 2026-10-23; each one: pre-registered criteria, tune/check split,
-one final test, then a new MAJOR version if it changes probabilities). Why this order: the measured
-weakness is overconfident disagreement with the market, so the cheap fixes that target it come first;
-the biggest build (player impact) comes once live NBA data shows how much injuries move lines.
+**Model accuracy program** (added 2026-10-23). Reordered 2026-10-23 after the factor study and the
+anchor fit (`backtest_results/factor_study.md`, `backtest_results/anchor.md`): the market price already
+holds everything the engine knows, so engine-accuracy work (margin compression, learning-rate decay)
+can't become an edge against the market. What can is information the market doesn't have yet:
+measured player availability and sourced news before the line moves. Talal chose to keep the engine as
+is (option 1); the anchored model is recorded, not deployed.
 
-3. **Market anchor as a model input** (all sports): blend the engine with the market's opening line,
-   with the weight fit on past data and allowed to vary by sport and by time of season (lean on the
-   market early, when our ratings are mostly last year's). The `market_anchor_v1` shadow challenger
-   is the crude version; its closing-line value is the early signal.
-4. **Edge recalibration** (all sports): a second calibration step that maps the size of an edge to how
-   often edges that size were right historically, flattening big edges toward the market. Fit on tune
-   seasons, checked on check seasons.
-5. **Margin with diminishing returns** (football and basketball): compress blowouts in the rating
-   updates (square-root or log scale on the margin) instead of counting every point up to the cap.
-   Test with `backtest.py ablate`.
-6. **Within-season learning-rate decay** (basketball first, 82 games): ratings learn faster right after
-   the off-season regression, then settle. A smooth decay, not the crude NFL early boost that was rejected.
-7. **Basketball player-impact model**: estimate each player's value from minutes and plus-minus data,
-   subtract absent players before predicting, replacing the 3-point cap for missing stars. Start after a
-   few weeks of live NBA results (moved up from "Later").
-8. **Soccer xG model**: shadow-only until a few seasons of expected-goals data exist (moved from "Later").
+3. **Basketball player-impact model** (in progress, see above): estimate each player's value from
+   minutes and box-score data, subtract absent players before predicting, replacing the 3-point cap
+   for missing stars. NBA first, college basketball after.
+4. **Sharper news timing**: use the morning line as the reference and get Claude's sourced absences
+   recorded before the line moves (after item 3 shows which absences matter).
+5. **Soccer xG model**: shadow-only until a few seasons of expected-goals data exist.
+
+Paused (engine accuracy only; revisit if live scorecards ever show the engine beating the closing line):
+- Margin with diminishing returns (football and basketball).
+- Within-season learning-rate decay.
+- Market anchor as a model input / edge recalibration: done as a study; every sport reduces to the market
+  (`plans/anchor.md`). Not deployed by Talal's choice.
 
 ## Waiting on a date or on data
 
