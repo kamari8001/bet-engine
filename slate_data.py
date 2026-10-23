@@ -376,6 +376,28 @@ def my_picks(conn, now, college):
 
 # ---------- scorecard ----------
 
+def player_rankings(conn, season=None):
+    """The NBA Rankings tab's Players view."""
+    import players_view as pv
+    out = {"mode": "players", "error": None, "rows": [], "options": [], "season": None}
+    try:
+        out["options"] = pv.seasons(conn)
+        valid = {s for s, _ in out["options"]}
+        out["season"] = int(season) if season and season.isdigit() and int(season) in valid else out["options"][0][0]
+        out["rows"] = pv.season_rows(conn, out["season"])
+    except RuntimeError as e:
+        out["error"] = str(e)
+    return out
+
+
+def team_roster(conn, team):
+    import players_view as pv
+    try:
+        return pv.roster(conn, team)
+    except RuntimeError as e:
+        return {"team": team, "rows": [], "error": str(e)}
+
+
 def rankings(conn, sport, college, season=None, team=None):
     """Everything the Rankings tab shows. season: a year, "all" (all-time list) or None (current);
     team: one team's season-by-season history."""

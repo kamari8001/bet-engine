@@ -135,6 +135,15 @@ a.tlink { color:inherit; text-decoration:none; } a.tlink:hover { text-decoration
 .form span { display:inline-block; width:14px; text-align:center; font-size:12px; font-weight:700; }
 .form .W { color:var(--good); } .form .L { color:var(--bad); } .form .T, .form .D { color:var(--muted); }
 .filters { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+/* players (NBA) */
+img.hs { width:34px; height:34px; border-radius:50%; object-fit:cover; object-position:top; background:var(--raise);
+         vertical-align:middle; margin-right:8px; border:1px solid var(--line); }
+img.hs.lg { width:104px; height:104px; margin:0; }
+.phead { display:flex; gap:16px; align-items:center; margin:6px 0 14px; flex-wrap:wrap; }
+.phead h2 { margin:0 0 4px; font-size:22px; } .phead .ovr { font-size:20px; padding:4px 10px; }
+.st { font-size:12px; font-weight:600; } .st.out { color:var(--bad); } .st.dtd { color:var(--warn); }
+.rk td.nw { white-space:nowrap; }
+.kvs { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:6px 16px; }
 .toggle { display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin-bottom:14px; }
 .toggle a { color:var(--muted); text-decoration:none; padding:6px 14px; }
 .toggle a.on { background:var(--card); color:var(--text); }
@@ -365,6 +374,9 @@ def signed(x):
 def card(v):
     away = team(v["away"], v["away_logo"])
     home = team(v["home"], v["home_logo"])
+    if v["sport"] == "nba":       # tap a team for its roster and player ratings
+        away, home = (f'<a class="tlink" href="/team?team={esc(urllib.parse.quote(v[k]))}" title="{esc(v[k])} roster">{t}</a>'
+                      for k, t in (("away", away), ("home", home)))
     n_warn = len(v["warnings"])
     badge = (f'<button type="button" class="badge" title="Warnings on the back of the card">&#9888; {n_warn}</button>'
              if n_warn else "")
@@ -756,7 +768,8 @@ def ovr_chart(points):
                    f'<text x="{left - 6}" y="{y(v) + 4:.1f}" class="ax" text-anchor="end">{v}</text>'
                    for v in range(lo + (10 - lo % 10) % 10, 100, 10))
     step = max(1, len(points) // 8)
-    labels = "".join(f'<text x="{xs[i]:.1f}" y="{h - 8}" class="ax" text-anchor="middle">{esc(points[i][0])}</text>'
+    anchor = lambda i: "end" if i == len(points) - 1 and len(points) > 1 else "start" if i == 0 and len(points) > 1 else "middle"
+    labels = "".join(f'<text x="{xs[i]:.1f}" y="{h - 8}" class="ax" text-anchor="{anchor(i)}">{esc(points[i][0])}</text>'
                      for i in range(len(points)) if i % step == 0 or i == len(points) - 1)
     line = " ".join(f"{x:.1f},{y(p[1]):.1f}" for x, p in zip(xs, points))
     dots = "".join(f'<g class="pt"><circle cx="{x:.1f}" cy="{y(p[1]):.1f}" r="12" class="hit"/>'
@@ -774,6 +787,25 @@ def rankings_page(sport, d):
     switch = ('<div class="toggle">' + "".join(
         f'<a class="{"on" if sport == k else ""}" href="/rankings?sport={k}">{n}</a>'
         for k, n in RANK_SPORTS.items()) + "</div>")
+    if sport == "nba":
+        players = d["mode"] == "players"
+        switch += ('<div class="toggle"><a class="' + ("" if players else "on") + '" href="/rankings?sport=nba">Teams</a>'
+                   '<a class="' + ("on" if players else "") + '" href="/rankings?sport=nba&amp;view=players">Players</a></div>')
+        if players and not d["error"]:
+            body, pscript = players_rankings(d)
+            search = """
+(function () {
+  var q = document.getElementById('rk-q'), c = document.getElementById('rk-c');
+  function apply() {
+    var text = (q.value || '').toLowerCase(), pos = c.value;
+    document.querySelectorAll('table.rk tr[data-name]').forEach(function (tr) {
+      tr.style.display = tr.dataset.name.indexOf(text) !== -1 && (!pos || tr.dataset.conf === pos) ? '' : 'none';
+    });
+  }
+  q.addEventListener('input', apply); c.addEventListener('change', apply);
+})();
+"""
+            return page("NBA player rankings", "rank", switch + body, scripts=pscript + search)
     if d["error"]:
         return page("Rankings", "rank", switch + f'<p class="note">Rankings unavailable: {esc(d["error"])}</p>')
     college = sport in ("ncaaf", "ncaab")
@@ -829,7 +861,9 @@ def rankings_page(sport, d):
                     f'<div class="panel">{ovr_chart(pts)}</div>'
                     f'<div class="panel"><table class="rk"><tr><th style="text-align:left">season</th><th class="num">OVR</th>'
                     f'<th class="num">rank</th><th class="num">record</th></tr>{rows}</table></div>')
-        back = f'<p><a class="tlink" href="/rankings?sport={sport}">&larr; back to rankings</a></p>'
+        back = (f'<p><a class="tlink" href="/rankings?sport={sport}">&larr; back to rankings</a>'
+                + (f' &middot; <a class="tlink" href="/team?team={esc(urllib.parse.quote(d["team"]))}">roster and player ratings</a>'
+                   if sport == "nba" else "") + "</p>")
         return page(f"{d['team']} history", "rank", switch + back + title + body, scripts=script)
 
     filters = f'<div class="filters">{picker}'
@@ -892,6 +926,144 @@ def rankings_page(sport, d):
     title = "" if live else f'<p class="note">Final ratings for {esc(rows[0]["season_label"]) if rows else ""}, after each team&rsquo;s last game.</p>'
     return page(f"{RANK_SPORTS[sport]} rankings", "rank", switch + intro + filters + title
                 + f'<div class="panel"><table class="rk">{head}{body}</table></div>', scripts=script)
+
+
+# ---------- players (NBA) ----------
+
+SILHOUETTE = ("data:image/svg+xml," + urllib.parse.quote(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#19202b"/>'
+    '<circle cx="32" cy="24" r="12" fill="#3a4554"/><path d="M10 62c2-14 11-21 22-21s20 7 22 21z" fill="#3a4554"/></svg>'))
+POS_NAMES = {"G": "Guard", "F": "Forward", "C": "Center", "?": "Position unknown"}
+
+
+def headshot(url, large=False):
+    return (f'<img class="hs{" lg" if large else ""}" src="{esc(url)}" alt="" loading="lazy" '
+            f'onerror="this.onerror=null;this.src=\'{SILHOUETTE}\'">')
+
+
+def player_link(r, text=None):
+    return f'<a class="tlink" href="/player?id={esc(r["id"])}">{text or esc(r["name"])}</a>'
+
+
+def status_html(status, detail=None):
+    if not status:
+        return ""
+    kind = "out" if status.lower() == "out" else "dtd"
+    return f'<span class="st {kind}" title="{esc(detail or "")}">{esc(status)}</span>'
+
+
+def ovr_badge(v):
+    return f'<span class="ovr {ovr_tier(v)}">{v}</span>' if v is not None else '<span class="note">n/a</span>'
+
+
+PLAYER_OVR_NOTE = ('<p class="note"><b>Player OVR</b> (1&ndash;99) is built from what the model charges when the player '
+                   'sits out: points of team margin per game (rating &times; minutes). It&rsquo;s ranked among every rotation '
+                   'player-season since 2015-16, so 62 = a typical rotation player, 80+ = top ~7%, 90+ = top ~1%. Players under '
+                   '10 minutes a game get none (the model doesn&rsquo;t count them). Early in a season OVRs run low: ratings are '
+                   'pulled toward replacement level over the summer and rebuild as games are played, which is what predicted '
+                   'best in testing.</p>')
+
+
+def team_page(d, logo=None):
+    img = f'<img src="{esc(logo)}" alt="" class="tlogo">' if logo else ""
+    title = f'<h2 class="thead">{img}{esc(d["team"])} roster</h2>'
+    links = (f'<p><a class="tlink" href="/slate?sport=nba">&larr; NBA slate</a> &middot; '
+             f'<a class="tlink" href="/rankings?sport=nba&amp;team={esc(urllib.parse.quote(d["team"]))}">team history</a> &middot; '
+             f'<a class="tlink" href="/rankings?sport=nba&amp;view=players">player rankings</a></p>')
+    if d.get("error"):
+        return page(f"{d['team']} roster", "rank", links + title + f'<p class="note">{esc(d["error"])}</p>')
+    warn = f'<p class="note warn">Injury list unavailable: {esc(d["injury_error"])}</p>' if d.get("injury_error") else ""
+    value = lambda r: "" if r["points"] is None else f'{r["points"]:+.1f}'
+    rows = "".join(
+        f'<tr><td class="team">{headshot(r["headshot"])}{player_link(r)}'
+        + (' <span class="note">(hasn&rsquo;t played this season)</span>' if r.get("not_yet") else "")
+        + f'</td><td class="num">{esc(r["pos"]) if r["pos"] != "?" else ""}</td><td class="num">{ovr_badge(r["ovr"])}</td>'
+        f'<td class="num hide-sm">{"" if r["mpg"] is None else r["mpg"]}</td>'
+        f'<td class="num hide-sm">{value(r)}</td>'
+        f'<td>{status_html(r["status"], r["detail"])}</td></tr>' for r in d["rows"])
+    table = ('<div class="panel"><table class="rk"><tr><th style="text-align:left">player</th><th class="num">pos</th>'
+             '<th class="num">OVR</th><th class="num hide-sm">min/g</th><th class="num hide-sm">value (pts)</th>'
+             f'<th style="text-align:left">status</th></tr>{rows}</table></div>')
+    return page(f"{d['team']} roster", "rank", links + title + warn + table + PLAYER_OVR_NOTE)
+
+
+def player_page(p, team_logo=None):
+    if p is None:
+        return page("Player", "rank", '<p class="note">No player with that id in our NBA box scores.</p>')
+    team = esc(p["team"] or "")
+    rank = (f' &middot; #{p["rank"]} of {p["of"]} in the NBA, #{p["pos_rank"]} of {p["pos_of"]} {POS_NAMES[p["pos"]].lower()}s'
+            if p.get("rank") else "")
+    inj = p.get("injury")
+    status = (f'{status_html(inj["status"], inj["detail"])} <span class="note">{esc(inj["detail"] or "")}'
+              f'{" (ESPN, " + esc((inj["date"] or "")[:10]) + ")" if inj.get("date") else ""}</span>') if inj else \
+        ('<span class="note">injury list unavailable</span>' if p.get("injury_error") else '<span class="note">not on ESPN&rsquo;s injury list</span>')
+    head = (f'<div class="phead">{headshot(p["headshot"], True)}<div><h2>{esc(p["name"])}</h2>'
+            f'<div class="note"><a class="tlink" href="/team?team={esc(urllib.parse.quote(p["team"] or ""))}">{team}</a> &middot; '
+            f'{POS_NAMES[p["pos"]]}{rank}</div><div style="margin-top:6px">{ovr_badge(p["ovr"])} '
+            + (f'<span class="note">value {p["points"]:+.1f} pts of margin per game, {p["mpg"]} min/g</span>' if p["ovr"] is not None
+               else '<span class="note">under 10 minutes a game: no OVR</span>')
+            + f'</div><div style="margin-top:6px">{status}</div></div></div>')
+    if not p.get("this_season"):
+        head += '<p class="note warn">Hasn&rsquo;t appeared in a box score this season; ratings are from earlier games.</p>'
+    notes = "".join(f'<div class="kv"><span>{esc(n["time"])}: {esc(n["status"])} for {esc(n["game"])}</span>'
+                    f'<span><a href="{esc(n["source_url"])}" target="_blank" rel="noopener">source</a></span></div>'
+                    f'<div class="note" style="padding:0 0 4px">{esc(n["reason"])}</div>' for n in p["notes"])
+    notes_html = f'<div class="panel"><div class="section"><h4>Claude&rsquo;s notes</h4>{notes}</div></div>' if notes else ""
+    pm = lambda g: "" if g["pm"] is None else f'{g["pm"]:+d}'
+    rec = "".join(
+        f'<tr><td class="nw">{esc(g["date"][5:])}</td><td class="nw">{esc(g["opp"])}</td><td class="num nw">{esc(g["result"])}</td>'
+        + (f'<td class="num">{g["min"]:.0f}</td><td class="num">{g["pts"]}</td><td class="num">{g["reb"]}</td>'
+           f'<td class="num">{g["ast"]}</td><td class="num hide-sm">{pm(g)}</td>'
+           if g["played"] else f'<td colspan="5" class="note">did not play{": " + esc(g["reason"].title()) if g["reason"] else ""}</td>')
+        + "</tr>" for g in p["recent"])
+    recent = ('<div class="panel"><div class="section"><h4>Last 5 games</h4><table class="rk"><tr><th style="text-align:left">date</th>'
+              '<th style="text-align:left">opp</th><th class="num">result</th><th class="num">min</th><th class="num">pts</th>'
+              f'<th class="num">reb</th><th class="num">ast</th><th class="num hide-sm">+/-</th></tr>{rec}</table></div></div>') if rec else ""
+    pct = lambda x: "" if x is None else f"{x:.1f}"
+    avg = "".join(f'<tr><td>{esc(a["label"])}</td><td class="num">{a["gp"]}</td><td class="num">{a["mpg"]}</td>'
+                  f'<td class="num">{a["pts"]}</td><td class="num">{a["reb"]}</td><td class="num">{a["ast"]}</td>'
+                  f'<td class="num hide-sm">{a["stl"]}</td><td class="num hide-sm">{a["blk"]}</td><td class="num hide-sm">{a["tov"]}</td>'
+                  f'<td class="num hide-sm">{pct(a["fg"])}</td><td class="num hide-sm">{pct(a["tp"])}</td><td class="num hide-sm">{pct(a["ft"])}</td>'
+                  f'<td class="num hide-sm">{a["pm"]:+.1f}</td></tr>' for a in p["averages"])
+    averages = ('<div class="panel"><div class="section"><h4>Per game</h4><table class="rk"><tr><th style="text-align:left">season</th>'
+                '<th class="num">gp</th><th class="num">min</th><th class="num">pts</th><th class="num">reb</th><th class="num">ast</th>'
+                '<th class="num hide-sm">stl</th><th class="num hide-sm">blk</th><th class="num hide-sm">tov</th><th class="num hide-sm">fg%</th>'
+                f'<th class="num hide-sm">3p%</th><th class="num hide-sm">ft%</th><th class="num hide-sm">+/-</th></tr>{avg}</table></div></div>') if avg else ""
+    hist = ""
+    if len(p["history"]) >= 2:
+        pts = [(lbl, v, f"{lbl}: OVR {v} ({t})") for lbl, v, t in p["history"]]
+        hist = f'<div class="panel"><div class="section"><h4>OVR by season (end of season; this season so far)</h4>{ovr_chart(pts)}</div></div>'
+    elif p["history"]:
+        lbl, v, t = p["history"][0]
+        hist = f'<p class="note">OVR {v} in {esc(lbl)} ({esc(t)}).</p>'
+    return page(p["name"], "rank", head + notes_html + recent + averages + hist + PLAYER_OVR_NOTE)
+
+
+def players_rankings(d):
+    """The Players view of the NBA Rankings tab."""
+    picker = ('<select id="pl-s" aria-label="Season">' + "".join(
+        f'<option value="{s}"{" selected" if s == d["season"] else ""}>{esc(label)}</option>' for s, label in d["options"]) + "</select>")
+    filters = (f'<div class="filters">{picker}<input id="rk-q" placeholder="Search players or teams" autocomplete="off">'
+               '<select id="rk-c"><option value="">All positions</option><option value="G">Guards</option>'
+               '<option value="F">Forwards</option><option value="C">Centers</option></select></div>')
+    body = "".join(
+        f'<tr data-name="{esc((r["name"] + " " + (r["team"] or "")).lower())}" data-conf="{esc(r["pos"])}">'
+        f'<td class="rank">{r["rank"]}</td><td class="team">{headshot(r["headshot"])}{player_link(r)}</td>'
+        f'<td class="num"><a class="tlink" href="/team?team={esc(urllib.parse.quote(r["team"] or ""))}">{esc(r["team"] or "")}</a></td>'
+        f'<td class="num">{esc(r["pos"]) if r["pos"] != "?" else ""}</td><td class="num">{ovr_badge(r["ovr"])}</td>'
+        f'<td class="num hide-sm">{r["mpg"]}</td><td class="num hide-sm">{r["points"]:+.1f}</td></tr>' for r in d["rows"])
+    table = ('<div class="panel"><table class="rk"><tr><th class="num">#</th><th style="text-align:left">player</th>'
+             '<th class="num">team</th><th class="num">pos</th><th class="num">OVR</th><th class="num hide-sm">min/g</th>'
+             f'<th class="num hide-sm">value (pts)</th></tr>{body}</table></div>')
+    live = d["season"] == d["options"][0][0]
+    title = "" if live else '<p class="note">End-of-season ratings (each player&rsquo;s last team that season).</p>'
+    script = """
+(function () {
+  var s = document.getElementById('pl-s');
+  if (s) s.addEventListener('change', function () { location.href = '/rankings?sport=nba&view=players&season=' + s.value; });
+})();
+"""
+    return PLAYER_OVR_NOTE + filters + title + table, script
 
 
 def scorecard_page(sport, sc):

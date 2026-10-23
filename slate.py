@@ -89,9 +89,22 @@ class Handler(BaseHTTPRequestHandler):
                     self._send(slate_views.live_page(groups, error, sport, counts))
             elif url.path == "/mine":
                 self._send(slate_views.mine_page(*slate_data.my_picks(conn, now, college)))
+            elif url.path == "/rankings" and sport == "nba" and q.get("view") == "players":
+                self._send(slate_views.rankings_page(sport, slate_data.player_rankings(conn, q.get("season"))))
             elif url.path == "/rankings":
                 self._send(slate_views.rankings_page(sport, slate_data.rankings(
                     conn, sport, college, q.get("season"), q.get("team"))))
+            elif url.path == "/team":
+                team = q.get("team", "")
+                self._send(slate_views.team_page(slate_data.team_roster(conn, team),
+                                                 slate_data.logo_for("nba", team, college)))
+            elif url.path == "/player":
+                import players_view
+                try:
+                    prof = players_view.profile(conn, q.get("id", ""))
+                except RuntimeError as e:
+                    prof = None
+                self._send(slate_views.player_page(prof))
             elif url.path == "/scorecard":
                 self._send(slate_views.scorecard_page(sport, slate_data.scorecard(conn, sport)))
             else:

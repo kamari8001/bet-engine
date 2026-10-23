@@ -4,6 +4,22 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 4.1.0 (2026-10-23): NBA players
+- **Player OVR (1-99)** for every NBA rotation player, built from what the model charges when the
+  player sits out (points of team margin per game). It's ranked among every rotation player-season
+  since 2015-16 on the same bell curve as team OVR: 62 = typical rotation player, 80+ = top ~7%,
+  90+ = top ~1%. Last season's top three: Doncic 95, Jokic 94, Wembanyama 90. Early in a season
+  OVRs run low (ratings rebuild as games are played), which is what predicted best in testing.
+- **Team rosters**: tap a team on an NBA card (or "roster" on its Rankings history page) for every
+  player with headshot, position, OVR, minutes and ESPN injury status.
+- **Player profiles**: headshot (a silhouette if ESPN has none), OVR with league and position rank,
+  injury detail, Claude's recorded notes with sources, last 5 games, per-game averages this season
+  and last, and OVR by season.
+- **Rankings, NBA**: a Teams | Players switch; players by OVR with a position filter
+  (guards/forwards/centers), search, and past seasons.
+- Display only: nothing is stored in the logbook and no probabilities change.
+- Season charts keep their first and last labels inside the chart.
+
 ## 4.0.1 (2026-10-23): faster slate
 - Slate pages load in well under a second (NBA, college football and soccer took about 4 seconds).
   Each card's form and record lookups were reading every past game of every sport; a database

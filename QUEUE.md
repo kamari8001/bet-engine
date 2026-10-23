@@ -25,9 +25,6 @@ measured player availability and sourced news before the line moves. Talal chose
 is (option 1); the anchored model is recorded, not deployed.
 
 3. **Basketball player-impact model follow-ups** (the NBA model itself went live 2026-10-23, v4.0.0). In order:
-   - **Player display release (MINOR)**: player OVR (frozen bell curve of rotation-player seasons),
-     tap a team for its roster, player profiles (OVR, position, status, recent games, Claude's notes,
-     ESPN headshot or a generic icon), player rankings under each league, sortable by position.
    - **College basketball player model** (CBBD box scores; its own plan).
 4. **Sharper news timing**: use the morning line as the reference and get Claude's sourced absences
    recorded before the line moves (after item 3 shows which absences matter).
@@ -62,6 +59,7 @@ Paused (engine accuracy only; revisit if live scorecards ever show the engine be
 
 ## Done
 
+- **Player display release** (2026-10-23, v4.1.0): player OVR, rosters, profiles, player rankings (`plans/player_display.md`).
 - **Early-season player values** (2026-10-23, no version change): both ideas tested, neither kept; the summer pull toward replacement predicts best (`plans/player_early_season.md`).
 - **NBA player-impact model** (2026-10-23, v4.0.0): `nba-v2-refit-20261023`, plan `plans/player_impact.md`.
 
