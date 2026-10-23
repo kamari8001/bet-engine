@@ -17,6 +17,28 @@ _(nothing)_
 1. **Club soccer + Champions League shakedown** (after Nov 3-4, matchday 4): Champions League games added about Oct 27 (7 days ahead), predictions before kickoff, 90-minute results loaded overnight, grading.
 2. **Club soccer shakedown check** (after the first weekend, around Mon Oct 26): early-kickoff closing pulls (6:50 AM wake), predictions before every game, results and grading, the 8 AM news check.
 
+**Model accuracy program** (added 2026-10-23; each one: pre-registered criteria, tune/check split,
+one final test, then a new MAJOR version if it changes probabilities). Why this order: the measured
+weakness is overconfident disagreement with the market, so the cheap fixes that target it come first;
+the biggest build (player impact) comes once live NBA data shows how much injuries move lines.
+
+3. **Market anchor as a model input** (all sports): blend the engine with the market's opening line,
+   with the weight fit on past data and allowed to vary by sport and by time of season (lean on the
+   market early, when our ratings are mostly last year's). The `market_anchor_v1` shadow challenger
+   is the crude version; its closing-line value is the early signal.
+4. **Edge recalibration** (all sports): a second calibration step that maps the size of an edge to how
+   often edges that size were right historically, flattening big edges toward the market. Fit on tune
+   seasons, checked on check seasons.
+5. **Margin with diminishing returns** (football and basketball): compress blowouts in the rating
+   updates (square-root or log scale on the margin) instead of counting every point up to the cap.
+   Test with `backtest.py ablate`.
+6. **Within-season learning-rate decay** (basketball first, 82 games): ratings learn faster right after
+   the off-season regression, then settle. A smooth decay, not the crude NFL early boost that was rejected.
+7. **Basketball player-impact model**: estimate each player's value from minutes and plus-minus data,
+   subtract absent players before predicting, replacing the 3-point cap for missing stars. Start after a
+   few weeks of live NBA results (moved up from "Later").
+8. **Soccer xG model**: shadow-only until a few seasons of expected-goals data exist (moved from "Later").
+
 ## Waiting on a date or on data
 
 - **Each summer (from July 2027):** add promoted soccer clubs to `teams.SOCCER_TEAMS` (checked against football-data, ESPN, The Odds API) before the season starts.
@@ -28,15 +50,12 @@ _(nothing)_
 
 ## Later (ideas, not ordered; promote to "Up next" when wanted)
 
-- **Basketball player-impact model:** turn "star X is out" into a probability with data,
-  instead of the 3-point cap. Wait for a few weeks of live NBA results first.
 - **Basketball preseason roster data:** better early-season ratings.
 - **Data-driven college football QB model** (the 3-point cap is small for a QB change).
 - **Europa League predictions** (its results already feed the league strengths).
 - **More covered leagues** for Champions League clubs we skip (Czechia, Ukraine, Croatia, Serbia, Cyprus, ...): needs a history source.
 - **MLS** (its season runs March to November).
 - **Three-way shadow mode** for soccer challengers (the current table is two-way only).
-- **Soccer xG model**, once a few seasons of expected-goals data exist.
 - **MLB** (build order #4).
 - **International soccer** (build order #5).
 
