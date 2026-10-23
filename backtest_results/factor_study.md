@@ -8,9 +8,9 @@ per standard deviation of each factor, in log-odds. Ridge penalty 1.0. Run 2026-
 | Sport | Seasons (tune / check) | Market alone | Engine alone | Engine's weight next to the market (b) | Market misses |
 |---|---|---|---|---|---|
 | NFL | 2006-18 / 2019-22 | 0.608 | 0.633 | +0.02 tune, -0.17 check | favorite size (+0.0011, barely) |
-| College football* | 2021-23 / 2024-25 | 0.515 | 0.534 | -0.10 tune, +0.10 check | nothing |
+| College football* | 2021-23 / 2024-25 | 0.515 | 0.534 | -0.12 tune, +0.10 check | nothing (after the line fix) |
 | NBA | 2015-20 / 2021-23 | 0.617 | 0.642 | +0.00 tune, -0.01 check | nothing |
-| College basketball* | 2023-24 / 2025-26 | 0.534 | 0.551 | +0.16 tune, +0.15 check | engine (+0.0015) |
+| College basketball* | 2023-24 / 2025-26 | 0.522 | 0.543 | +0.18 tune, +0.16 check | engine (+0.0013; neutral-site games excluded) |
 | Club soccer | 2013-19 / 2020-22 | 0.604 | 0.613 | +0.05 tune, +0.04 check | nothing |
 
 \* Priced seasons only, split in date order; they overlap the final-exam seasons (information, not a
@@ -113,18 +113,18 @@ Home-win rate: tune 0.569, check 0.605
 
 | factor | coef (tune) | coef (check) | same sign |
 |---|---|---|---|
-| market_logit | +1.119 | +1.275 | yes |
-| engine_logit | -0.001 | +0.075 | no |
-| home | +0.017 | +0.026 | yes |
+| market_logit | +1.350 | +1.256 | yes |
+| engine_logit | -0.193 | +0.095 | no |
+| home | -0.003 | +0.032 | no |
 | rest_diff | +0.000 | +0.000 | no |
-| games_played | -0.060 | +0.035 | no |
-| form_diff | +0.182 | +0.034 | yes |
-| fav_size | -0.016 | +0.182 | no |
-| talent_diff | +0.036 | -0.267 | no |
-| returning_diff | +0.120 | +0.004 | yes |
-| prev_sp_diff | -0.009 | +0.059 | no |
+| games_played | -0.059 | +0.035 | no |
+| form_diff | +0.163 | +0.034 | yes |
+| fav_size | -0.003 | +0.186 | no |
+| talent_diff | +0.014 | -0.266 | no |
+| returning_diff | +0.130 | +0.005 | yes |
+| prev_sp_diff | -0.037 | +0.059 | no |
 
-All factors, check-season log loss: 0.5182
+All factors, check-season log loss: 0.5181
 
 Forward selection (each step adds the factor that most improves check-season log loss):
 
@@ -139,23 +139,23 @@ Forward selection (each step adds the factor that most improves check-season log
 
 | factor | coef (tune) | coef (check) | same sign |
 |---|---|---|---|
-| engine_logit | -0.097 | +0.099 | no |
-| home | +0.018 | +0.026 | yes |
+| engine_logit | -0.116 | +0.101 | no |
+| home | -0.002 | +0.032 | no |
 | rest_diff | +0.000 | +0.000 | no |
-| games_played | -0.058 | +0.034 | no |
-| form_diff | +0.173 | +0.036 | yes |
-| fav_size | -0.022 | +0.183 | no |
-| talent_diff | +0.033 | -0.265 | no |
-| returning_diff | +0.122 | +0.004 | yes |
-| prev_sp_diff | -0.020 | +0.059 | no |
+| games_played | -0.061 | +0.035 | no |
+| form_diff | +0.170 | +0.035 | yes |
+| fav_size | -0.000 | +0.186 | no |
+| talent_diff | +0.018 | -0.266 | no |
+| returning_diff | +0.128 | +0.005 | yes |
+| prev_sp_diff | -0.028 | +0.059 | no |
 
-All factors, check-season log loss: 0.5180
+All factors, check-season log loss: 0.5179
 
 Forward selection (each step adds the factor that most improves check-season log loss):
 
 | step | factor | check log loss | gain |
 |---|---|---|---|
-| 0 | (none) | 0.5154 | +0.0000 |
+| 0 | (none) | 0.5156 | +0.0000 |
 
 **Factors that matter (selected, gain >= 0.001, same sign on tune and check):** none
 
@@ -164,9 +164,9 @@ Forward selection (each step adds the factor that most improves check-season log
 6 of 10 components explain 90% of the factors' variance.
 
 - component 1: 39% of variance; main loadings engine_logit -0.51, market_logit -0.51, prev_sp_diff -0.43
-- component 2: 15% of variance; main loadings games_played +0.66, home -0.62, fav_size -0.27
-- component 3: 12% of variance; main loadings returning_diff -0.88, talent_diff +0.29, home -0.22
-- component 4: 10% of variance; main loadings fav_size +0.62, home -0.41, talent_diff +0.41
+- component 2: 15% of variance; main loadings games_played -0.66, home +0.62, fav_size +0.27
+- component 3: 12% of variance; main loadings returning_diff -0.88, talent_diff +0.29, home -0.23
+- component 4: 10% of variance; main loadings fav_size -0.62, home +0.41, talent_diff -0.40
 
 ## nba: 7586 tune games (2015-2020), 3814 check games (2021-2023)
 
@@ -226,33 +226,33 @@ Forward selection (each step adds the factor that most improves check-season log
 - component 3: 14% of variance; main loadings home +0.71, rest_diff +0.67, form_diff -0.18
 - component 4: 14% of variance; main loadings home -0.60, games_played +0.59, rest_diff +0.48
 
-## ncaab: 10586 tune games (2023-2024), 9876 check games (2025-2026)
+## ncaab: 9176 tune games (2023-2024), 8554 check games (2025-2026)
 
 **Deviation from the plan:** this sport has sportsbook prices only in recent seasons, so the priced seasons are split in date order (tune then check). They overlap the sport's final-exam seasons, so treat this as information, not a pre-registered test.
 
-Baselines (check-season log loss): market alone 0.5338, engine alone 0.5511
-Home-win rate: tune 0.646, check 0.630
+Baselines (check-season log loss): market alone 0.5218, engine alone 0.5429
+Home-win rate: tune 0.654, check 0.635
 
 ### (a) What predicts winning
 
 | factor | coef (tune) | coef (check) | same sign |
 |---|---|---|---|
-| market_logit | +1.168 | +1.104 | yes |
-| engine_logit | +0.160 | +0.208 | yes |
-| home | -0.002 | -0.029 | yes |
-| rest_diff | -0.033 | -0.016 | yes |
-| games_played | -0.040 | -0.002 | yes |
-| form_diff | +0.018 | +0.054 | yes |
-| fav_size | -0.007 | +0.014 | no |
+| market_logit | +1.208 | +1.420 | yes |
+| engine_logit | +0.172 | -0.032 | no |
+| home | +0.000 | +0.000 | no |
+| rest_diff | -0.026 | -0.031 | yes |
+| games_played | -0.025 | +0.007 | no |
+| form_diff | +0.002 | +0.041 | yes |
+| fav_size | -0.018 | -0.063 | yes |
 
-All factors, check-season log loss: 0.5333
+All factors, check-season log loss: 0.5220
 
 Forward selection (each step adds the factor that most improves check-season log loss):
 
 | step | factor | check log loss | gain |
 |---|---|---|---|
-| 0 | (none) | 0.6593 | +0.0000 |
-| 1 | market_logit | 0.5338 | +0.1255 |
+| 0 | (none) | 0.6569 | +0.0000 |
+| 1 | market_logit | 0.5218 | +0.1351 |
 
 **Factors that matter (selected, gain >= 0.001, same sign on tune and check):** market_logit
 
@@ -260,32 +260,32 @@ Forward selection (each step adds the factor that most improves check-season log
 
 | factor | coef (tune) | coef (check) | same sign |
 |---|---|---|---|
-| engine_logit | +0.155 | +0.147 | yes |
-| home | -0.002 | -0.027 | yes |
-| rest_diff | -0.033 | -0.017 | yes |
-| games_played | -0.040 | -0.001 | yes |
-| form_diff | +0.018 | +0.055 | yes |
-| fav_size | -0.007 | +0.002 | no |
+| engine_logit | +0.178 | +0.159 | yes |
+| home | +0.000 | +0.000 | no |
+| rest_diff | -0.026 | -0.030 | yes |
+| games_played | -0.025 | -0.001 | yes |
+| form_diff | +0.002 | +0.037 | yes |
+| fav_size | -0.017 | -0.024 | yes |
 
-All factors, check-season log loss: 0.5333
+All factors, check-season log loss: 0.5220
 
 Forward selection (each step adds the factor that most improves check-season log loss):
 
 | step | factor | check log loss | gain |
 |---|---|---|---|
-| 0 | (none) | 0.5348 | +0.0000 |
-| 1 | engine_logit | 0.5333 | +0.0015 |
+| 0 | (none) | 0.5234 | +0.0000 |
+| 1 | engine_logit | 0.5221 | +0.0013 |
 
 **Factors that matter (selected, gain >= 0.001, same sign on tune and check):** engine_logit
 
 ### PCA diagnostic
 
-5 of 7 components explain 90% of the factors' variance.
+4 of 7 components explain 90% of the factors' variance.
 
-- component 1: 43% of variance; main loadings engine_logit -0.54, market_logit -0.54, fav_size -0.46
-- component 2: 16% of variance; main loadings rest_diff +0.62, home -0.59, games_played +0.42
-- component 3: 13% of variance; main loadings games_played +0.83, home +0.43, rest_diff -0.27
-- component 4: 13% of variance; main loadings rest_diff +0.73, home +0.64, form_diff -0.20
+- component 1: 51% of variance; main loadings market_logit +0.54, engine_logit +0.53, fav_size +0.46
+- component 2: 17% of variance; main loadings rest_diff -1.00, games_played +0.05, fav_size -0.03
+- component 3: 16% of variance; main loadings games_played +0.90, form_diff +0.39, fav_size -0.14
+- component 4: 10% of variance; main loadings form_diff -0.68, fav_size +0.61, games_played +0.38
 
 ## soccer_club: 12782 tune games (2013-2019), 5376 check games (2020-2022)
 

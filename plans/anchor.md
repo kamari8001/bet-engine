@@ -50,3 +50,10 @@ edges were noise, and Claude's sourced news is the only place an edge can come f
 `backtest_anchor.py` (fit, report; saves weights under `anchor` in `model_params.json`),
 `backtest_results/anchor.md` (results), then `shadow.py` for the live shadow challengers (separate
 step, pre-registered in `backtest_results/shadow_challengers.md` before logging starts).
+
+## Results (2026-10-23; full tables in `backtest_results/anchor.md`)
+Every sport reduces to the market: no engine term survives the check-season bar (the NFL keeps only
+the favorite-size term, +0.0011). The anchored model has zero flagged bets in every sport, versus
+633-4,974 losing engine flags. Two college line data bugs were found along the way and fixed or
+excluded (see the criteria files). Decision for Talal: whether to run the anchored model live as the
+shadow challenger `market_anchor_v2` (it would almost never flag) and what the engine's role should be.

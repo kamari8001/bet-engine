@@ -57,3 +57,11 @@ error, so nothing is changed and the fail stands.
 **Verdict:** both sports continue to live logging and grading, with flagged
 bets shown as Low confidence, paper only. Neither has evidence of an edge
 over the market from the base model alone.
+
+**Data bug found 2026-10-23 (college football lines):** 219 of 8,469 CFBD lines (2.6%, mostly at
+neutral sites) were stored for the wrong side: the sportsbook's "home" differed from CFBD's game
+record. CFBD's `formattedSpread` names the favorite, so `fix_college_lines.py` verified every line and
+swapped the reversed ones. Model settings were NOT changed. College exam re-run (2nd run, 2026-10-23;
+both in `final_runs.jsonl`): log loss 0.5003 vs baseline 0.6593 (test 1 PASS); vs the market on 3,933
+priced games: model 0.5539 vs market 0.5334; money test: 2,162 flagged bets, 976-1186, -97.0 units,
+**-4.5%** (was -3.8%). Verdict unchanged: FAIL, paper only.

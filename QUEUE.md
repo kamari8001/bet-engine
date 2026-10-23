@@ -10,7 +10,7 @@ first (CLAUDE.md).
 
 ## In progress
 
-- **Market-anchored engine (items 3 + 4 merged)**: plan `plans/anchor.md`; fitting on tune/check seasons 2026-10-23; next: live shadow challengers `market_anchor_v2_<sport>`, then Talal decides on promotion to the engine.
+- **Market-anchored engine (items 3 + 4 merged)**: fitted 2026-10-23 (`backtest_results/anchor.md`): every sport reduces to the market, zero flags. Waiting on Talal's decision (live shadow challenger? engine's role?).
 
 ## Up next
 

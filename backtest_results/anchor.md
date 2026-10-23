@@ -2,6 +2,26 @@
 
 Plan: `plans/anchor.md`. Produced by `backtest_anchor.py`. Flagged bets use the average listed price. Run 2026-10-23.
 
+## Summary
+
+With the engine's weight treated like any other term (kept only if it improves check-season log loss
+by >= 0.001 over the market alone), **every sport reduces to the market**: NBA, college football,
+college basketball and soccer keep no engine term at all; the NFL keeps only the favorite-size term
+(+0.0011). Under the anchored model there are **zero flagged bets** in any sport on the check seasons,
+against 633-4,974 engine flags per sport that all lost money. College basketball's engine carries a
+borderline hint (+0.0013 in the factor study, below the bar here); nothing else survives.
+
+| Sport | Market (check log loss) | Engine | Anchored | Engine flags, ROI | Anchored flags |
+|---|---|---|---|---|---|
+| NFL | 0.6088 | 0.6326 | 0.6072 (market + favorite size) | 633, -13.3% | 0 |
+| College football* | 0.5158 | 0.5327 | 0.5156 (market) | 929, -5.3% | 0 |
+| NBA | 0.6173 | 0.6397 | 0.6173 (market) | 2,489, -2.5% | 0 |
+| College basketball* | 0.5234 | 0.5430 | 0.5234 (market) | 4,974, -8.0% | 0 |
+| Club soccer | 0.9781 | 0.9909 | 0.9781 (market) | 2,288, -10.0% | 0 |
+
+\* College sports on their priced seasons (overlap the final exams); college basketball without
+neutral-site games and college football after the line-orientation fix (see the criteria files).
+
 ## nfl: tune 2006-2018, check 2019-2022
 
 Fitted terms: {"c": -0.135, "w_fav": 0.16473}
@@ -22,6 +42,27 @@ Forward selection (check-season log loss after each kept term):
 
 Saved as anchor-v1-20261023 under nfl.anchor in model_params.json.
 
+## ncaaf: tune 2021-2023, check 2024-2025
+
+Priced seasons only (overlap the final exam): information, not a pre-registered test.
+
+Fitted terms: {"c": 0.01688}
+
+Check-season log loss: market 0.5158 | engine 0.5327 | anchored 0.5156 (1694 games)
+
+| model | flagged bets | won | units | ROI |
+|---|---|---|---|---|
+| engine | 929 | 423 | -48.9 | -5.3% |
+| anchored | 0 | 0 | +0.0 | +0.0% |
+
+Forward selection (check-season log loss after each kept term):
+
+| term | check log loss | gain |
+|---|---|---|
+| (market only) | 0.5156 |  |
+
+Saved as anchor-v1-20261023 under ncaaf.anchor in model_params.json.
+
 ## nba: tune 2015-2020, check 2021-2023
 
 Fitted terms: {"c": -0.00763}
@@ -40,46 +81,6 @@ Forward selection (check-season log loss after each kept term):
 | (market only) | 0.6173 |  |
 
 Saved as anchor-v1-20261023 under nba.anchor in model_params.json.
-
-## soccer_club: tune 2013-2019, check 2020-2022
-
-Fitted terms: {}
-
-Check-season log loss: market 0.9781 | engine 0.9909 | anchored 0.9781 (5376 games)
-
-| model | flagged bets | won | units | ROI | avg CLV (games with a close) |
-|---|---|---|---|---|---|
-| engine | 2288 | 719 | -229.9 | -10.0% | -0.09 pts (2288) |
-| anchored | 0 | 0 | +0.0 | +0.0% |  (0) |
-
-Forward selection (check-season log loss after each kept term):
-
-| term | check log loss | gain |
-|---|---|---|
-| (market only) | 0.9781 |  |
-
-Saved as anchor-v1-20261023 under soccer_club.anchor in model_params.json.
-
-## ncaaf: tune 2021-2023, check 2024-2025
-
-Priced seasons only (overlap the final exam): information, not a pre-registered test.
-
-Fitted terms: {"c": 0.01133}
-
-Check-season log loss: market 0.5155 | engine 0.5327 | anchored 0.5154 (1694 games)
-
-| model | flagged bets | won | units | ROI |
-|---|---|---|---|---|
-| engine | 927 | 421 | -53.4 | -5.8% |
-| anchored | 0 | 0 | +0.0 | +0.0% |
-
-Forward selection (check-season log loss after each kept term):
-
-| term | check log loss | gain |
-|---|---|---|
-| (market only) | 0.5154 |  |
-
-Saved as anchor-v1-20261023 under ncaaf.anchor in model_params.json.
 
 ## ncaab: tune 2023-2024, check 2025-2026
 
@@ -102,23 +103,21 @@ Forward selection (check-season log loss after each kept term):
 
 Saved as anchor-v1-20261023 under ncaab.anchor in model_params.json.
 
-## ncaaf: tune 2021-2023, check 2024-2025
+## soccer_club: tune 2013-2019, check 2020-2022
 
-Priced seasons only (overlap the final exam): information, not a pre-registered test.
+Fitted terms: {}
 
-Fitted terms: {"c": 0.01688}
+Check-season log loss: market 0.9781 | engine 0.9909 | anchored 0.9781 (5376 games)
 
-Check-season log loss: market 0.5158 | engine 0.5327 | anchored 0.5156 (1694 games)
-
-| model | flagged bets | won | units | ROI |
-|---|---|---|---|---|
-| engine | 929 | 423 | -48.9 | -5.3% |
-| anchored | 0 | 0 | +0.0 | +0.0% |
+| model | flagged bets | won | units | ROI | avg CLV (games with a close) |
+|---|---|---|---|---|---|
+| engine | 2288 | 719 | -229.9 | -10.0% | -0.09 pts (2288) |
+| anchored | 0 | 0 | +0.0 | +0.0% |  (0) |
 
 Forward selection (check-season log loss after each kept term):
 
 | term | check log loss | gain |
 |---|---|---|
-| (market only) | 0.5156 |  |
+| (market only) | 0.9781 |  |
 
-Saved as anchor-v1-20261023 under ncaaf.anchor in model_params.json.
+Saved as anchor-v1-20261023 under soccer_club.anchor in model_params.json.
