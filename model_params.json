@@ -28,8 +28,8 @@
     "anchor": {
       "version": "anchor-v1-20261023",
       "terms": {
-        "c": -0.01431,
-        "w": 0.26068
+        "c": -0.135,
+        "w_fav": 0.16473
       },
       "early_games": 4,
       "tune_seasons": [
@@ -86,8 +86,7 @@
     "anchor": {
       "version": "anchor-v1-20261023",
       "terms": {
-        "c": 0.00864,
-        "w": 0.07962
+        "c": 0.01688
       },
       "early_games": 4,
       "tune_seasons": [
@@ -128,8 +127,7 @@
     "anchor": {
       "version": "anchor-v1-20261023",
       "terms": {
-        "c": -0.00852,
-        "w": -0.01732
+        "c": -0.00763
       },
       "early_games": 10,
       "tune_seasons": [
@@ -170,9 +168,7 @@
     "anchor": {
       "version": "anchor-v1-20261023",
       "terms": {
-        "c": 0.08874,
-        "w": -0.11036,
-        "w_big": 0.23676
+        "c": 0.10167
       },
       "early_games": 10,
       "tune_seasons": [
@@ -224,9 +220,7 @@
     },
     "anchor": {
       "version": "anchor-v1-20261023",
-      "terms": {
-        "w": -0.19
-      },
+      "terms": {},
       "early_games": 5,
       "tune_seasons": [
         2013,

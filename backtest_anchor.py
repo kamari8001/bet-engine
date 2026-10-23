@@ -3,8 +3,8 @@
 Usage: python3 backtest_anchor.py nfl | ncaaf | nba | ncaab | soccer_club [--save] [--out]
 
 In log-odds: anchored = market + c + w*d + w_early*early*d + w_big*d*|d| + w_fav*fav_size,
-where d = engine - market. Terms beyond w are kept only if they improve CHECK-season log loss by
->= 0.001 (forward selection). Soccer blends each outcome's log probability the same way (one w,
+where d = engine - market. Every term, w included, is kept only if it improves CHECK-season log loss by
+>= 0.001 over the market alone (forward selection). Soccer blends each outcome's log probability the same way (one w,
 one w_big, one w_early) and renormalizes. --save writes the weights under "anchor" in
 model_params.json; --out appends the report to backtest_results/anchor.md. The final-exam seasons
 are never used here; the real test is live (shadow mode).
@@ -67,11 +67,12 @@ def fit2(rows, names):
 
 
 def select2(rt, rc):
-    names = ["w"]
+    """Start from the market alone (intercept only); add terms, w included, only if they earn it."""
+    names = []
     w = fit2(rt, names)
     best = ll2(rc, w, names)
-    log = [("w", best, None)]
-    remaining = list(TERMS)
+    log = [("(market only)", best, None)]
+    remaining = ["w"] + list(TERMS)
     while remaining:
         trials = []
         for t in remaining:
@@ -166,11 +167,11 @@ def fit3(rows, names, start=None):
 
 
 def select3(rt, rc):
-    names = ["w"]
-    t = fit3(rt, names)
+    names = []
+    t = {}
     best = ll3(rc, t)
-    log = [("w", best, None)]
-    remaining = ["w_early", "w_big"]
+    log = [("(market only)", best, None)]
+    remaining = ["w", "w_early", "w_big"]
     while remaining:
         trials = []
         for term in remaining:

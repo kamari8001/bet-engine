@@ -68,3 +68,18 @@ ESPN's NBA odds providers: 151 NBA game prices. They're now excluded (`odds_math
 deleted from `hist_odds`. The final exam above (run 2026-10-19) counted them in the market average for
 those games; it is not re-run (one-time rule), and the effect is small (about 151 of roughly 4,000 games
 had a Betradar price alongside real sportsbooks').
+
+**Second data bug, found 2026-10-23 (college basketball): reversed lines at neutral sites.** CBBD's
+lines for some neutral-site games are stored for the wrong side: the sportsbook's "home" differs from
+CBBD's game record, and CBBD gives no field to tell (e.g. Tennessee listed at +850 vs Rutgers in a game
+Tennessee won 85-60). About 7% of neutral-site games (roughly 1% of all priced games) are affected,
+but they sit exactly where the engine and the "market" disagree most, so they corrupt any analysis of
+big edges (the anchored-model study showed an impossible +46% on 356 bets before this was found).
+Fix: neutral-site college basketball games carry no market in backtests (`backtest.market_by_game`)
+until their prices can be verified from a second source (queued). Model settings were NOT changed.
+
+Re-run of the college basketball exam with that fix (3rd run, 2026-10-23; all runs in `final_runs.jsonl`):
+tests 1 and 2 unchanged (log loss 0.4974 vs baseline 0.6333; worst bucket 4.0 points); vs the market
+on the 13,034 non-neutral priced games: model 0.5408 vs market 0.5219; money test: 7,515 flagged bets,
+3839-3676, -525.2 units, **-7.0%** (was -4.2% with the reversed lines, which had been flattering the
+engine: its bets against mirrored prices "won"). Verdict unchanged: FAIL, paper only.

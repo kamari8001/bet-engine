@@ -52,6 +52,7 @@ the biggest build (player impact) comes once live NBA data shows how much injuri
 
 - **Basketball preseason roster data:** better early-season ratings.
 - **Data-driven college football QB model** (the 3-point cap is small for a QB change).
+- **Verify college basketball neutral-site lines** from a second source (ESPN's odds by game, ~2,800 games 2023-26) so they can return to the backtests (CBBD stores some for the wrong side; see `criteria_basketball.md`).
 - **Europa League predictions** (its results already feed the league strengths).
 - **More covered leagues** for Champions League clubs we skip (Czechia, Ukraine, Croatia, Serbia, Cyprus, ...): needs a history source.
 - **MLS** (its season runs March to November).

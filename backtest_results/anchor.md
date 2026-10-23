@@ -4,26 +4,27 @@ Plan: `plans/anchor.md`. Produced by `backtest_anchor.py`. Flagged bets use the 
 
 ## nfl: tune 2006-2018, check 2019-2022
 
-Fitted terms: {"c": -0.01431, "w": 0.26068}
+Fitted terms: {"c": -0.135, "w_fav": 0.16473}
 
-Check-season log loss: market 0.6088 | engine 0.6326 | anchored 0.6119 (1100 games)
+Check-season log loss: market 0.6088 | engine 0.6326 | anchored 0.6072 (1100 games)
 
 | model | flagged bets | won | units | ROI |
 |---|---|---|---|---|
 | engine | 633 | 229 | -84.3 | -13.3% |
-| anchored | 56 | 24 | +4.7 | +8.3% |
+| anchored | 0 | 0 | +0.0 | +0.0% |
 
 Forward selection (check-season log loss after each kept term):
 
 | term | check log loss | gain |
 |---|---|---|
-| w | 0.6119 |  |
+| (market only) | 0.6082 |  |
+| w_fav | 0.6072 | +0.0011 |
 
 Saved as anchor-v1-20261023 under nfl.anchor in model_params.json.
 
 ## nba: tune 2015-2020, check 2021-2023
 
-Fitted terms: {"c": -0.00852, "w": -0.01732}
+Fitted terms: {"c": -0.00763}
 
 Check-season log loss: market 0.6173 | engine 0.6397 | anchored 0.6173 (3814 games)
 
@@ -36,26 +37,26 @@ Forward selection (check-season log loss after each kept term):
 
 | term | check log loss | gain |
 |---|---|---|
-| w | 0.6173 |  |
+| (market only) | 0.6173 |  |
 
 Saved as anchor-v1-20261023 under nba.anchor in model_params.json.
 
 ## soccer_club: tune 2013-2019, check 2020-2022
 
-Fitted terms: {"w": -0.19}
+Fitted terms: {}
 
-Check-season log loss: market 0.9781 | engine 0.9909 | anchored 0.9777 (5376 games)
+Check-season log loss: market 0.9781 | engine 0.9909 | anchored 0.9781 (5376 games)
 
 | model | flagged bets | won | units | ROI | avg CLV (games with a close) |
 |---|---|---|---|---|---|
 | engine | 2288 | 719 | -229.9 | -10.0% | -0.09 pts (2288) |
-| anchored | 11 | 4 | -2.9 | -26.2% | -2.00 pts (11) |
+| anchored | 0 | 0 | +0.0 | +0.0% |  (0) |
 
 Forward selection (check-season log loss after each kept term):
 
 | term | check log loss | gain |
 |---|---|---|
-| w | 0.9777 |  |
+| (market only) | 0.9781 |  |
 
 Saved as anchor-v1-20261023 under soccer_club.anchor in model_params.json.
 
@@ -63,7 +64,7 @@ Saved as anchor-v1-20261023 under soccer_club.anchor in model_params.json.
 
 Priced seasons only (overlap the final exam): information, not a pre-registered test.
 
-Fitted terms: {"c": 0.00864, "w": 0.07962}
+Fitted terms: {"c": 0.01133}
 
 Check-season log loss: market 0.5155 | engine 0.5327 | anchored 0.5154 (1694 games)
 
@@ -76,7 +77,7 @@ Forward selection (check-season log loss after each kept term):
 
 | term | check log loss | gain |
 |---|---|---|
-| w | 0.5154 |  |
+| (market only) | 0.5154 |  |
 
 Saved as anchor-v1-20261023 under ncaaf.anchor in model_params.json.
 
@@ -84,20 +85,40 @@ Saved as anchor-v1-20261023 under ncaaf.anchor in model_params.json.
 
 Priced seasons only (overlap the final exam): information, not a pre-registered test.
 
-Fitted terms: {"c": 0.08874, "w": -0.11036, "w_big": 0.23676}
+Fitted terms: {"c": 0.10167}
 
-Check-season log loss: market 0.5349 | engine 0.5515 | anchored 0.5324 (9876 games)
+Check-season log loss: market 0.5234 | engine 0.5430 | anchored 0.5234 (8554 games)
 
 | model | flagged bets | won | units | ROI |
 |---|---|---|---|---|
-| engine | 5798 | 2923 | -250.6 | -4.3% |
-| anchored | 356 | 194 | +166.0 | +46.6% |
+| engine | 4974 | 2520 | -397.9 | -8.0% |
+| anchored | 0 | 0 | +0.0 | +0.0% |
 
 Forward selection (check-season log loss after each kept term):
 
 | term | check log loss | gain |
 |---|---|---|
-| w | 0.5342 |  |
-| w_big | 0.5324 | +0.0018 |
+| (market only) | 0.5234 |  |
 
 Saved as anchor-v1-20261023 under ncaab.anchor in model_params.json.
+
+## ncaaf: tune 2021-2023, check 2024-2025
+
+Priced seasons only (overlap the final exam): information, not a pre-registered test.
+
+Fitted terms: {"c": 0.01688}
+
+Check-season log loss: market 0.5158 | engine 0.5327 | anchored 0.5156 (1694 games)
+
+| model | flagged bets | won | units | ROI |
+|---|---|---|---|---|
+| engine | 929 | 423 | -48.9 | -5.3% |
+| anchored | 0 | 0 | +0.0 | +0.0% |
+
+Forward selection (check-season log loss after each kept term):
+
+| term | check log loss | gain |
+|---|---|---|
+| (market only) | 0.5156 |  |
+
+Saved as anchor-v1-20261023 under ncaaf.anchor in model_params.json.

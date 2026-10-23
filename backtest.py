@@ -90,9 +90,13 @@ def market_by_game(conn, sport):
     """{hist game id: (no-vig P(home), mean decimal odds home, away, market margin, total)}.
     Averages across every book that priced both sides."""
     out = {}
+    # College basketball: CBBD's lines at neutral sites are sometimes stored for the wrong side (the
+    # sportsbook's "home" differs from CBBD's) and CBBD gives no way to tell which, so neutral-site
+    # games carry no market here (data bug found 2026-10-23; see criteria_basketball.md).
+    neutral = " AND NOT (g.sport = 'ncaab' AND g.neutral_site = 1)"
     rows = conn.execute(
         "SELECT o.* FROM hist_odds o JOIN hist_games g ON g.id = o.hist_game_id"
-        " WHERE g.sport = ?", (sport,)).fetchall()
+        " WHERE g.sport = ?" + neutral, (sport,)).fetchall()
     by_game = {}
     for r in rows:
         if not is_pregame_sportsbook(r["provider"]):

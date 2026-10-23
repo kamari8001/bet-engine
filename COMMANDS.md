@@ -119,6 +119,7 @@ Challengers and the promotion bar are fixed in `backtest_results/shadow_challeng
 | `python3 backtest.py refit nfl` | Refits on all seasons for live use (overwrites saved settings) |
 | `python3 factor_study.py nfl` | Factor study (plan `plans/factor_study.md`): which pre-game factors predict winning and which the market misses; `--out` appends to `backtest_results/factor_study.md`. Also `ncaaf`, `nba`, `ncaab`, `soccer_club`. |
 | `python3 backtest_anchor.py nfl` | Fits the market-anchored engine (plan `plans/anchor.md`) on the tune seasons and reports the check seasons; `--save` stores the weights under `anchor` in `model_params.json`, `--out` appends to `backtest_results/anchor.md` |
+| `python3 fix_college_lines.py` | Checks stored college football lines against CFBD's named favorite and reports reversed ones; `--apply` swaps them (219 fixed 2026-10-23). 6 CFBD calls. |
 | `python3 market_patterns.py` | Pre-registered tests of whether kinds of games (home underdogs, big favorites, etc.) are mispriced; see `backtest_results/market_patterns_plan.md` |
 | `python3 pull_history.py all` | Reloads *all* past seasons. Slow; about 50 college API calls. |
 | `python3 pull_basketball_history.py summary` | What basketball history is loaded (games and moneylines per season) |
