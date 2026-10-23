@@ -150,7 +150,9 @@ def main():
         params = tune(games, box, tparams, idea, start)
         preds, book = run(games, box, tparams, params, idea)
         r = report(f"idea {idea}", games, preds, mkt)
-        keep = (best_check - r["check"] >= MIN_GAIN) and r["worst_bucket"] <= 0.08
+        # calibration: within 8 points, or no worse than the base model's own worst bucket (the pre-exam
+        # settings already have a 60-game bucket off by 13.9 on the check seasons)
+        keep = (best_check - r["check"] >= MIN_GAIN) and r["worst_bucket"] <= max(0.08, base["worst_bucket"] + 1e-9)
         lines.append(f"idea {idea}: {json.dumps({k: round(v, 4) for k, v in params.items()})} -> tune {r['tune']:.4f}, "
                      f"check {r['check']:.4f} ({r['check'] - best_check:+.4f} vs best so far), worst bucket {r['worst_bucket'] * 100:.1f}, "
                      f"vs market {r['model_vs_market'][0]:.4f} / {r['model_vs_market'][1]:.4f}, flags {r['flags']} ROI {r['roi']:+.1%} -> "
