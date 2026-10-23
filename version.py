@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 
 APP_NAME = "Kamari's Prediction Engine"
-APP_VERSION = "3.1.1"
+APP_VERSION = "4.0.0"
 
 
 def model_versions():

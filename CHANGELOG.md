@@ -4,6 +4,30 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 4.0.0 (2026-10-23): the NBA model sees who's playing
+- New NBA model, `nba-v2-refit-20261023`. Every player gets a rating from their box scores (scoring,
+  shooting efficiency, rebounds, assists, turnovers, steals, blocks, fouls), weighted by their
+  minutes. Ratings update after every game but move only as evidence builds up, so one big night
+  doesn't swing them. When a rotation player is out, the team's projected margin drops by that
+  player's value.
+- Tested before going live (plan `plans/player_impact.md`, results `backtest_results/players.md`):
+  on the 2020-21 to 2022-23 check seasons, log loss improved from 0.6433 to 0.6340 and calibration's
+  worst bucket from 13.9 to 5.3 points off. Plus-minus and a self-correcting absence weight added
+  nothing and were left out. It still trails the market, and flagged bets still lose in the backtest,
+  so flags stay paper only.
+- Before each prediction the engine reads ESPN's injury list: rotation players marked Out count as
+  missing. Day-to-day players count as playing and show up as a warning. If the list can't be read,
+  NBA predictions stop instead of guessing.
+- Claude's NBA injury checks now record confirmed absences as sourced facts (`news.py out`, or
+  `news.py playing` when ESPN's list is wrong), and the formula turns them into the claude
+  probability. This replaces the 3-point cap for missing players. Capped adjustments remain for what
+  the formula can't see, like a star returning from a long injury.
+- Card backs show "Missing players" with each one's effect on the team's win chance.
+- Rankings use the same absence-aware ratings.
+- Known limitation: player ratings are pulled toward replacement level over the summer, so in a
+  season's first 15-20 games even stars count for little (Jokic is worth 1.2 points today, versus
+  4.7 at the end of last season). A fix needs its own test and is in the queue.
+
 ## 3.1.1 (2026-10-22): smoother slate
 - Logging a pick keeps your league filter (it's now part of the page address, so reloads and
   bookmarks keep it too) and brings you back to the card you picked.

@@ -10,10 +10,7 @@ first (CLAUDE.md).
 
 ## In progress
 
-- **Basketball player-impact model (started 2026-10-23)**: plan `plans/player_impact.md`. Steps 1-2 done
-  (box scores loaded; idea 2, the production rating, passed: check log loss 0.6433 -> 0.6340). Step 3
-  wired and tested; **waiting for Talal to run `python3 backtest_players.py apply`** to put
-  nba-v2-refit-20261023 live (v4.0.0).
+(nothing right now)
 
 ## Up next
 
@@ -27,7 +24,7 @@ can't become an edge against the market. What can is information the market does
 measured player availability and sourced news before the line moves. Talal chose to keep the engine as
 is (option 1); the anchored model is recorded, not deployed.
 
-3. **Basketball player-impact model** (in progress, see above). Follow-ups, in order:
+3. **Basketball player-impact model follow-ups** (the NBA model itself went live 2026-10-23, v4.0.0). In order:
    - **Player display release (MINOR)**: player OVR (frozen bell curve of rotation-player seasons),
      tap a team for its roster, player profiles (OVR, position, status, recent games, Claude's notes,
      ESPN headshot or a generic icon), player rankings under each league, sortable by position.
@@ -68,6 +65,8 @@ Paused (engine accuracy only; revisit if live scorecards ever show the engine be
 - **International soccer** (build order #5).
 
 ## Done
+
+- **NBA player-impact model** (2026-10-23, v4.0.0): `nba-v2-refit-20261023`, plan `plans/player_impact.md`.
 
 - 2026-10-23: factor study (`backtest_results/factor_study.md`): the market price is the only factor that matters; the engine adds ~0 beyond it except in college basketball (+0.15); NFL favorite size is the one small market miss
 - 2026-10-22 v3.1.1: filter kept after logging a pick; phone scrolling fix (flat cards on touch screens); modern look and light animations
