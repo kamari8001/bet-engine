@@ -24,7 +24,24 @@
       2006,
       2025
     ],
-    "note": "Refit on all seasons after the final exam; judged on live results only."
+    "note": "Refit on all seasons after the final exam; judged on live results only.",
+    "anchor": {
+      "version": "anchor-v1-20261023",
+      "terms": {
+        "c": -0.01431,
+        "w": 0.26068
+      },
+      "early_games": 4,
+      "tune_seasons": [
+        2006,
+        2018
+      ],
+      "check_seasons": [
+        2019,
+        2022
+      ],
+      "note": "Market-anchored engine (plans/anchor.md); shadow-tested live, not the engine."
+    }
   },
   "ncaaf": {
     "version": "ncaaf-v2-refit-20261015",
@@ -65,7 +82,24 @@
       2014,
       2025
     ],
-    "note": "Refit on all seasons after the final exam; judged on live results only."
+    "note": "Refit on all seasons after the final exam; judged on live results only.",
+    "anchor": {
+      "version": "anchor-v1-20261023",
+      "terms": {
+        "c": 0.00864,
+        "w": 0.07962
+      },
+      "early_games": 4,
+      "tune_seasons": [
+        2021,
+        2023
+      ],
+      "check_seasons": [
+        2024,
+        2025
+      ],
+      "note": "Market-anchored engine (plans/anchor.md); shadow-tested live, not the engine."
+    }
   },
   "nba": {
     "version": "nba-v1-refit-20261019",
@@ -90,7 +124,24 @@
       2015,
       2026
     ],
-    "note": "Refit on all seasons after the final exam; judged on live results only."
+    "note": "Refit on all seasons after the final exam; judged on live results only.",
+    "anchor": {
+      "version": "anchor-v1-20261023",
+      "terms": {
+        "c": -0.00852,
+        "w": -0.01732
+      },
+      "early_games": 10,
+      "tune_seasons": [
+        2015,
+        2020
+      ],
+      "check_seasons": [
+        2021,
+        2023
+      ],
+      "note": "Market-anchored engine (plans/anchor.md); shadow-tested live, not the engine."
+    }
   },
   "ncaab": {
     "version": "ncaab-v1-refit-20261019",
@@ -115,7 +166,25 @@
       2015,
       2026
     ],
-    "note": "Refit on all seasons after the final exam; judged on live results only."
+    "note": "Refit on all seasons after the final exam; judged on live results only.",
+    "anchor": {
+      "version": "anchor-v1-20261023",
+      "terms": {
+        "c": 0.08874,
+        "w": -0.11036,
+        "w_big": 0.23676
+      },
+      "early_games": 10,
+      "tune_seasons": [
+        2023,
+        2024
+      ],
+      "check_seasons": [
+        2025,
+        2026
+      ],
+      "note": "Market-anchored engine (plans/anchor.md); shadow-tested live, not the engine."
+    }
   },
   "soccer_club": {
     "version": "soccer-v2-refit-20261021",
@@ -152,6 +221,22 @@
         2016,
         2026
       ]
+    },
+    "anchor": {
+      "version": "anchor-v1-20261023",
+      "terms": {
+        "w": -0.19
+      },
+      "early_games": 5,
+      "tune_seasons": [
+        2013,
+        2019
+      ],
+      "check_seasons": [
+        2020,
+        2022
+      ],
+      "note": "Market-anchored engine (plans/anchor.md); shadow-tested live, not the engine."
     }
   }
 }

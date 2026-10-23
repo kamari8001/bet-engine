@@ -10,7 +10,7 @@ first (CLAUDE.md).
 
 ## In progress
 
-_(nothing)_
+- **Market-anchored engine (items 3 + 4 merged)**: plan `plans/anchor.md`; fitting on tune/check seasons 2026-10-23; next: live shadow challengers `market_anchor_v2_<sport>`, then Talal decides on promotion to the engine.
 
 ## Up next
 
@@ -61,6 +61,7 @@ the biggest build (player impact) comes once live NBA data shows how much injuri
 
 ## Done
 
+- 2026-10-23: factor study (`backtest_results/factor_study.md`): the market price is the only factor that matters; the engine adds ~0 beyond it except in college basketball (+0.15); NFL favorite size is the one small market miss
 - 2026-10-22 v3.1.1: filter kept after logging a pick; phone scrolling fix (flat cards on touch screens); modern look and light animations
 - 2026-10-22 v3.1.0: Champions League live (learned league strengths; final exam -1.0%); soccer rankings use learned strengths
 - 2026-10-21 v3.0.0: club soccer live (Big 5, three-way predictions, grading with RPS, Soccer tab, automation, 8 AM news check); $30 Odds API plan bought
