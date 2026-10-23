@@ -52,3 +52,13 @@ Builds on `plans/player_impact.md` (nba-v2, idea 2 live since v4.0.0).
 `player_model.py` (the two ideas, switched off by default so nba-v2 is unchanged), `backtest_players.py`
 (ideas 5 and 6, early-season report), `predict.py` / `news.py` (idea 6 live, only if kept),
 results appended to `backtest_results/players.md`.
+
+## Results (2026-10-23; full lines in `backtest_results/players.md`)
+Neither idea is kept; nba-v2 stays as it is (no refit, no version change).
+- #5 (pull toward the average player): check 0.6347 vs 0.6340, worse, and worse on the first 20
+  games of a season too (0.6597 vs 0.6587). The data prefers the summer pull toward replacement:
+  last season's numbers overstate players at the start of a new season (age, new roles, new teams).
+  So the "low early values" are what predicts best, not a flaw to fix.
+- #6 (count returning players who haven't played yet): check 0.6339, a 0.0001 gain, below the 0.001
+  bar; first 20 games 0.6590 vs 0.6587. No measurable value in history.
+- Both remain in `player_model.py` as switches (`regress_to`, `carry_unseen`), off by default.

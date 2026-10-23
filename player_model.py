@@ -48,6 +48,9 @@ DEFAULTS = {
     "min_mpg": 10.0,        # rotation = players at or above this many minutes per game
     "window_days": 21,      # a player counts as on the roster if seen with the team this recently
     "idea": 2,              # 1 = minutes only, 2 = production, 3 = production + impact
+    # Early-season ideas (plans/player_early_season.md); off = nba-v2 exactly
+    "regress_to": "replacement",   # idea 5: "average" = pull toward last season's average rotation player
+    "carry_unseen": False,         # idea 6: last season's rotation players count as missing until they first play
 }
 
 
@@ -75,6 +78,8 @@ class PlayerBook:
         self.scale = dict(SCALE_DEFAULT)
         self.season = None
         self.season_snapshots = {}   # season -> [(player id, name, team, position, value, rating_z, mpg)] at season end
+        self.carry = {}              # idea 6: team -> [player ids] in its rotation at the end of last season
+        self.first_play = {}         # idea 6 (history stand-in): (player id, season) -> (first date played, team)
 
     # ---------- ratings ----------
     def _state(self, pid):
@@ -109,10 +114,16 @@ class PlayerBook:
                     mu = sum(xs) / len(xs)
                     sd = math.sqrt(sum((x - mu) ** 2 for x in xs) / len(xs)) or 1.0
                     self.scale[k] = (mu, sd)
+            self.carry = defaultdict(list)
+            for pid, s in self.st.items():
+                if s in rot:
+                    self.carry[s["team"]].append(pid)
             r = self.p["season_regress"]
+            target = PRIOR if self.p.get("regress_to", "replacement") == "replacement" else \
+                {"prod": self.scale["prod"][0], "imp": self.scale["imp"][0]}
             for s in self.st.values():
-                s["prod"] += r * (PRIOR["prod"] - s["prod"])
-                s["imp"] += r * (PRIOR["imp"] - s["imp"])
+                s["prod"] += r * (target["prod"] - s["prod"])
+                s["imp"] += r * (target["imp"] - s["imp"])
                 s["n"] *= 1 - r
         self.season = season
 
@@ -135,6 +146,16 @@ class PlayerBook:
             tot, lst = 0.0, []
             for pid, s in self.rotation(team, on_date):
                 if (team, pid) not in played:
+                    v = self.value(s)
+                    tot += v
+                    lst.append((s["name"], round(v, 3)))
+            if self.p.get("carry_unseen"):
+                seen = {pid for pid, _ in self.rotation(team, on_date)}
+                for pid in self.carry.get(team, []):
+                    fp = self.first_play.get((pid, g["season"]))
+                    if pid in seen or (team, pid) in played or not fp or fp[1] != team or fp[0] <= on_date:
+                        continue
+                    s = self.st[pid]
                     v = self.value(s)
                     tot += v
                     lst.append((s["name"], round(v, 3)))
@@ -163,6 +184,8 @@ def features(games, box, params=None):
     """{game id: (home missing, away missing, absent lists)} for every game, walk-forward.
     Returns (features, final PlayerBook)."""
     book = PlayerBook(params)
+    if book.p.get("carry_unseen"):
+        book.first_play = first_appearances(games, box)
     out = {}
     for g in games:
         rows = box.get(g["id"], [])
@@ -170,6 +193,17 @@ def features(games, box, params=None):
         if rows:
             book.after_game(g, rows)
     return out, book
+
+
+def first_appearances(games, box):
+    """(player id, season) -> (date of first game played that season, team): the history stand-in for
+    "on this team's roster but injured" in idea 6 (plans/player_early_season.md)."""
+    out = {}
+    for g in games:
+        for r in box.get(g["id"], []):
+            if r["played"] and r["minutes"] and r["minutes"] >= 1 and (r["player_id"], g["season"]) not in out:
+                out[(r["player_id"], g["season"])] = (date.fromisoformat(g["game_date_et"]), r["team"])
+    return out
 
 
 # ---------- live use (nba-v2) ----------

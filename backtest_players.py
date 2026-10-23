@@ -4,6 +4,8 @@ Usage:
   python3 backtest_players.py base              the team model alone on tune and check seasons
   python3 backtest_players.py idea 1|2|3|4      tune that idea's settings on the tune seasons, report check seasons
   python3 backtest_players.py ablate            all four ideas in order, applying the pre-registered keep rules
+  python3 backtest_players.py early             early-season ideas 5 and 6 (plans/player_early_season.md) on top of
+                                                the kept idea 2, bar 0.001; first-20-games vs rest report
   python3 backtest_players.py look              second look: the kept settings on the exam seasons (already used once
                                                 for nba-v1), plus whether the engine adds anything beside the market
   python3 backtest_players.py save              save the kept settings (players_best.json) under nba.players in model_params.json
@@ -35,11 +37,16 @@ from odds_math import decimal_odds
 TUNE, CHECK, FINAL = PERIODS["nba"]["tune"], PERIODS["nba"]["check"], PERIODS["nba"]["final"]
 BEST_PATH = RESULTS_DIR / "players_best.json"
 PENDING_PATH = RESULTS_DIR / "nba_refit_pending.json"
+EARLY_BEST_PATH = RESULTS_DIR / "players_best_early.json"
 MIN_GAIN = 0.002
 IDEA_PARAMS = {1: ["abs_coef"], 2: ["abs_coef", "alpha", "season_regress", "repl_z"],
                3: ["abs_coef", "alpha", "season_regress", "repl_z", "w_imp"],
                4: ["abs_coef", "alpha", "season_regress", "repl_z", "w_imp", "abs_k"]}
+IDEA_PARAMS[5] = IDEA_PARAMS[6] = IDEA_PARAMS[2]
+IDEA_FLAGS = {5: {"regress_to": "average"}, 6: {"carry_unseen": True}}   # idea 6 also gets 5's flag if 5 is kept
 START = {"abs_coef": 3.0, "abs_k": 0.02}
+EARLY_BAR = 0.001
+EARLY_GAMES = 20
 
 
 def team_params():
@@ -58,9 +65,10 @@ def attach(games, feats):
 
 def run(games, box, tparams, pparams, idea):
     pp = {k: v for k, v in pparams.items() if k not in ("abs_coef", "abs_k")}
-    pp["idea"] = min(idea, 3) if idea else 2
-    if idea == 2:
+    pp["idea"] = 2 if not idea or idea >= 5 else min(idea, 3)
+    if idea in (2, 5, 6):
         pp["w_imp"] = 0.0
+    pp.update(IDEA_FLAGS.get(idea, {}))
     feats, book = pm.features(games, box, pp)
     attach(games, feats)
     tp = dict(tparams, abs_coef=pparams.get("abs_coef", 0.0), abs_k=pparams.get("abs_k", 0.0) if idea == 4 else 0.0)
@@ -132,6 +140,51 @@ def report(label, games, preds, mkt):
     mm, mk, nb, roi = market_gap(games, preds, mkt, CHECK)
     print(f"{label:<28} tune {t:.4f}  check {c:.4f}  worst bucket {wb * 100:.1f}  | vs market (check): {mm:.4f} vs {mk:.4f} | flags {nb}, ROI {roi:+.1%}")
     return {"tune": t, "check": c, "worst_bucket": wb, "model_vs_market": [mm, mk], "flags": nb, "roi": roi}
+
+
+def early_split(games, preds, period):
+    """(log loss on games where either team is in its first EARLY_GAMES of the season, n, log loss on the rest, n)."""
+    count, early, rest = {}, [], []
+    for g in games:
+        key = (g["season"],)
+        nh, na = count.get(key + (g["home_team"],), 0), count.get(key + (g["away_team"],), 0)
+        count[key + (g["home_team"],)], count[key + (g["away_team"],)] = nh + 1, na + 1
+        if period[0] <= g["season"] <= period[1] and g["home_score"] != g["away_score"]:
+            (early if min(nh, na) < EARLY_GAMES else rest).append((preds[g["id"]][2], int(g["home_score"] > g["away_score"])))
+    return log_loss(early), len(early), log_loss(rest), len(rest)
+
+
+def early(games, box, tparams, mkt):
+    """Ideas 5 and 6 on top of the kept idea 2 (players_best.json), pre-registered bar EARLY_BAR."""
+    best = json.loads(BEST_PATH.read_text())
+    params, base_flags = dict(best["params"]), {}
+    preds, _ = run(games, box, tparams, params, 2)
+    r0 = report("idea 2 (live design)", games, preds, mkt)
+    e0 = early_split(games, preds, CHECK)
+    lines = [f"\n## Early-season ideas {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC (plans/player_early_season.md)\n",
+             f"idea 2 (starting point): check {r0['check']:.4f}, worst bucket {r0['worst_bucket'] * 100:.1f}; "
+             f"check first {EARLY_GAMES} games {e0[0]:.4f} ({e0[1]}), rest {e0[2]:.4f} ({e0[3]})"]
+    best_check, kept = r0["check"], []
+    for idea in (5, 6):
+        IDEA_FLAGS[idea] = {**base_flags, **IDEA_FLAGS[idea]}
+        p = tune(games, box, tparams, idea, params)
+        preds, _ = run(games, box, tparams, p, idea)
+        r = report(f"idea {idea}", games, preds, mkt)
+        e = early_split(games, preds, CHECK)
+        keep = best_check - r["check"] >= EARLY_BAR and r["worst_bucket"] <= max(0.08, r0["worst_bucket"] + 1e-9)
+        lines.append(f"idea {idea} {json.dumps(IDEA_FLAGS[idea])}: {json.dumps({k: round(v, 4) for k, v in p.items()})} -> "
+                     f"tune {r['tune']:.4f}, check {r['check']:.4f} ({r['check'] - best_check:+.4f} vs best so far), "
+                     f"worst bucket {r['worst_bucket'] * 100:.1f}; first {EARLY_GAMES} games {e[0]:.4f} ({e[0] - e0[0]:+.4f}), "
+                     f"rest {e[2]:.4f} ({e[2] - e0[2]:+.4f}); vs market {r['model_vs_market'][0]:.4f} / "
+                     f"{r['model_vs_market'][1]:.4f}, flags {r['flags']} ROI {r['roi']:+.1%} -> {'KEEP' if keep else 'drop'}")
+        if keep:
+            best_check, params, base_flags = r["check"], p, dict(IDEA_FLAGS[idea])
+            kept.append(idea)
+    lines.append(f"\nKept: {', '.join(map(str, kept)) or 'none'} (check {best_check:.4f})")
+    if kept:
+        EARLY_BEST_PATH.write_text(json.dumps({"idea": 2, "flags": base_flags, "params": params, "check": best_check,
+                                               "kept": kept}, indent=2) + "\n")
+    return lines
 
 
 def beside_market(games, preds, mkt, fit_period, test_period):
@@ -272,7 +325,7 @@ def main():
     if a[:1] == ["apply"]:
         apply()
         return
-    if not a or a[0] not in ("base", "idea", "ablate", "look", "save", "refit", "apply"):
+    if not a or a[0] not in ("base", "idea", "ablate", "look", "save", "refit", "apply", "early"):
         sys.exit(__doc__)
     conn = db.connect()
     box = pm.load_box(conn)
@@ -303,6 +356,11 @@ def main():
     lines = [f"\n## Run {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC: {a}\n",
              f"base: tune {base['tune']:.4f}, check {base['check']:.4f}, worst bucket {base['worst_bucket'] * 100:.1f}, "
              f"vs market {base['model_vs_market'][0]:.4f} / {base['model_vs_market'][1]:.4f}, flags {base['flags']} ROI {base['roi']:+.1%}"]
+    if a[0] == "early":
+        lines += early(games, box, tparams, mkt)
+        results_path.write_text(results_path.read_text() + "\n".join(lines) + "\n")
+        print("\n".join(lines))
+        return
     if a[0] == "look":
         lines += look(games, box, tparams, mkt, base_preds)
         results_path.write_text(results_path.read_text() + "\n".join(lines) + "\n")

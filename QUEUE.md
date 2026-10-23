@@ -28,10 +28,6 @@ is (option 1); the anchored model is recorded, not deployed.
    - **Player display release (MINOR)**: player OVR (frozen bell curve of rotation-player seasons),
      tap a team for its roster, player profiles (OVR, position, status, recent games, Claude's notes,
      ESPN headshot or a generic icon), player rankings under each league, sortable by position.
-   - **Early-season player values (needs a pre-registered test)**: ratings are pulled toward
-     replacement level over the summer, so stars count for little in a season's first 15-20 games, and
-     players who haven't played yet this season aren't counted as missing. Idea: regress toward the
-     league average and carry last season's value into the first games.
    - **College basketball player model** (CBBD box scores; its own plan).
 4. **Sharper news timing**: use the morning line as the reference and get Claude's sourced absences
    recorded before the line moves (after item 3 shows which absences matter).
@@ -66,6 +62,7 @@ Paused (engine accuracy only; revisit if live scorecards ever show the engine be
 
 ## Done
 
+- **Early-season player values** (2026-10-23, no version change): both ideas tested, neither kept; the summer pull toward replacement predicts best (`plans/player_early_season.md`).
 - **NBA player-impact model** (2026-10-23, v4.0.0): `nba-v2-refit-20261023`, plan `plans/player_impact.md`.
 
 - 2026-10-23: factor study (`backtest_results/factor_study.md`): the market price is the only factor that matters; the engine adds ~0 beyond it except in college basketball (+0.15); NFL favorite size is the one small market miss

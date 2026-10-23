@@ -53,3 +53,15 @@ Information only: does the engine add anything beside the market price? Fit mark
 
 Team {"k": 0.02954, "hfa_start": 1.89925, "hfa_rate": 0.0, "regress": 0.4478, "cap": 30.24087, "sigma": 11.00501, "new_team": 0.0, "avg_rate": 0.002, "rest_coef": 0.61971, "rest_cap": 3, "abs_coef": 1.03099}; players {"alpha": 0.06973, "season_regress": 0.597, "repl_z": -0.76494}.
 In-sample on 2015-2026 (used for fitting, so NOT a test): log loss 0.6095, worst bucket 2.0, vs market 0.6095 / 0.5941, flags 8905 ROI -4.6%. Replaces nba-v1-refit-20261019.
+
+## Run 2026-10-23 20:08 UTC: ['early']
+
+base: tune 0.6112, check 0.6433, worst bucket 13.9, vs market 0.6433 / 0.6173, flags 2557 ROI -3.3%
+
+## Early-season ideas 2026-10-23 20:08 UTC (plans/player_early_season.md)
+
+idea 2 (starting point): check 0.6340, worst bucket 5.3; check first 20 games 0.6587 (927), rest 0.6261 (2887)
+idea 5 {"regress_to": "average"}: {"alpha": 0.0792, "season_regress": 0.3815, "repl_z": -0.2987, "abs_coef": 1.1789} -> tune 0.6057, check 0.6347 (+0.0006 vs best so far), worst bucket 5.9; first 20 games 0.6597 (+0.0010), rest 0.6266 (+0.0005); vs market 0.6347 / 0.6173, flags 2304 ROI -2.8% -> drop
+idea 6 {"carry_unseen": true}: {"alpha": 0.074, "season_regress": 0.5417, "repl_z": -0.3924, "abs_coef": 1.2189} -> tune 0.6051, check 0.6340 (-0.0001 vs best so far), worst bucket 5.2; first 20 games 0.6590 (+0.0002), rest 0.6259 (-0.0002); vs market 0.6340 / 0.6173, flags 2330 ROI -2.3% -> drop
+
+Kept: none (check 0.6340)
