@@ -4,7 +4,9 @@ Usage:
   python3 backtest_players.py base              the team model alone on tune and check seasons
   python3 backtest_players.py idea 1|2|3|4      tune that idea's settings on the tune seasons, report check seasons
   python3 backtest_players.py ablate            all four ideas in order, applying the pre-registered keep rules
-  python3 backtest_players.py save <idea>       save that idea's tuned settings under nba.players in model_params.json
+  python3 backtest_players.py look              second look: the kept settings on the exam seasons (already used once
+                                                for nba-v1), plus whether the engine adds anything beside the market
+  python3 backtest_players.py save              save the kept settings (players_best.json) under nba.players in model_params.json
 
 Team settings are the pre-exam nba-v1 (from final_runs.jsonl) so nothing here saw the exam seasons.
 Ideas: 1 minutes only; 2 production rating; 3 production + impact; 4 online correction of the
@@ -19,13 +21,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import db
+import factor_study
 import model
 import player_model as pm
 from backtest import PERIODS, log_loss, market_by_game, RESULTS_DIR
 import config
 from odds_math import decimal_odds
 
-TUNE, CHECK = PERIODS["nba"]["tune"], PERIODS["nba"]["check"]
+TUNE, CHECK, FINAL = PERIODS["nba"]["tune"], PERIODS["nba"]["check"], PERIODS["nba"]["final"]
+BEST_PATH = RESULTS_DIR / "players_best.json"
 MIN_GAIN = 0.002
 IDEA_PARAMS = {1: ["abs_coef"], 2: ["abs_coef", "alpha", "season_regress", "repl_z"],
                3: ["abs_coef", "alpha", "season_regress", "repl_z", "w_imp"],
@@ -125,9 +129,50 @@ def report(label, games, preds, mkt):
     return {"tune": t, "check": c, "worst_bucket": wb, "model_vs_market": [mm, mk], "flags": nb, "roi": roi}
 
 
+def beside_market(games, preds, mkt, fit_period, test_period):
+    """Information only: fit market + c + w*(engine - market) in log-odds on fit_period, test on test_period.
+    Returns (w, market-alone log loss, market + engine log loss, games) on test_period."""
+    logit = lambda q: math.log(q / (1 - q))
+    def rows(period):
+        out = []
+        for g in games:
+            m = mkt.get(g["id"])
+            if period[0] <= g["season"] <= period[1] and m and m["p_home"] and g["home_score"] != g["away_score"]:
+                p = min(max(preds[g["id"]][2], 1e-6), 1 - 1e-6)
+                out.append((logit(m["p_home"]), logit(p) - logit(m["p_home"]), int(g["home_score"] > g["away_score"])))
+        return out
+    fr, tr = rows(fit_period), rows(test_period)
+    w0 = factor_study.fit([[] for _ in fr], [r[2] for r in fr], [r[0] for r in fr])
+    w1 = factor_study.fit([[r[1]] for r in fr], [r[2] for r in fr], [r[0] for r in fr])
+    ll = lambda w, use: log_loss([(factor_study.sigmoid(r[0] + w[0] + (w[1] * r[1] if use else 0)), r[2]) for r in tr])
+    return w1[1], ll(w0, False), ll(w1, True), len(tr)
+
+
+def look(games, box, tparams, mkt, base_preds):
+    best = json.loads(BEST_PATH.read_text())
+    preds, _ = run(games, box, tparams, best["params"], best["idea"])
+    lines = [f"\n## Second look {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC: idea {best['idea']} on the exam seasons "
+             f"{FINAL[0]}-{FINAL[1]}\n",
+             "These seasons were already used once (the nba-v1 final exam), so this is a second look, not an "
+             "untouched test. Settings tuned on tune seasons only.\n",
+             "| model | log loss | worst bucket | model vs market log loss | flagged bets | ROI |", "|---|---|---|---|---|---|"]
+    for label, p in (("team model only (nba-v1 pre-exam)", base_preds), (f"with players (idea {best['idea']})", preds)):
+        mm, mk, nb, roi = market_gap(games, p, mkt, FINAL)
+        lines.append(f"| {label} | {period_ll(games, p, FINAL):.4f} | {worst_bucket(games, p, FINAL) * 100:.1f} | "
+                     f"{mm:.4f} vs {mk:.4f} | {nb} | {roi:+.1%} |")
+    lines += ["\nInformation only: does the engine add anything beside the market price? Fit market + c + w x "
+              "(engine - market) in log-odds on the tune seasons, test on later seasons (w = 0 means the engine adds nothing).\n",
+              "| model | test seasons | w | market alone | market + engine | games |", "|---|---|---|---|---|---|"]
+    for label, p in (("team model only", base_preds), ("with players", preds)):
+        for per in (CHECK, FINAL):
+            w, l0, l1, n = beside_market(games, p, mkt, TUNE, per)
+            lines.append(f"| {label} | {per[0]}-{per[1]} | {w:+.3f} | {l0:.4f} | {l1:.4f} | {n} |")
+    return lines
+
+
 def main():
     a = sys.argv[1:]
-    if not a or a[0] not in ("base", "idea", "ablate", "save"):
+    if not a or a[0] not in ("base", "idea", "ablate", "look", "save"):
         sys.exit(__doc__)
     conn = db.connect()
     box = pm.load_box(conn)
@@ -139,11 +184,28 @@ def main():
     base = report("base (no players)", games, base_preds, mkt)
     if a[0] == "base":
         return
+    if a[0] == "save":
+        best = json.loads(BEST_PATH.read_text())
+        idea, p = best["idea"], best["params"]
+        saved = json.loads(model.PARAMS_PATH.read_text())
+        saved["nba"]["players"] = {"version": f"players-v1-{datetime.now(timezone.utc):%Y%m%d}", "idea": idea,
+                                   "params": {k: v for k, v in p.items() if k not in ("abs_coef", "abs_k")},
+                                   "abs_coef": p.get("abs_coef", 0.0), "abs_k": p.get("abs_k", 0.0) if idea == 4 else 0.0,
+                                   "tune_seasons": list(TUNE), "check_seasons": list(CHECK),
+                                   "note": "Player-impact feature (plans/player_impact.md); tuned on tune seasons."}
+        model.PARAMS_PATH.write_text(json.dumps(saved, indent=2) + "\n")
+        print(f"Saved idea {idea} under nba.players in model_params.json")
+        return
     results_path = RESULTS_DIR / "players.md"
     lines = [f"\n## Run {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC: {a}\n",
              f"base: tune {base['tune']:.4f}, check {base['check']:.4f}, worst bucket {base['worst_bucket'] * 100:.1f}, "
              f"vs market {base['model_vs_market'][0]:.4f} / {base['model_vs_market'][1]:.4f}, flags {base['flags']} ROI {base['roi']:+.1%}"]
-    ideas = [int(a[1])] if a[0] in ("idea", "save") else [1, 2, 3, 4]
+    if a[0] == "look":
+        lines += look(games, box, tparams, mkt, base_preds)
+        results_path.write_text(results_path.read_text() + "\n".join(lines) + "\n")
+        print("\n".join(lines))
+        return
+    ideas = [int(a[1])] if a[0] == "idea" else [1, 2, 3, 4]
     best_check, best_params, start = base["check"], None, None
     saved_sets = {}
     for idea in ideas:
@@ -162,17 +224,8 @@ def main():
             best_check, best_params, start = r["check"], (idea, params), params
         elif a[0] == "ablate":
             start = params if idea == 1 else start   # later ideas start from the best kept settings
-    if a[0] == "save":
-        idea = ideas[0]
-        p = saved_sets[idea]
-        saved = json.loads(model.PARAMS_PATH.read_text())
-        saved["nba"]["players"] = {"version": f"players-v1-{datetime.now(timezone.utc):%Y%m%d}", "idea": idea,
-                                   "params": {k: v for k, v in p.items() if k not in ("abs_coef", "abs_k")},
-                                   "abs_coef": p.get("abs_coef", 0.0), "abs_k": p.get("abs_k", 0.0) if idea == 4 else 0.0,
-                                   "tune_seasons": list(TUNE), "check_seasons": list(CHECK),
-                                   "note": "Player-impact feature (plans/player_impact.md); tuned on tune seasons."}
-        model.PARAMS_PATH.write_text(json.dumps(saved, indent=2) + "\n")
-        print(f"Saved idea {idea} under nba.players in model_params.json")
+    if a[0] == "ablate" and best_params:
+        BEST_PATH.write_text(json.dumps({"idea": best_params[0], "params": best_params[1], "check": best_check}, indent=2) + "\n")
     lines.append(f"\nBest kept: {best_params[0] if best_params else 'none'} (check {best_check:.4f})")
     if not results_path.exists():
         results_path.write_text("# Player-impact feature: tune/check results\n\nPlan: `plans/player_impact.md`. "

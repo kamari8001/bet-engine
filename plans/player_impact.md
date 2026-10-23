@@ -87,3 +87,10 @@ on the slate opens its roster with player OVRs, injury status (ESPN's list) and 
 player has a profile (OVR, position, status, recent games and stats, Claude's recorded notes, ESPN
 headshot with a generic icon as fallback). The Rankings tab gets player rankings under each league,
 sortable by position. College basketball follows the NBA if the model passes.
+
+## Results (2026-10-23; full tables in `backtest_results/players.md`)
+Step 2 passes. Idea 2 (production rating) is kept: check-season log loss 0.6433 -> 0.6340 (bar: 0.002),
+calibration's worst bucket 13.9 -> 5.3. Ideas 3 (plus-minus) and 4 (online correction) don't clear the
+bar. Second look on the exam seasons: 0.6096 -> 0.6002. Still trails the market (0.6173 check, 0.5799
+exam); beside the market price it adds nothing in history. Going live as `nba-v2` (step 3) needs
+Talal's OK.
