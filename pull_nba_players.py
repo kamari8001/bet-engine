@@ -76,6 +76,9 @@ def fetch_game(conn, g):
                              number(get("OREB")), number(get("DREB")), number(get("AST")), number(get("TO")),
                              number(get("STL")), number(get("BLK")), number(get("PF")),
                              number(get("+/-")), a.get("reason") if dnp else None))
+    if not any(r[6] and r[6] > 0 for r in rows):
+        rows = []          # ESPN has no box score for this game ("--" minutes for everyone): store nothing,
+                           # so the feature treats it as unknown rather than as a whole roster absent
     conn.executemany("INSERT OR REPLACE INTO hist_player_games VALUES (" + ",".join("?" * 24) + ")", rows)
     conn.execute("INSERT OR REPLACE INTO hist_box_pulled (hist_game_id, players) VALUES (?, ?)", (g["id"], len(rows)))
     return len(rows)

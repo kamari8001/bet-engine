@@ -87,6 +87,9 @@ class RatingModel:
         self.team_season = {}           # team -> season of its last game
         self.games_this_season = {}     # team -> games played so far this season
         self.season = None
+        # Player absences (basketball, plans/player_impact.md): points of margin per unit of
+        # "missing value"; corrected online when abs_k > 0
+        self.abs_coef = self.p.get("abs_coef", 0.0)
 
     def _get(self, name):
         return self.p.get(name, 0.0)
@@ -161,6 +164,8 @@ class RatingModel:
         if "rest_coef" in self.p and g.get("home_rest_days") is not None and g.get("away_rest_days") is not None:
             cap = self.p.get("rest_cap", 7)
             bump += self.p["rest_coef"] * max(-cap, min(cap, g["home_rest_days"] - g["away_rest_days"]))
+        if self.abs_coef and g.get("home_missing") is not None and g.get("away_missing") is not None:
+            bump -= self.abs_coef * (g["home_missing"] - g["away_missing"])
         return bump
 
     def _points_view(self, g):
@@ -226,6 +231,11 @@ class RatingModel:
             self.edef[h] -= ekh * e_away
             self.epa_avg += self.p["avg_rate"] * ((g["home_off_epa"] + g["away_off_epa"]) / 2 - self.epa_avg)
 
+        if self._get("abs_k") and g.get("home_missing") is not None and g.get("away_missing") is not None:
+            # online correction of the absence coefficient: move it toward what this result implied
+            x = g["home_missing"] - g["away_missing"]
+            err = (g["home_score"] - g["away_score"]) - (home_pts - away_pts)
+            self.abs_coef = max(0.0, min(10.0, self.abs_coef - self._get("abs_k") * err * x / (1 + x * x)))
         self.games_this_season[h] = self.games_this_season.get(h, 0) + 1
         self.games_this_season[a] = self.games_this_season.get(a, 0) + 1
         self.avg += self.p["avg_rate"] * ((g["home_score"] + g["away_score"]) / 2 - self.avg)
