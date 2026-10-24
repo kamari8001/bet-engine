@@ -138,6 +138,16 @@ def main():
     expect_blocked("edit an absence", lambda: conn.execute("UPDATE player_facts SET player_name = 'X'"))
     expect_blocked("delete an absence", lambda: conn.execute("DELETE FROM player_facts"))
 
+    print("\n-- Injury events (news timing) --")
+    ievent = lambda **kw: conn.execute(
+        "INSERT INTO injury_events (game_id, team, player_id, player_name, old_status, new_status, value_pts,"
+        " missing_change, material, triggered, created_at) VALUES (:game_id, 'Test Home', '1', 'Test Guard', 'none',"
+        " 'Out', 2.0, 2.0, 1, 1, :created_at)", dict(dict(game_id=future, created_at=db.to_utc(datetime.now(timezone.utc))), **kw))
+    expect_ok("log an injury event before tip-off", lambda: ievent())
+    expect_blocked("a backdated injury event", lambda: ievent(created_at="2026-01-01 12:00:00"))
+    expect_blocked("edit an injury event", lambda: conn.execute("UPDATE injury_events SET new_status = 'Day-To-Day'"))
+    expect_blocked("delete an injury event", lambda: conn.execute("DELETE FROM injury_events"))
+
     print("\n-- Shadow challengers --")
     shadow_bet = lambda **kw: conn.execute(
         "INSERT INTO shadow_bets (challenger, game_id, side, team, price_ml, book, market_p, odds_captured_at)"
@@ -194,6 +204,7 @@ def main():
     expect_blocked("player absence after tip-off",
                    lambda: db.add_player_fact(conn, soon, "Test Home B", "Late Guard", "out",
                                               "https://example.com/x", "test"))
+    expect_blocked("injury event after tip-off", lambda: ievent(game_id=soon))
     expect_blocked("QB check after kickoff",
                    lambda: db.add_qb_check(conn, soon, "Test Home B", "Late QB",
                                            "https://example.com/x", "test"))

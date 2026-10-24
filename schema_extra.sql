@@ -442,3 +442,47 @@ BEGIN SELECT RAISE(ABORT, 'player facts can never be deleted'); END;
 -- Speed: the slate's per-card lookups (form, record, games played) filter past games by sport and
 -- season; without this index each one read the whole table (~4 s per page). Added 2026-10-23.
 CREATE INDEX IF NOT EXISTS hist_games_sport_season ON hist_games(sport, season);
+
+------------------------------------------------------------------------
+-- injury_events (NBA news timing, plans/news_timing.md): every injury-list status change we see for
+-- a rotation player in a game within 36 hours, stamped when we first saw it. missing_change = points
+-- of margin the team's missing value moved by (+ = the team got weaker). material = the team's total
+-- change at that look was 1.0+ points in a game within 24 hours; triggered = an odds pull and
+-- predictions were started right away. Same protections as the logbook.
+------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS injury_events (
+    id              INTEGER PRIMARY KEY,
+    game_id         INTEGER NOT NULL REFERENCES games(id),
+    team            TEXT NOT NULL,
+    player_id       TEXT NOT NULL,
+    player_name     TEXT NOT NULL,
+    old_status      TEXT NOT NULL,          -- 'none' = wasn't on the list
+    new_status      TEXT NOT NULL,
+    value_pts       REAL NOT NULL,
+    missing_change  REAL NOT NULL,
+    material        INTEGER NOT NULL CHECK (material IN (0, 1)),
+    triggered       INTEGER NOT NULL CHECK (triggered IN (0, 1)),
+    source          TEXT NOT NULL DEFAULT 'ESPN injury list',
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS injury_events_game ON injury_events(game_id, created_at);
+
+CREATE TRIGGER IF NOT EXISTS injury_events_must_be_current
+BEFORE INSERT ON injury_events
+WHEN abs(julianday(NEW.created_at) - julianday('now')) * 86400 > 5
+BEGIN
+    SELECT RAISE(ABORT, 'injury events must be stamped with the current time (no backdating)');
+END;
+
+CREATE TRIGGER IF NOT EXISTS injury_events_before_tip
+BEFORE INSERT ON injury_events
+WHEN datetime('now') >= (SELECT start_time_utc FROM games WHERE id = NEW.game_id)
+BEGIN
+    SELECT RAISE(ABORT, 'tip-off has passed: injury events are only logged before the game');
+END;
+
+CREATE TRIGGER IF NOT EXISTS injury_events_no_update BEFORE UPDATE ON injury_events
+BEGIN SELECT RAISE(ABORT, 'injury events can never be changed'); END;
+
+CREATE TRIGGER IF NOT EXISTS injury_events_no_delete BEFORE DELETE ON injury_events
+BEGIN SELECT RAISE(ABORT, 'injury events can never be deleted'); END;

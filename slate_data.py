@@ -467,7 +467,13 @@ def scorecard(conn, sport):
                 row[src] = sum((x[src] - x["y"]) ** 2 for x in common) / len(common)
             h2h.append(row)
     import shadow
-    return {"finished": len(games), "approx": approx, "tiles": tiles, "h2h": h2h,
+    news = None
+    if sport == "nba":
+        import injury_watch
+        rows, summary = injury_watch.news_timing(conn)
+        recorded = conn.execute("SELECT COUNT(*), SUM(material) FROM injury_events").fetchone()
+        news = {"rows": rows[-10:], "summary": summary, "events": recorded[0], "material": recorded[1] or 0}
+    return {"finished": len(games), "approx": approx, "tiles": tiles, "h2h": h2h, "news": news,
             "graded": len(stats["engine"]["rows"]), "shadow": shadow.report_data(conn, sport)}
 
 

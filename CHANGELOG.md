@@ -4,6 +4,17 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 4.2.0 (2026-10-24): NBA news timing
+- An injury watcher checks ESPN's NBA injury list every 10 minutes (8 AM to the day's last tip-off)
+  and records every status change for a rotation player, stamped when we first saw it.
+- When news moves a team's missing value by 1+ point of margin within 24 hours of tip-off, it pulls
+  odds and logs predictions right away (at most one extra pull per 15 minutes, 30 a day), so the
+  prediction sits next to the line at that moment instead of hours later.
+- NBA scorecard: a "News timing" panel. News CLV = how far the line kept moving after we saw the news.
+  Pre-registered bar (`plans/news_timing.md`): after 100 events the 95% range must sit above 0. If it
+  does, public injury news gives us a head start; if not, that route to an edge is closed.
+- No probabilities change: same model, just logged sooner.
+
 ## 4.1.0 (2026-10-23): NBA players
 - **Player OVR (1-99)** for every NBA rotation player, built from what the model charges when the
   player sits out (points of team margin per game). It's ranked among every rotation player-season

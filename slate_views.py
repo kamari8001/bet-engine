@@ -1153,5 +1153,25 @@ def scorecard_page(sport, sc):
                    f'<div class="note" style="margin-top:6px">Definitions and the bar are fixed in '
                    f'backtest_results/shadow_challengers.md. Eligible means you decide; it never switches on by itself.</div></div>'
                    ) if shadow_rows else ""
-    body = switch + tiles + approx + h2h_html + chart + shadow_html + rule8
+    news_html = ""
+    nw = sc.get("news")
+    if nw is not None:
+        sm = nw["summary"]
+        pct = lambda x: "" if x is None else f"{x:.0%}"
+        rng = f' (95% range {sm["ci"][0] * 100:+.2f} to {sm["ci"][1] * 100:+.2f})' if sm["ci"] else ""
+        line = (f'{sm["n"]} events, average news CLV {sm["mean"] * 100:+.2f} pts{rng}' if sm["n"]
+                else "no finished games with material news yet")
+        rows = "".join(
+            f'<tr><td class="l">{esc(r["when"])}<div class="note">{esc(r["game"])}</div></td><td class="l">{esc(r["news"])}</td>'
+            f'<td>{pct(r["morning"])}</td><td>{pct(r["at_pull"])}</td><td>{pct(r["close"])}</td>'
+            f'<td>{r["news_clv"] * 100:+.1f}</td></tr>' for r in nw["rows"])
+        table = (f'<table><tr><th class="l">seen</th><th class="l">news</th><th>morning</th><th>our pull</th><th>close</th>'
+                 f'<th>news CLV</th></tr>{rows}</table>') if rows else ""
+        news_html = (f'<div class="panel"><h2>News timing (are we early?)</h2><p class="note">ESPN&rsquo;s injury list is checked '
+                     f'every 10 minutes; when a team&rsquo;s missing value moves by 1+ point, odds are pulled and predictions logged '
+                     f'right away. News CLV = how far the line moved after our pull, toward the side the news favors (the % columns '
+                     f'are that side&rsquo;s no-vig chance). {nw["events"]} injury changes recorded, {nw["material"]} material.</p>'
+                     f'<p><b>{line}.</b> Status: {esc(sm["verdict"])}. Bar (set beforehand): after 100 events the 95% range must '
+                     f'sit above 0.</p>{table}</div>')
+    body = switch + tiles + approx + h2h_html + chart + news_html + shadow_html + rule8
     return page(f"{label} scorecard", "score", body, scripts=CHART_JS)

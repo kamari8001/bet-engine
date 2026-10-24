@@ -176,6 +176,18 @@ def due_tasks(conn, state, et, woke=False):
     return tasks
 
 
+WATCH_FROM_HOUR = 8     # NBA injury watcher (plans/news_timing.md): from 8 AM ET until the day's last tip-off
+
+
+def watch_due(conn, et):
+    """True when the NBA injury watcher should look: 8 AM ET or later and an NBA game still to start today."""
+    if et.hour < WATCH_FROM_HOUR:
+        return False
+    end_of_day = et.replace(hour=23, minute=59, second=59).astimezone(timezone.utc)
+    return conn.execute("SELECT 1 FROM games WHERE sport = 'nba' AND start_time_utc > ? AND start_time_utc <= ?",
+                        (db.to_utc(et.astimezone(timezone.utc)), db.to_utc(end_of_day))).fetchone() is not None
+
+
 def status(conn, state):
     et = now_et()
     print(f"Now: {et:%a %b %d, %I:%M %p} ET")
@@ -222,7 +234,8 @@ def main():
         state["last_run"] = db.to_utc(now)
         save_state(state)
     tasks = due_tasks(conn, state, now_et(), woke)
-    if not tasks:
+    watch = watch_due(conn, now_et())
+    if not tasks and not watch:
         if dry:
             print("Nothing due right now.")
         return
@@ -268,6 +281,11 @@ def main():
                 state[kind] = key
             save_state(state)
             log(f"{name}: {'done' if ok else 'FAILED'}")
+    if watch:
+        # every run: quick when nothing changed; on material news it pulls NBA odds (1 credit) itself
+        if dry:
+            print("NBA injury watcher:")
+        run_steps("NBA injury watcher", [["injury_watch.py", "run"]], dry)
 
 
 if __name__ == "__main__":

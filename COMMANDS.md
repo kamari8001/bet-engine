@@ -83,6 +83,7 @@ Typical order: `pull_games` → `pull_odds` → `pull_history --current` → `pr
 | `python3 news.py players <id>` | NBA: both teams' rotations (the players the model counts), each player's value in points, ESPN's injury status, and absences already recorded |
 | `python3 news.py out <id> <team> "<Name>" "<link>" "<reason>"` | NBA: records that a rotation player will NOT play (a fact, like a confirmed QB; the formula turns it into the claude probability). For absences ESPN's injury list doesn't show as Out yet. |
 | `python3 news.py playing <id> <team> "<Name>" "<link>" "<reason>"` | NBA: records that a player ESPN lists as Out WILL play (overrides the injury list) |
+| `python3 injury_watch.py report` | NBA news timing (plan `plans/news_timing.md`): each material injury event with the line at the morning, at our pull and at the close, and the news CLV test vs its bar. `run` = one look at ESPN's injury list (the automation does it every 10 minutes; on material news it pulls NBA odds, 1 credit, and logs predictions). |
 
 ## Cancelled or postponed games
 

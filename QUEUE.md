@@ -27,8 +27,6 @@ is (option 1); the anchored model is recorded, not deployed.
 3. **Check ESPN's college basketball injury list after Nov 3** (is it filled in during the season?). If it
    is, a possible shadow test of the college player rating (it narrowly missed its bar; see
    `plans/college_player_impact.md`).
-4. **Sharper news timing**: use the morning line as the reference and get Claude's sourced absences
-   recorded before the line moves (after item 3 shows which absences matter).
 5. **Soccer xG model**: shadow-only until a few seasons of expected-goals data exist.
 
 Paused (engine accuracy only; revisit if live scorecards ever show the engine beating the closing line):
@@ -39,6 +37,7 @@ Paused (engine accuracy only; revisit if live scorecards ever show the engine be
 
 ## Waiting on a date or on data
 
+- **NBA news timing test** (v4.2.0): 100 material injury events, then the verdict (`python3 injury_watch.py report`; progress look at 50). If we're early, extend to NFL QB news and soccer team news.
 - **Each summer (from July 2027):** add promoted soccer clubs to `teams.SOCCER_TEAMS` (checked against football-data, ESPN, The Odds API) before the season starts.
 - **200 graded games per sport:** evidence-based Low / Medium / High confidence, and
   rule-8 blending by track record.
@@ -60,6 +59,7 @@ Paused (engine accuracy only; revisit if live scorecards ever show the engine be
 
 ## Done
 
+- **Sharper news timing, NBA** (2026-10-24, v4.2.0): injury watcher, instant odds + predictions on material news, news-timing panel (`plans/news_timing.md`).
 - **College basketball player model** (2026-10-24, no version change): box scores loaded (daily refresh); tested, neither idea cleared the bar (production rating +0.0015 vs 0.002 needed), so nothing went live (`plans/college_player_impact.md`).
 - **Player display release** (2026-10-23, v4.1.0): player OVR, rosters, profiles, player rankings (`plans/player_display.md`).
 - **Early-season player values** (2026-10-23, no version change): both ideas tested, neither kept; the summer pull toward replacement predicts best (`plans/player_early_season.md`).
