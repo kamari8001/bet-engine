@@ -47,3 +47,20 @@ NBA model that went live in v4.0.0 (`plans/player_impact.md`); this file only re
   only reliable absence source.
 - Refit on all seasons, staged; Talal runs `apply`. Card back, rankings and player pages follow the
   NBA versions.
+
+## Results (2026-10-24; full lines in `backtest_results/players_ncaab.md`)
+Step 1 done: 68,806 games, 1.34 million player rows, 212 CBBD calls; CBBD has no box score for 2,758
+games (4%, checked directly for two of them), treated as "absences unknown". Daily refresh in the
+morning routine.
+
+Step 2: **neither idea clears the pre-registered bar; no college player model goes live.**
+- #1 minutes only: check 0.5124 vs 0.5125 (the tuner shrank its weight to almost nothing). Dropped.
+- #2 production rating: check 0.5110, a 0.0015 gain, short of the 0.002 bar. Dropped. It did look
+  better on the side measures (calibration's worst bucket 5.9 -> 4.1; on the one priced check season,
+  gap to the market 0.0122 -> 0.0092; flagged-bet ROI -3.6% -> -2.0%), but the bar was set before the
+  test and isn't moved after seeing results. Its tuned summer pull-back was 0.91: college rosters turn
+  over so much that last season's ratings carry little.
+- The second look on the exam seasons was for a kept idea, so it wasn't run.
+- What remains for college: Claude's capped adjustments for absences (as before). A future, separate
+  test could be idea 2 as a live shadow challenger, if ESPN's college injury list turns out to have
+  real data once the season starts (to be checked after Nov 3).
