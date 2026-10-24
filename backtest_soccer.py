@@ -6,6 +6,8 @@ Usage:
   python3 backtest_soccer.py ablate    test the pre-registered ideas one at a time
   python3 backtest_soccer.py final     the ONE-TIME final exam (recorded in final_runs.jsonl)
   python3 backtest_soccer.py refit     refit on all seasons for live use (after the final exam)
+  python3 backtest_soccer.py xg        the pre-registered xG test (plans/soccer_xg.md): xg_w tuned with the base
+                                       settings on the tune seasons, kept only if better on both tune and check
 
 Graded games: Big 5 leagues only. Second divisions feed the ratings but aren't graded.
 """
@@ -205,8 +207,54 @@ def ablate(games, mkt, base_params, elo=None):
     return kept
 
 
+def pre_exam_settings():
+    """The soccer settings the final exam ran with (tune seasons only): the base for later ideas."""
+    for line in (RESULTS_DIR / "final_runs.jsonl").read_text().splitlines():
+        r = json.loads(line)
+        if r["sport"] == "soccer_club":
+            return dict(r["ratings"])
+    raise RuntimeError("soccer exam record not found")
+
+
+def xg_test(games, mkt):
+    """plans/soccer_xg.md: tune xg_w (with the base settings and sot_w) on the tune seasons; keep only if log
+    loss is better on both tune and check and no per-outcome calibration bucket (50+ games) is off by 8+ points."""
+    base = pre_exam_settings()
+    base_preds = run(games, base, None, ("tune", "check"))
+    bt, bc = (period_log_loss(games, base_preds, PERIODS[x]) for x in ("tune", "check"))
+    print(f"Base (pre-exam soccer settings): tune {bt:.4f}, check {bc:.4f}")
+    p = tune(games, {**base, "xg_w": 0.0}, TUNED + ["sot_w", "xg_w"])
+    preds = run(games, p, None, ("tune", "check", "final"))
+    t, c = (period_log_loss(games, preds, PERIODS[x]) for x in ("tune", "check"))
+    base_check = report(games, base_preds, mkt, "check")
+    chk = report(games, preds, mkt, "check")
+    keep = t < bt and c < bc and chk["worst_calibration_gap"] <= 0.08
+    lines = [f"\n## xG test {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC (plans/soccer_xg.md)\n",
+             f"Base (pre-exam settings): tune {bt:.4f}, check {bc:.4f}, check RPS {base_check['model_rps']:.4f}, worst calibration "
+             f"{base_check['worst_calibration_gap'] * 100:.1f}, flagged {base_check['flagged_bets']} ROI {base_check['roi']:+.1%}.",
+             f"With xG: xg_w {p['xg_w']}, sot_w {p['sot_w']} -> tune {t:.4f} ({t - bt:+.4f}), check {c:.4f} ({c - bc:+.4f}), "
+             f"check RPS {chk['model_rps']:.4f}, worst calibration {chk['worst_calibration_gap'] * 100:.1f}, "
+             f"flagged {chk['flagged_bets']} ROI {chk['roi']:+.1%}"
+             + (f", avg CLV {chk['avg_clv'] * 100:+.2f} pts" if chk.get("avg_clv") is not None else "") + ".",
+             f"Market (avg close) on check games: {json.dumps(chk.get('market_avg_close'))}",
+             f"Decision: {'KEEP (better on both, calibrated)' if keep else 'drop'}.",
+             f"Settings: {json.dumps(p)}"]
+    if keep:
+        fin_b = report(games, run(games, base, None, ("final",)), mkt, "final")
+        fin = report(games, preds, mkt, "final")
+        lines.append(f"Second look on the exam seasons (already used once, NOT an untouched test): log loss "
+                     f"{fin_b['model_log_loss']:.4f} -> {fin['model_log_loss']:.4f}, RPS {fin_b['model_rps']:.4f} -> "
+                     f"{fin['model_rps']:.4f}, flagged ROI {fin_b['roi']:+.1%} -> {fin['roi']:+.1%}.")
+        (RESULTS_DIR / "soccer_xg_best.json").write_text(json.dumps(p, indent=2) + "\n")
+    path = RESULTS_DIR / "soccer_xg.md"
+    if not path.exists():
+        path.write_text("# Soccer xG test\n\nPlan: `plans/soccer_xg.md`. Produced by `backtest_soccer.py xg`.\n")
+    path.write_text(path.read_text() + "\n".join(lines) + "\n")
+    print("\n".join(lines))
+
+
 def main():
-    modes = ("tune", "check", "ablate", "final", "refit")
+    modes = ("tune", "check", "ablate", "final", "refit", "xg")
     if len(sys.argv) < 2 or sys.argv[1] not in modes:
         sys.exit(__doc__)
     mode = sys.argv[1]
@@ -218,6 +266,9 @@ def main():
         import clubelo
         elo = clubelo.ratings_for_games(conn, games)
 
+    if mode == "xg":
+        xg_test(games, mkt)
+        return
     if mode == "tune":
         ratings = tune(games, sm.DEFAULT_PARAMS, TUNED)
         save_params(ratings, "Tuned on 2013-2019 Big 5 seasons; ideas off.")

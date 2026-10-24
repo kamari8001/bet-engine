@@ -50,6 +50,7 @@ DEFAULT_PARAMS = {
     "rho": -0.08,       # Dixon-Coles low-score correction (negative = more 0-0 and 1-1)
     "home_start": 0.25, # starting home advantage (log-goals)
     "sot_w": 0.0,       # idea 1: weight of shots on target in updates (0 = off)
+    "xg_w": 0.0,        # xG idea (plans/soccer_xg.md): weight of Understat expected goals in updates (0 = off)
     "rest_coef": 0.0,   # idea 3: effect of rest-day difference (0 = off)
     "rest_cap": 7,
     "elo_w": 0.0,       # idea 2: weight of ClubElo difference (0 = off)
@@ -69,7 +70,7 @@ def load_games(conn, include_europe=False):
     competition games are left out unless include_europe (the domestic model doesn't use them)."""
     rows = conn.execute(
         "SELECT id, league, season, game_date_et, kickoff_utc, home_team, away_team, home_score, away_score,"
-        " home_shots_ot, away_shots_ot, neutral_site FROM hist_games WHERE sport = 'soccer_club'"
+        " home_shots_ot, away_shots_ot, home_xg, away_xg, neutral_site FROM hist_games WHERE sport = 'soccer_club'"
         + ("" if include_europe else f" AND league NOT IN ({','.join(repr(x) for x in EUROPE)})")
         + " ORDER BY game_date_et, COALESCE(kickoff_utc, game_date_et), id").fetchall()
     games = [dict(r) for r in rows]
@@ -209,13 +210,19 @@ class Ratings:
             return self.update_europe(g, lh, la)
         p, lg = self.p, g["league"]
         gh, ga = min(g["home_score"], p["cap"]), min(g["away_score"], p["cap"])
+        xg_w = p.get("xg_w", 0.0) if g.get("home_xg") is not None and g.get("away_xg") is not None else 0.0
         if p["sot_w"] and g.get("home_shots_ot") is not None and g.get("away_shots_ot") is not None:
             ratio = self.sot_ratio[lg]
-            gh = (1 - p["sot_w"]) * gh + p["sot_w"] * ratio * g["home_shots_ot"]
-            ga = (1 - p["sot_w"]) * ga + p["sot_w"] * ratio * g["away_shots_ot"]
+            sot_w = min(p["sot_w"], 1 - xg_w)
+            gh = (1 - sot_w - xg_w) * gh + sot_w * ratio * g["home_shots_ot"] + xg_w * g["home_xg"] if xg_w else \
+                (1 - p["sot_w"]) * gh + p["sot_w"] * ratio * g["home_shots_ot"]
+            ga = (1 - sot_w - xg_w) * ga + sot_w * ratio * g["away_shots_ot"] + xg_w * g["away_xg"] if xg_w else \
+                (1 - p["sot_w"]) * ga + p["sot_w"] * ratio * g["away_shots_ot"]
             shots = g["home_shots_ot"] + g["away_shots_ot"]
             if shots:
                 self.sot_ratio[lg] += 0.002 * ((g["home_score"] + g["away_score"]) / shots - self.sot_ratio[lg])
+        elif xg_w:
+            gh, ga = (1 - xg_w) * gh + xg_w * g["home_xg"], (1 - xg_w) * ga + xg_w * g["away_xg"]
         eh, ea = gh - lh, ga - la
         h, a = g["home_team"], g["away_team"]
         self.att[h] += p["k"] * eh
