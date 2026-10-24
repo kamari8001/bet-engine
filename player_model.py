@@ -75,6 +75,8 @@ class PlayerBook:
     def __init__(self, params=None):
         self.p = {**DEFAULTS, **(params or {})}
         self.st = {}                 # player id -> state
+        self.by_team = defaultdict(set)
+        self.order = {}              # player id -> when first seen (keeps rotation() in the original order)   # team -> player ids whose latest team it is (speeds up rotation())
         self.scale = dict(SCALE_DEFAULT)
         self.season = None
         self.season_snapshots = {}   # season -> [(player id, name, team, position, value, rating_z, mpg)] at season end
@@ -84,6 +86,7 @@ class PlayerBook:
     # ---------- ratings ----------
     def _state(self, pid):
         if pid not in self.st:
+            self.order[pid] = len(self.order)
             self.st[pid] = {"prod": PRIOR["prod"], "imp": PRIOR["imp"], "mpg": 0.0, "n": 0.0,
                             "team": None, "last": None, "season": None, "name": "", "pos": None}
         return self.st[pid]
@@ -105,9 +108,11 @@ class PlayerBook:
 
     def _start_season(self, season):
         if self.season is not None and season != self.season:
-            rot = [s for s in self.st.values() if s["mpg"] >= self.p["min_mpg"] and s["n"] >= 5 and s["season"] == self.season]
+            rot_ids = {pid for pid, s in self.st.items()
+                       if s["mpg"] >= self.p["min_mpg"] and s["n"] >= 5 and s["season"] == self.season}
+            rot = [s for pid, s in self.st.items() if pid in rot_ids]
             self.season_snapshots[self.season] = [(pid, s["name"], s["team"], s["pos"], self.value(s), self.z(s), s["mpg"])
-                                                  for pid, s in self.st.items() if s in rot]
+                                                  for pid, s in self.st.items() if pid in rot_ids]
             if len(rot) >= 50:
                 for k in ("prod", "imp"):
                     xs = [s[k] for s in rot]
@@ -116,7 +121,7 @@ class PlayerBook:
                     self.scale[k] = (mu, sd)
             self.carry = defaultdict(list)
             for pid, s in self.st.items():
-                if s in rot:
+                if pid in rot_ids:
                     self.carry[s["team"]].append(pid)
             r = self.p["season_regress"]
             target = PRIOR if self.p.get("regress_to", "replacement") == "replacement" else \
@@ -128,11 +133,11 @@ class PlayerBook:
         self.season = season
 
     def rotation(self, team, on_date):
-        """Rotation players currently on this team."""
+        """Rotation players currently on this team (in the order they were first seen, as before)."""
         out = []
-        for pid, s in self.st.items():
-            if s["team"] == team and s["last"] and (on_date - s["last"]).days <= self.p["window_days"] \
-                    and s["mpg"] >= self.p["min_mpg"]:
+        for pid in sorted(self.by_team.get(team, ()), key=self.order.get):
+            s = self.st[pid]
+            if s["last"] and (on_date - s["last"]).days <= self.p["window_days"] and s["mpg"] >= self.p["min_mpg"]:
                 out.append((pid, s))
         return out
 
@@ -167,6 +172,10 @@ class PlayerBook:
         a = self.p["alpha"]
         for r in rows:
             s = self._state(r["player_id"])
+            if s["team"] != r["team"]:
+                if s["team"] is not None:
+                    self.by_team[s["team"]].discard(r["player_id"])
+                self.by_team[r["team"]].add(r["player_id"])
             s.update(team=r["team"], last=on_date, season=g["season"], name=r["player_name"], pos=r["pos"] if "pos" in r else r.get("position"))
             if not r["played"] or not r["minutes"] or r["minutes"] < 1:
                 continue
