@@ -27,7 +27,6 @@ is (option 1); the anchored model is recorded, not deployed.
 3. **Check ESPN's college basketball injury list after Nov 3** (is it filled in during the season?). If it
    is, a possible shadow test of the college player rating (it narrowly missed its bar; see
    `plans/college_player_impact.md`).
-5. **Soccer xG model**: shadow-only until a few seasons of expected-goals data exist.
 
 Paused (engine accuracy only; revisit if live scorecards ever show the engine beating the closing line):
 - Margin with diminishing returns (football and basketball).
@@ -59,6 +58,7 @@ Paused (engine accuracy only; revisit if live scorecards ever show the engine be
 
 ## Done
 
+- **Soccer xG model** (2026-10-24, no version change): Understat xG for every Big 5 game since 2014-15 (daily refresh); tested, better log loss on both tune and check but failed the calibration rule (9.8 vs 8), so not kept (`plans/soccer_xg.md`).
 - **Sharper news timing, NBA** (2026-10-24, v4.2.0): injury watcher, instant odds + predictions on material news, news-timing panel (`plans/news_timing.md`).
 - **College basketball player model** (2026-10-24, no version change): box scores loaded (daily refresh); tested, neither idea cleared the bar (production rating +0.0015 vs 0.002 needed), so nothing went live (`plans/college_player_impact.md`).
 - **Player display release** (2026-10-23, v4.1.0): player OVR, rosters, profiles, player rankings (`plans/player_display.md`).

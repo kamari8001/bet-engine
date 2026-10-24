@@ -72,3 +72,8 @@ gap was 8.8 (2020-21, no crowds); that was a check, not the exam.
 **Verdict:** works and is calibrated, trails the market, no money edge: same as every other sport.
 Club soccer goes live with flags paper only / Low confidence. Refit on 2013-2026 for live use:
 `soccer-v2-refit-20261021`.
+
+**Amendment (2026-10-24): idea #4 xG became testable** with Understat history (2014-15 on), so it was
+tested under a plan written before the fit (`plans/soccer_xg.md`): better log loss on both tune and
+check, but a per-outcome calibration bucket off by 9.8 points (rule: 8), so **not kept**. Details in
+`backtest_results/soccer_xg.md`.

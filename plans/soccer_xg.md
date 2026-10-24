@@ -42,3 +42,20 @@ time). So the idea becomes testable, under the soccer criteria's existing rules.
 - Live xG comes from Understat's current season (refreshed morning and night). Predictions note how
   many recent games lack xG; a game without it simply updates from goals and shots, as in history.
 - If it's not kept: the finding is recorded, the data stays for later ideas, nothing goes live.
+
+## Results (2026-10-24; full lines in `backtest_results/soccer_xg.md`)
+Step 1 done: xG for 21,925 of 21,935 Big 5 games since 2014-15 (every league-season matched 98%+; one
+2026-27 game, PSG v Rennes, has home and away swapped between ESPN and Understat and stays without xG).
+Refreshed in the morning and night routines.
+
+Step 2: **xG is not kept; nothing goes live.**
+- Tuned weights: xG 0.31, shots on target 0.19 (down from 0.30), actual goals 0.50.
+- Log loss improved on both tune (0.9722 -> 0.9718) and check (0.9934 -> 0.9915), and flagged-bet ROI
+  on the check seasons went from -12.4% to -10.1%. Gap to the market's closing price: 0.0181 -> 0.0162.
+- But the calibration rule fails: the away-win 50-60% bucket (357 games) was off by 9.8 points (the
+  pre-exam model already missed the 8-point line in that bucket, at 8.8). The plan's rule says no
+  bucket over 8, so it's dropped; under the gentler reading used in the NBA tests ("no worse than the
+  base"), 9.8 is still worse than 8.8, so the decision is the same either way.
+- The second look on the exam seasons was for a kept idea, so it wasn't run.
+- The xG data and the `xg_w` switch (off) stay, for a future, separately pre-registered idea (for
+  example, xG together with a calibration fix for away favorites, or a three-way shadow challenger).
