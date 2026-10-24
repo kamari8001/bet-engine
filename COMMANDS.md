@@ -43,6 +43,7 @@ Typical order: `pull_games` → `pull_odds` → `pull_history --current` → `pr
 | `python3 pull_history.py all --current` | Refreshes this season's history so the model's ratings are current |
 | `python3 pull_basketball_history.py nba current` | Same for the NBA (recent days from ESPN) |
 | `python3 pull_nba_players.py current` | NBA box scores (who played, minutes, plus-minus, did-not-play reasons) for the last 7 days, for the player-impact model; `history` loads every past game (resumable), `summary` shows what's loaded |
+| `python3 pull_ncaab_players.py current` | College basketball box scores (CBBD) for the last 7 days, for the college player model (1-2 CBBD calls); `history` loads every past game (~210 calls, resumable), `summary` shows what's loaded |
 | `python3 pull_basketball_history.py ncaab current` | Same for college basketball (1 CBBD call) |
 | `python3 rankings.py nfl` | Power rankings in the terminal (rank, OVR, net points, record, last 5, offense/defense ranks, movement since last week). Add `--top 50` for more teams; also `ncaaf`, `nba`, `ncaab`. |
 | `python3 rankings.py nfl --season 2017` | Final rankings for a past season (each team's rating after its last game) |
@@ -124,6 +125,7 @@ Challengers and the promotion bar are fixed in `backtest_results/shadow_challeng
 | `python3 factor_study.py nfl` | Factor study (plan `plans/factor_study.md`): which pre-game factors predict winning and which the market misses; `--out` appends to `backtest_results/factor_study.md`. Also `ncaaf`, `nba`, `ncaab`, `soccer_club`. |
 | `python3 backtest_anchor.py nfl` | Fits the market-anchored engine (plan `plans/anchor.md`) on the tune seasons and reports the check seasons; `--save` stores the weights under `anchor` in `model_params.json`, `--out` appends to `backtest_results/anchor.md` |
 | `python3 backtest_players.py ablate` | NBA player-impact test (plan `plans/player_impact.md`): tunes ideas 1-4 on the tune seasons, keeps each only if it beats the best so far on the check seasons by 0.002; results in `backtest_results/players.md`, the kept settings in `players_best.json`. Also `base`, `idea <n>`, `look` (second look on the exam seasons), `save`. |
+| `python3 backtest_players.py ablate --sport ncaab` | The same test for college basketball (ideas 1-2; plan `plans/college_player_impact.md`); results in `backtest_results/players_ncaab.md`. Also `base` and `look` with `--sport ncaab`. |
 | `python3 backtest_players.py refit` | Refits nba-v2 (team + player settings) on every season for live use. Saves to `backtest_results/nba_refit_pending.json`; nothing goes live yet. |
 | `python3 backtest_players.py apply` | **Puts the pending NBA refit live** (replaces only the NBA block of `model_params.json`; refuses if a different NBA version is live than the one it was built to replace). Then run `python3 predict.py nba`. |
 | `python3 fix_college_lines.py` | Checks stored college football lines against CFBD's named favorite and reports reversed ones; `--apply` swaps them (219 fixed 2026-10-23). 6 CFBD calls. |

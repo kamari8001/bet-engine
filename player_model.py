@@ -62,11 +62,11 @@ def game_score(r):
             - 0.4 * g("pf") - g("tov"))
 
 
-def load_box(conn):
-    """{hist game id: [player rows]} for every fetched NBA game."""
+def load_box(conn, sport="nba"):
+    """{hist game id: [player rows]} for every fetched game of a sport (NBA, or college from CBBD)."""
     out = defaultdict(list)
     for r in conn.execute("SELECT p.* FROM hist_player_games p JOIN hist_games g ON g.id = p.hist_game_id"
-                          " WHERE g.sport = 'nba'"):
+                          " WHERE g.sport = ?", (sport,)):
         out[r["hist_game_id"]].append(dict(r))
     return out
 

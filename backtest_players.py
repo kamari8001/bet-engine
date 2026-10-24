@@ -14,6 +14,9 @@ Usage:
                                                 backtest_results/nba_refit_pending.json, NOT live yet.
   python3 backtest_players.py apply             puts the pending refit live (replaces the NBA block of model_params.json)
 
+College basketball: add `--sport ncaab` to base, ablate (ideas 1-2) or look (plans/college_player_impact.md);
+results in players_ncaab.md / players_best_ncaab.json.
+
 Team settings are the pre-exam nba-v1 (from final_runs.jsonl) so nothing here saw the exam seasons.
 Ideas: 1 minutes only; 2 production rating; 3 production + impact; 4 online correction of the
 absence coefficient. Keep rule: an idea must beat the previous best check-season log loss by >= 0.002
@@ -34,7 +37,9 @@ from backtest import PERIODS, log_loss, market_by_game, RESULTS_DIR
 import config
 from odds_math import decimal_odds
 
+SPORT = "nba"
 TUNE, CHECK, FINAL = PERIODS["nba"]["tune"], PERIODS["nba"]["check"], PERIODS["nba"]["final"]
+RESULTS_NAME = "players.md"
 BEST_PATH = RESULTS_DIR / "players_best.json"
 PENDING_PATH = RESULTS_DIR / "nba_refit_pending.json"
 EARLY_BEST_PATH = RESULTS_DIR / "players_best_early.json"
@@ -49,12 +54,23 @@ EARLY_BAR = 0.001
 EARLY_GAMES = 20
 
 
+def configure(sport):
+    """Point the test at a sport (nba default; ncaab per plans/college_player_impact.md)."""
+    global SPORT, TUNE, CHECK, FINAL, BEST_PATH, RESULTS_NAME
+    SPORT = sport
+    TUNE, CHECK, FINAL = (PERIODS[sport][k] for k in ("tune", "check", "final"))
+    if sport != "nba":
+        BEST_PATH = RESULTS_DIR / f"players_best_{sport}.json"
+        RESULTS_NAME = f"players_{sport}.md"
+
+
 def team_params():
+    """The sport's pre-exam team settings: its first final-exam record."""
     for line in (RESULTS_DIR / "final_runs.jsonl").read_text().splitlines():
         r = json.loads(line)
-        if r["sport"] == "nba":
+        if r["sport"] == SPORT:
             return r["ratings"]
-    raise RuntimeError("nba exam record not found")
+    raise RuntimeError(f"{SPORT} exam record not found")
 
 
 def attach(games, feats):
@@ -72,7 +88,7 @@ def run(games, box, tparams, pparams, idea):
     feats, book = pm.features(games, box, pp)
     attach(games, feats)
     tp = dict(tparams, abs_coef=pparams.get("abs_coef", 0.0), abs_k=pparams.get("abs_k", 0.0) if idea == 4 else 0.0)
-    preds, _ = model.walk_forward(games, tp, "nba")
+    preds, _ = model.walk_forward(games, tp, SPORT)
     return preds, book
 
 
@@ -209,12 +225,12 @@ def beside_market(games, preds, mkt, fit_period, test_period):
 def look(games, box, tparams, mkt, base_preds):
     best = json.loads(BEST_PATH.read_text())
     preds, _ = run(games, box, tparams, best["params"], best["idea"])
-    lines = [f"\n## Second look {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC: idea {best['idea']} on the exam seasons "
+    lines = [f"\n## Second look {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC: {SPORT} idea {best['idea']} on the exam seasons "
              f"{FINAL[0]}-{FINAL[1]}\n",
-             "These seasons were already used once (the nba-v1 final exam), so this is a second look, not an "
+             f"These seasons were already used for the {SPORT} final exam, so this is a second look, not an "
              "untouched test. Settings tuned on tune seasons only.\n",
              "| model | log loss | worst bucket | model vs market log loss | flagged bets | ROI |", "|---|---|---|---|---|---|"]
-    for label, p in (("team model only (nba-v1 pre-exam)", base_preds), (f"with players (idea {best['idea']})", preds)):
+    for label, p in ((f"team model only ({SPORT}-v1 pre-exam)", base_preds), (f"with players (idea {best['idea']})", preds)):
         mm, mk, nb, roi = market_gap(games, p, mkt, FINAL)
         lines.append(f"| {label} | {period_ll(games, p, FINAL):.4f} | {worst_bucket(games, p, FINAL) * 100:.1f} | "
                      f"{mm:.4f} vs {mk:.4f} | {nb} | {roi:+.1%} |")
@@ -322,18 +338,27 @@ def apply():
 
 def main():
     a = sys.argv[1:]
+    if "--sport" in a:
+        i = a.index("--sport")
+        sport = a[i + 1]
+        del a[i:i + 2]
+        if sport not in ("nba", "ncaab"):
+            sys.exit("--sport must be nba or ncaab")
+        configure(sport)
+        if sport != "nba" and a[:1] not in (["base"], ["ablate"], ["look"]):
+            sys.exit("For college basketball only base, ablate and look exist so far (step 2 of the plan).")
     if a[:1] == ["apply"]:
         apply()
         return
     if not a or a[0] not in ("base", "idea", "ablate", "look", "save", "refit", "apply", "early"):
         sys.exit(__doc__)
     conn = db.connect()
-    box = pm.load_box(conn)
-    games = model.load_games(conn, "nba", players=False)
-    mkt = market_by_game(conn, "nba")
+    box = pm.load_box(conn, SPORT)
+    games = model.load_games(conn, SPORT, players=False)
+    mkt = market_by_game(conn, SPORT)
     tparams = team_params()
-    print(f"{len(games)} games, {len(box)} with box scores; team settings nba-v1 (pre-exam)")
-    base_preds, _ = model.walk_forward(games, tparams, "nba")
+    print(f"{len(games)} {SPORT} games, {len(box)} with box scores; team settings {SPORT}-v1 (pre-exam)")
+    base_preds, _ = model.walk_forward(games, tparams, SPORT)
     base = report("base (no players)", games, base_preds, mkt)
     if a[0] == "base":
         return
@@ -352,7 +377,7 @@ def main():
         model.PARAMS_PATH.write_text(json.dumps(saved, indent=2) + "\n")
         print(f"Saved idea {idea} under nba.players in model_params.json")
         return
-    results_path = RESULTS_DIR / "players.md"
+    results_path = RESULTS_DIR / RESULTS_NAME
     lines = [f"\n## Run {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC: {a}\n",
              f"base: tune {base['tune']:.4f}, check {base['check']:.4f}, worst bucket {base['worst_bucket'] * 100:.1f}, "
              f"vs market {base['model_vs_market'][0]:.4f} / {base['model_vs_market'][1]:.4f}, flags {base['flags']} ROI {base['roi']:+.1%}"]
@@ -366,7 +391,7 @@ def main():
         results_path.write_text(results_path.read_text() + "\n".join(lines) + "\n")
         print("\n".join(lines))
         return
-    ideas = [int(a[1])] if a[0] == "idea" else [1, 2, 3, 4]
+    ideas = [int(a[1])] if a[0] == "idea" else [1, 2, 3, 4] if SPORT == "nba" else [1, 2]
     best_check, best_params, start = base["check"], None, None
     saved_sets = {}
     for idea in ideas:
