@@ -24,7 +24,12 @@ can't become an edge against the market. What can is information the market does
 measured player availability and sourced news before the line moves. Talal chose to keep the engine as
 is (option 1); the anchored model is recorded, not deployed.
 
-3. **Check ESPN's college basketball injury list after Nov 3** (is it filled in during the season?). If it
+3. **Soccer away-favorite calibration fix, then retry xG on top** (suggested 2026-10-25): the soccer model
+   underrates away teams it gives 50-60% (predicted 54%, won 63-64% on the check seasons); xG improved log
+   loss but failed only on this bucket. Needs a pre-registered plan.
+4. **Retry temporary server errors** in downloads before failing a routine (a CFBD 502 on 2026-10-25 made
+   the morning routine fail twice and run 20 minutes late). Small patch.
+5. **Check ESPN's college basketball injury list after Nov 3** (is it filled in during the season?). If it
    is, a possible shadow test of the college player rating (it narrowly missed its bar; see
    `plans/college_player_impact.md`).
 
@@ -58,6 +63,7 @@ Paused (engine accuracy only; revisit if live scorecards ever show the engine be
 
 ## Done
 
+- **NBA starting ratings from player moves** (2026-10-26, v5.0.0): `nba-v3-refit-20261026` (`plans/nba_roster_moves.md`).
 - **Soccer xG model** (2026-10-24, no version change): Understat xG for every Big 5 game since 2014-15 (daily refresh); tested, better log loss on both tune and check but failed the calibration rule (9.8 vs 8), so not kept (`plans/soccer_xg.md`).
 - **Sharper news timing, NBA** (2026-10-24, v4.2.0): injury watcher, instant odds + predictions on material news, news-timing panel (`plans/news_timing.md`).
 - **College basketball player model** (2026-10-24, no version change): box scores loaded (daily refresh); tested, neither idea cleared the bar (production rating +0.0015 vs 0.002 needed), so nothing went live (`plans/college_player_impact.md`).

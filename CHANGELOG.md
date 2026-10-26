@@ -4,6 +4,19 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 5.0.0 (2026-10-26): NBA player moves
+- New NBA model, `nba-v3-refit-20261026`. When a player first appears for a different team, his value
+  moves with him: the new team's rating goes up and the old team's goes down. Covers summer trades and
+  signings and the trade deadline, so a team's rating no longer waits weeks to learn who it added or
+  lost. The 25 moves already seen this season count right away (e.g. Kawhi Leonard to Toronto, Giannis
+  Antetokounmpo to Miami).
+- Tested before going live (plan `plans/nba_roster_moves.md`): on the 2020-21 to 2022-23 check
+  seasons, log loss improved from 0.6340 to 0.6328 (bar: 0.001), in both a team's first 20 games and
+  the rest of the season; second look on the exam seasons 0.6002 to 0.5993. It still trails the market
+  and flagged bets still lose in the backtest, so flags stay paper only.
+- Not covered: retirements, and a traded player who's injured only counts once he appears.
+- Rankings and player OVRs were rebuilt for the new model.
+
 ## 4.2.0 (2026-10-24): NBA news timing
 - An injury watcher checks ESPN's NBA injury list every 10 minutes (8 AM to the day's last tip-off)
   and records every status change for a rotation player, stamped when we first saw it.
