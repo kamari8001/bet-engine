@@ -59,3 +59,16 @@ Step 2: **xG is not kept; nothing goes live.**
 - The second look on the exam seasons was for a kept idea, so it wasn't run.
 - The xG data and the `xg_w` switch (off) stay, for a future, separately pre-registered idea (for
   example, xG together with a calibration fix for away favorites, or a three-way shadow challenger).
+
+## Follow-up (2026-10-26): the "away favorites" miss is the empty-stadium season
+Looked at before planning a calibration fix (no fitting, just the existing predictions by season):
+- With the pre-exam settings (frozen on 2013-2019), the away 50-60% bucket is fine in most seasons but
+  far off in 2019-20 (54% predicted, 65% won) and 2020-21 (54% vs 70%), when most games had no crowds
+  and home teams won 39.9% instead of the predicted 45.5%. 2021-22 is fine (54% vs 54%).
+- The **live** model (refit on all seasons) already learned the lower home advantage: from 2021-22 on
+  its predicted home-win rate is within ~2 points of the actual each season, misses in both directions,
+  and each league's home advantage is close to what 2023-26 shows. So there's no live bias to fix.
+- xG failed its test on this same bucket, inside a check period that includes the no-crowd season. A
+  retest would need a pre-registered way to handle no-crowd games (e.g. a separate home advantage for
+  games played behind closed doors, by public date ranges), applied to both models, and would be a
+  second attempt (weaker evidence than a first test). Talal decides whether it's worth it.

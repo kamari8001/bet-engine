@@ -24,9 +24,9 @@ can't become an edge against the market. What can is information the market does
 measured player availability and sourced news before the line moves. Talal chose to keep the engine as
 is (option 1); the anchored model is recorded, not deployed.
 
-3. **Soccer away-favorite calibration fix, then retry xG on top** (suggested 2026-10-25): the soccer model
-   underrates away teams it gives 50-60% (predicted 54%, won 63-64% on the check seasons); xG improved log
-   loss but failed only on this bucket. Needs a pre-registered plan.
+3. **(Optional) Retry soccer xG with no-crowd games handled**: the away-favorite miss turned out to be the
+   2020-21 empty-stadium season inside the check period; the live model has no such bias (see
+   `plans/soccer_xg.md`, follow-up). A retest would be a second attempt; Talal's call.
 4. **Retry temporary server errors** in downloads before failing a routine (a CFBD 502 on 2026-10-25 made
    the morning routine fail twice and run 20 minutes late). Small patch.
 5. **Check ESPN's college basketball injury list after Nov 3** (is it filled in during the season?). If it
