@@ -4,6 +4,10 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 5.0.2 (2026-10-26): new font
+- The slate uses Inter (clean, very readable numbers) instead of Doppio One, picked by Talal from a
+  preview of nine fonts.
+
 ## 5.0.1 (2026-10-26): retries for temporary server errors
 - Downloads now retry when a source has a temporary problem (server errors 500/502/503/504, a timeout,
   or a dropped connection): up to 4 tries, waiting 5, 15 and 45 seconds. Real errors (wrong key, not

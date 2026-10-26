@@ -20,7 +20,7 @@ CSS = """
         --glow:rgba(90,169,255,.35); --ease:cubic-bezier(.2,.8,.2,1); color-scheme:dark; }
 * { box-sizing:border-box; }
 body { margin:0; background:var(--bg); color:var(--text);
-       font:14px/1.45 "Doppio One", system-ui, -apple-system, "Segoe UI", sans-serif;
+       font:14px/1.45 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
        font-variant-ligatures:none; font-feature-settings:"liga" 0, "clig" 0, "dlig" 0; }
 header { position:sticky; top:0; z-index:20; background:rgba(14,17,22,.96); border-bottom:1px solid var(--line);
          padding:12px 20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
@@ -348,7 +348,7 @@ def page(title, active, body, msg=None, scripts=""):
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>{esc(title)} &middot; {esc(APP_NAME)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Doppio+One&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>{CSS}</style></head><body>
 <header><h1>{esc(APP_NAME)} <span class="ver" title="{esc(models)}">v{APP_VERSION}</span></h1><nav>{tabs}</nav>
 <span class="note models">{esc(models)} &middot; all flags are low confidence, paper only</span></header>
