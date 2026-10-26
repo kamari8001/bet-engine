@@ -51,6 +51,7 @@ DEFAULTS = {
     # Early-season ideas (plans/player_early_season.md); off = nba-v2 exactly
     "regress_to": "replacement",   # idea 5: "average" = pull toward last season's average rotation player
     "carry_unseen": False,         # idea 6: last season's rotation players count as missing until they first play
+    "moves": False,                # idea 7 (plans/nba_roster_moves.md): record player moves between teams
 }
 
 
@@ -82,6 +83,9 @@ class PlayerBook:
         self.season_snapshots = {}   # season -> [(player id, name, team, position, value, rating_z, mpg)] at season end
         self.carry = {}              # idea 6: team -> [player ids] in its rotation at the end of last season
         self.first_play = {}         # idea 6 (history stand-in): (player id, season) -> (first date played, team)
+        self.end_value = {}          # idea 7: player id -> value at the end of last season (before the summer pull-back)
+        self.moves = {}              # idea 7: game id -> [(team, value change)] seen before that game
+        self.move_log = []           # idea 7: (season, date, player, from, to, value) for the sanity report
 
     # ---------- ratings ----------
     def _state(self, pid):
@@ -113,6 +117,8 @@ class PlayerBook:
             rot = [s for pid, s in self.st.items() if pid in rot_ids]
             self.season_snapshots[self.season] = [(pid, s["name"], s["team"], s["pos"], self.value(s), self.z(s), s["mpg"])
                                                   for pid, s in self.st.items() if pid in rot_ids]
+            if self.p.get("moves"):
+                self.end_value = {pid: self.value(s) for pid, s in self.st.items() if s["season"] == self.season}
             if len(rot) >= 50:
                 for k in ("prod", "imp"):
                     xs = [s[k] for s in rot]
@@ -146,6 +152,17 @@ class PlayerBook:
         self._start_season(g["season"])
         on_date = date.fromisoformat(g["game_date_et"])
         played = {(r["team"], r["player_id"]) for r in rows if r["played"]}
+        if self.p.get("moves"):
+            # a player listed for a different team than his last one has moved: his value goes with him
+            mv = []
+            for r in rows:
+                s = self.st.get(r["player_id"])
+                if s and s["team"] and s["team"] != r["team"]:
+                    v = self.end_value.get(r["player_id"], self.value(s)) if s["season"] != g["season"] else self.value(s)
+                    mv += [(r["team"], v), (s["team"], -v)]
+                    self.move_log.append((g["season"], g["game_date_et"], s["name"], s["team"], r["team"], round(v, 3)))
+            if mv:
+                self.moves[g["id"]] = mv
         missing, absent = {}, {}
         for team in (g["home_team"], g["away_team"]):
             tot, lst = 0.0, []
@@ -235,6 +252,7 @@ def attach(conn, games, settings=None):
     for g in games:
         f = feats.get(g["id"])
         g["home_missing"], g["away_missing"] = (f[0], f[1]) if f and f[2] else (None, None)
+        g["roster_moves"] = book.moves.get(g["id"], [])
     return book
 
 

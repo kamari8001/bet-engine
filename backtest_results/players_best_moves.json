@@ -1,0 +1,12 @@
+{
+  "idea": 7,
+  "params": {
+    "alpha": 0.074,
+    "season_regress": 0.675,
+    "repl_z": -0.4219,
+    "abs_coef": 1.2189,
+    "move_coef": 0.40125,
+    "regress": 0.30793
+  },
+  "check": 0.632784736924124
+}

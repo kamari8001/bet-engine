@@ -6,6 +6,8 @@ Usage:
   python3 backtest_players.py ablate            all four ideas in order, applying the pre-registered keep rules
   python3 backtest_players.py early             early-season ideas 5 and 6 (plans/player_early_season.md) on top of
                                                 the kept idea 2, bar 0.001; first-20-games vs rest report
+  python3 backtest_players.py moves             idea 7, player moves carry their value (plans/nba_roster_moves.md),
+                                                on top of the kept idea 2; bar 0.001
   python3 backtest_players.py look              second look: the kept settings on the exam seasons (already used once
                                                 for nba-v1), plus whether the engine adds anything beside the market
   python3 backtest_players.py save              save the kept settings (players_best.json) under nba.players in model_params.json
@@ -48,8 +50,10 @@ IDEA_PARAMS = {1: ["abs_coef"], 2: ["abs_coef", "alpha", "season_regress", "repl
                3: ["abs_coef", "alpha", "season_regress", "repl_z", "w_imp"],
                4: ["abs_coef", "alpha", "season_regress", "repl_z", "w_imp", "abs_k"]}
 IDEA_PARAMS[5] = IDEA_PARAMS[6] = IDEA_PARAMS[2]
+IDEA_PARAMS[7] = ["move_coef", "regress"]          # player moves; regress = the team rating's summer pull-back
+TEAM_KEYS = ("abs_coef", "abs_k", "move_coef", "regress")
 IDEA_FLAGS = {5: {"regress_to": "average"}, 6: {"carry_unseen": True}}   # idea 6 also gets 5's flag if 5 is kept
-START = {"abs_coef": 3.0, "abs_k": 0.02}
+START = {"abs_coef": 3.0, "abs_k": 0.02, "move_coef": 1.0}
 EARLY_BAR = 0.001
 EARLY_GAMES = 20
 
@@ -80,14 +84,20 @@ def attach(games, feats):
 
 
 def run(games, box, tparams, pparams, idea):
-    pp = {k: v for k, v in pparams.items() if k not in ("abs_coef", "abs_k")}
+    pp = {k: v for k, v in pparams.items() if k not in TEAM_KEYS}
     pp["idea"] = 2 if not idea or idea >= 5 else min(idea, 3)
-    if idea in (2, 5, 6):
+    if idea in (2, 5, 6, 7):
         pp["w_imp"] = 0.0
     pp.update(IDEA_FLAGS.get(idea, {}))
+    if idea == 7:
+        pp["moves"] = True
     feats, book = pm.features(games, box, pp)
     attach(games, feats)
-    tp = dict(tparams, abs_coef=pparams.get("abs_coef", 0.0), abs_k=pparams.get("abs_k", 0.0) if idea == 4 else 0.0)
+    for g in games:
+        g["roster_moves"] = book.moves.get(g["id"], [])
+    tp = dict(tparams, abs_coef=pparams.get("abs_coef", 0.0), abs_k=pparams.get("abs_k", 0.0) if idea == 4 else 0.0,
+              move_coef=pparams.get("move_coef", 0.0) if idea == 7 else 0.0,
+              regress=pparams.get("regress", tparams["regress"]) if idea == 7 else tparams["regress"])
     preds, _ = model.walk_forward(games, tp, SPORT)
     return preds, book
 
@@ -125,11 +135,11 @@ def market_gap(games, preds, mkt, period):
     return log_loss(rows_m), log_loss(rows_k), len(bets), (sum(bets) / len(bets) if bets else 0.0)
 
 
-def tune(games, box, tparams, idea, start=None):
+def tune(games, box, tparams, idea, start=None, fixed=None):
     names = IDEA_PARAMS[idea]
     params = {**{k: pm.DEFAULTS[k] for k in names if k in pm.DEFAULTS}, **{k: START[k] for k in names if k in START}}
     params.update({k: v for k, v in (start or {}).items() if k in names})
-    score = lambda p: period_ll(games, run(games, box, tparams, p, idea)[0], TUNE)
+    score = lambda p: period_ll(games, run(games, box, tparams, {**(fixed or {}), **p}, idea)[0], TUNE)
     best = score(params)
     print(f"  idea {idea}: starting tune log loss {best:.4f}", flush=True)
     for factors in ([0.5, 0.75, 1.33, 2.0], [0.85, 0.93, 1.07, 1.18], [0.96, 1.04]):
@@ -141,7 +151,7 @@ def tune(games, box, tparams, idea, start=None):
                     trial = dict(params)
                     v = params[name]
                     trial[name] = (v * f) if v else (0.01 * f if name != "repl_z" else -0.1 * f)
-                    if name in ("season_regress", "w_imp"):
+                    if name in ("season_regress", "w_imp", "regress"):
                         trial[name] = min(trial[name], 1.0)
                     s = score(trial)
                     if s < best - 1e-6:
@@ -168,6 +178,47 @@ def early_split(games, preds, period):
         if period[0] <= g["season"] <= period[1] and g["home_score"] != g["away_score"]:
             (early if min(nh, na) < EARLY_GAMES else rest).append((preds[g["id"]][2], int(g["home_score"] > g["away_score"])))
     return log_loss(early), len(early), log_loss(rest), len(rest)
+
+
+def moves(games, box, tparams, mkt):
+    """Idea 7 (plans/nba_roster_moves.md) on top of the kept idea 2, bar EARLY_BAR."""
+    best = json.loads(BEST_PATH.read_text())
+    base_p = dict(best["params"])
+    preds, _ = run(games, box, tparams, base_p, 2)
+    r0, e0 = report("idea 2 (live design)", games, preds, mkt), early_split(games, preds, CHECK)
+    p = tune(games, box, tparams, 7, {"regress": tparams["regress"]}, fixed=base_p)
+    p = {**base_p, **p}
+    preds, book = run(games, box, tparams, p, 7)
+    r, e = report("idea 7 (player moves)", games, preds, mkt), early_split(games, preds, CHECK)
+    keep = r0["check"] - r["check"] >= EARLY_BAR and r["worst_bucket"] <= max(0.08, r0["worst_bucket"] + 1e-9)
+    lines = [f"\n## Player moves {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC (plans/nba_roster_moves.md)\n",
+             f"idea 2 (starting point): check {r0['check']:.4f}, worst bucket {r0['worst_bucket'] * 100:.1f}; first {EARLY_GAMES} "
+             f"games {e0[0]:.4f} ({e0[1]}), rest {e0[2]:.4f} ({e0[3]})",
+             f"idea 7: move_coef {p['move_coef']:.4f}, regress {p['regress']:.4f} (was {tparams['regress']:.4f}) -> tune {r['tune']:.4f} "
+             f"({r['tune'] - r0['tune']:+.4f}), check {r['check']:.4f} ({r['check'] - r0['check']:+.4f}), worst bucket "
+             f"{r['worst_bucket'] * 100:.1f}; first {EARLY_GAMES} games {e[0]:.4f} ({e[0] - e0[0]:+.4f}), rest {e[2]:.4f} "
+             f"({e[2] - e0[2]:+.4f}); vs market {r['model_vs_market'][0]:.4f} / {r['model_vs_market'][1]:.4f} (was "
+             f"{r0['model_vs_market'][0]:.4f}), flags {r['flags']} ROI {r['roi']:+.1%} (was {r0['flags']}, {r0['roi']:+.1%}) -> "
+             f"{'KEEP' if keep else 'drop'}",
+             "\nSanity check, moves seen per season (and the three biggest by value carried):"]
+    by_season = {}
+    for m in book.move_log:
+        by_season.setdefault(m[0], []).append(m)
+    for season in sorted(by_season):
+        ms = by_season[season]
+        top = sorted(ms, key=lambda m: -abs(m[5]))[:3]
+        lines.append(f"- {season - 1}-{season % 100:02d}: {len(ms)} moves; " + "; ".join(
+            f"{m[2]} {m[3]} -> {m[4]} ({m[1]}, value {m[5] * p['move_coef']:+.1f} pts)" for m in top))
+    if keep:
+        fin = lambda pr: (period_ll(games, pr, FINAL), market_gap(games, pr, mkt, FINAL))
+        b_ll, b_m = fin(run(games, box, tparams, base_p, 2)[0])
+        n_ll, n_m = fin(preds)
+        lines.append(f"\nSecond look on the exam seasons {FINAL[0]}-{FINAL[1]} (already used; NOT an untouched test): log loss "
+                     f"{b_ll:.4f} -> {n_ll:.4f}; vs market {b_m[0]:.4f} -> {n_m[0]:.4f} (market {n_m[1]:.4f}); flags ROI "
+                     f"{b_m[3]:+.1%} -> {n_m[3]:+.1%}")
+        (RESULTS_DIR / "players_best_moves.json").write_text(json.dumps({"idea": 7, "params": p, "check": r["check"]}, indent=2) + "\n")
+    lines.append(f"\nDecision: {'KEEP' if keep else 'drop'} (bar: check better by >= {EARLY_BAR}, calibration rule).")
+    return lines
 
 
 def early(games, box, tparams, mkt):
@@ -244,19 +295,30 @@ def look(games, box, tparams, mkt, base_preds):
     return lines
 
 
-def refit(games, box, mkt):
-    """Tune the team settings and the kept idea's player settings together on every season, starting
-    from the live nba-v1-refit team settings and the tune-season player settings. Saves nba-v2-refit."""
+def refit(games, box, mkt, moves=False):
+    """Tune the team settings and the kept idea's player settings together on every season. Without
+    --moves: nba-v2 (idea 2), starting from the live nba-v1-refit team settings and the tune-season player
+    settings. With --moves: nba-v3 (idea 2 + player moves, plans/nba_roster_moves.md), starting from the
+    live nba-v2 settings plus the tested move weight. Saves to the pending file, never live."""
     import backtest
     old = model.load_params("nba")
-    best = json.loads(BEST_PATH.read_text())
-    if best["idea"] != 2:
-        sys.exit("refit is written for idea 2 (production rating)")
     allp = PERIODS["nba"]["all"]
     team_names = backtest.TUNED + backtest.TUNED_EXTRA["nba"]
     pl_names = ["alpha", "season_regress", "repl_z", "abs_coef"]
-    tp = {k: v for k, v in old["ratings"].items() if k != "abs_coef"}
-    pp = {k: best["params"][k] for k in pl_names}
+    if moves:
+        tested = json.loads((RESULTS_DIR / "players_best_moves.json").read_text())["params"]
+        if not old.get("players"):
+            sys.exit("--moves builds on nba-v2 (player settings must be live first)")
+        team_names = team_names + ["move_coef"]
+        tp = {k: v for k, v in old["ratings"].items() if k != "abs_coef"}
+        tp["move_coef"] = tested["move_coef"]
+        pp = {**{k: old["players"]["params"][k] for k in pl_names if k != "abs_coef"}, "abs_coef": old["ratings"]["abs_coef"]}
+    else:
+        best = json.loads(BEST_PATH.read_text())
+        if best["idea"] != 2:
+            sys.exit("refit is written for idea 2 (production rating)")
+        tp = {k: v for k, v in old["ratings"].items() if k != "abs_coef"}
+        pp = {k: best["params"][k] for k in pl_names}
     cache = {}
 
     def feats_for(p):
@@ -264,11 +326,18 @@ def refit(games, box, mkt):
         if key not in cache:
             if len(cache) >= 3:
                 cache.pop(next(iter(cache)))
-            cache[key] = pm.features(games, box, {**{k: p[k] for k in pl_names if k != "abs_coef"}, "idea": 2})[0]
+            feats, book = pm.features(games, box, {**{k: p[k] for k in pl_names if k != "abs_coef"}, "idea": 2, "moves": moves})
+            cache[key] = (feats, book.moves)
         return cache[key]
 
+    def put(p):
+        feats, mv = feats_for(p)
+        attach(games, feats)
+        for g in games:
+            g["roster_moves"] = mv.get(g["id"], [])
+
     def score(t, p):
-        attach(games, feats_for(p))
+        put(p)
         preds, _ = model.walk_forward(games, dict(t, abs_coef=p["abs_coef"]), "nba")
         return period_ll(games, preds, allp)
 
@@ -295,17 +364,20 @@ def refit(games, box, mkt):
     saved = {"nba": None}
     prev = old
     saved["nba"] = {**{k: v for k, v in prev.items() if k not in ("version", "ratings", "players", "note", "previous")},
-                    "version": f"nba-v2-refit-{day}",
+                    "version": f"nba-v{3 if moves else 2}-refit-{day}",
                     "ratings": {**{k: round(v, 5) for k, v in tp.items()}, "abs_coef": round(pp["abs_coef"], 5)},
                     "combiner": None, "calibration": {"a": 1.0, "b": 0.0}, "fit_seasons": list(allp),
-                    "players": {"version": f"players-v1-refit-{day}", "idea": 2,
-                                "params": {k: round(pp[k], 5) for k in pl_names if k != "abs_coef"},
-                                "plan": "plans/player_impact.md", "results": "backtest_results/players.md"},
+                    "players": {"version": f"players-v{2 if moves else 1}-refit-{day}", "idea": 2,
+                                "params": {**{k: round(pp[k], 5) for k in pl_names if k != "abs_coef"},
+                                           **({"moves": True} if moves else {})},
+                                "plan": "plans/nba_roster_moves.md" if moves else "plans/player_impact.md",
+                                "results": "backtest_results/players.md"},
                     "previous": prev["version"],
-                    "note": "nba-v2: team ratings + rest + player absences (production rating, idea 2). Refit on all "
-                            "seasons after the tune/check test; judged on live results only."}
+                    "note": ("nba-v3: team ratings + rest + player absences + player moves carry their value. "
+                             if moves else "nba-v2: team ratings + rest + player absences (production rating, idea 2). ")
+                            + "Refit on all seasons after the tune/check test; judged on live results only."}
     PENDING_PATH.write_text(json.dumps(saved["nba"], indent=2) + "\n")
-    attach(games, feats_for(pp))
+    put(pp)
     preds, _ = model.walk_forward(games, saved["nba"]["ratings"], "nba")
     mm, mk, nb, roi = market_gap(games, preds, mkt, allp)
     line = (f"\n## Refit {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC: {saved['nba']['version']} "
@@ -350,7 +422,7 @@ def main():
     if a[:1] == ["apply"]:
         apply()
         return
-    if not a or a[0] not in ("base", "idea", "ablate", "look", "save", "refit", "apply", "early"):
+    if not a or a[0] not in ("base", "idea", "ablate", "look", "save", "refit", "apply", "early", "moves"):
         sys.exit(__doc__)
     conn = db.connect()
     box = pm.load_box(conn, SPORT)
@@ -363,7 +435,7 @@ def main():
     if a[0] == "base":
         return
     if a[0] == "refit":
-        refit(games, box, mkt)
+        refit(games, box, mkt, moves="--moves" in a)
         return
     if a[0] == "save":
         best = json.loads(BEST_PATH.read_text())
@@ -381,6 +453,11 @@ def main():
     lines = [f"\n## Run {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC: {a}\n",
              f"base: tune {base['tune']:.4f}, check {base['check']:.4f}, worst bucket {base['worst_bucket'] * 100:.1f}, "
              f"vs market {base['model_vs_market'][0]:.4f} / {base['model_vs_market'][1]:.4f}, flags {base['flags']} ROI {base['roi']:+.1%}"]
+    if a[0] == "moves":
+        lines += moves(games, box, tparams, mkt)
+        results_path.write_text(results_path.read_text() + "\n".join(lines) + "\n")
+        print("\n".join(lines))
+        return
     if a[0] == "early":
         lines += early(games, box, tparams, mkt)
         results_path.write_text(results_path.read_text() + "\n".join(lines) + "\n")

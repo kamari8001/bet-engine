@@ -49,3 +49,14 @@ immediately. Rankings and player pages use the same ratings automatically.
 ## Files
 `player_model.py` (detect moves, off by default), `model.py` (apply them, off unless `move_coef` > 0),
 `backtest_players.py` (`moves` mode), results in `backtest_results/players.md`.
+
+## Results (2026-10-26; full lines in `backtest_results/players.md`)
+**Kept.** Tuned move weight 0.40 points of margin per unit of value (the summer pull-back didn't
+change). Check seasons 0.6340 -> 0.6328 (bar 0.001), calibration's worst bucket 6.2 (rule: within 8).
+It helps both a team's first 20 games (0.6587 -> 0.6578) and the rest of the season (0.6261 -> 0.6248,
+trade periods). Second look on the exam seasons: 0.6002 -> 0.5993. Still trails the market (0.6173 on
+the check seasons); flagged-bet ROI moved from -2.1% to -3.2% (information only).
+Sanity check: 85-313 moves per season; the biggest are the famous ones (Durant to Golden State 2016,
+LeBron to the Lakers 2018, Leonard to the Clippers 2019, the Doncic-Davis trade 2025).
+Next: refit on all seasons (`backtest_players.py refit --moves`, staged), Talal runs `apply` -> nba-v3,
+version 5.0.0.

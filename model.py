@@ -90,6 +90,8 @@ class RatingModel:
         # Player absences (basketball, plans/player_impact.md): points of margin per unit of
         # "missing value"; corrected online when abs_k > 0
         self.abs_coef = self.p.get("abs_coef", 0.0)
+        # Player moves (plans/nba_roster_moves.md): points of margin per unit of a moved player's value
+        self.move_coef = self.p.get("move_coef", 0.0)
 
     def _get(self, name):
         return self.p.get(name, 0.0)
@@ -146,6 +148,11 @@ class RatingModel:
                 self.games_this_season[t] = 0
             if g.get(f"{side}_coach"):
                 self.coach[t] = g[f"{side}_coach"]
+        if self.move_coef:
+            for team, v in g.get("roster_moves") or []:
+                t = self._team(team)
+                self.off[t] += self.move_coef * v / 2
+                self.dfn[t] += self.move_coef * v / 2
 
     def _bumps(self, g):
         """Points added to the home margin by home field, rest and travel."""
