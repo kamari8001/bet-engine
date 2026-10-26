@@ -93,3 +93,8 @@ Sanity check, moves seen per season (and the three biggest by value carried):
 Second look on the exam seasons 2024-2026 (already used; NOT an untouched test): log loss 0.6002 -> 0.5993; vs market 0.6002 -> 0.5993 (market 0.5799); flags ROI -7.0% -> -7.8%
 
 Decision: KEEP (bar: check better by >= 0.001, calibration rule).
+
+## Refit 2026-10-26 00:17 UTC: nba-v3-refit-20261026 (pending: live after `backtest_players.py apply`)
+
+Team {"k": 0.02747, "hfa_start": 1.89925, "hfa_rate": 0.0, "regress": 0.47915, "cap": 30.24087, "sigma": 11.00501, "new_team": 0.0, "avg_rate": 0.002, "rest_coef": 0.61971, "rest_cap": 3, "move_coef": 0.55501, "abs_coef": 1.07223}; players {"alpha": 0.05596, "season_regress": 0.52775, "repl_z": -0.73434, "moves": true}.
+In-sample on 2015-2026 (used for fitting, so NOT a test): log loss 0.6085, worst bucket 2.3, vs market 0.6085 / 0.5941, flags 8592 ROI -5.2%. Replaces nba-v2-refit-20261023.
