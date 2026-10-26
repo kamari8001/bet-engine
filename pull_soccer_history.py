@@ -35,6 +35,7 @@ from odds_math import american_from_decimal
 from pull_basketball_history import espn_get
 from pull_history import current_season, insert_game, insert_odds
 from teams import SOCCER_BY_ESPN_ID, SOCCER_LEAGUES
+import net
 
 FD_URL = "https://football-data.co.uk/mmz4281/{code}/{div}.csv"
 CACHE = Path(__file__).parent / "cache" / "football_data"
@@ -80,10 +81,8 @@ def fd_file(div, season, refresh=False):
     path = CACHE / f"{div}_{season_code(season)}.csv"
     if refresh or not path.exists() or path.stat().st_size == 0:
         CACHE.mkdir(parents=True, exist_ok=True)
-        req = urllib.request.Request(FD_URL.format(code=season_code(season), div=div),
-                                     headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req, timeout=60) as r:
-            path.write_bytes(r.read())
+        path.write_bytes(net.get(FD_URL.format(code=season_code(season), div=div),
+                                 {"User-Agent": "Mozilla/5.0"}, label="football-data.co.uk")[0])
         time.sleep(0.3)
     raw = path.read_bytes().decode("latin-1").lstrip("﻿").lstrip("ï»¿")
     if not raw.startswith("Div"):
@@ -157,9 +156,8 @@ def fd_new_file(code, refresh=False):
     path = CACHE / f"new_{code}.csv"
     if refresh or not path.exists() or path.stat().st_size == 0:
         CACHE.mkdir(parents=True, exist_ok=True)
-        req = urllib.request.Request(FD_NEW_URL.format(code=code), headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req, timeout=60) as r:
-            path.write_bytes(r.read())
+        path.write_bytes(net.get(FD_NEW_URL.format(code=code), {"User-Agent": "Mozilla/5.0"},
+                                 label="football-data.co.uk")[0])
         time.sleep(0.3)
     raw = path.read_bytes().decode("utf-8-sig", "replace")
     if not raw.startswith("Country"):

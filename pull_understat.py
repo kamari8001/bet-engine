@@ -24,6 +24,7 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import db
+import net
 
 HERE = Path(__file__).parent
 CACHE = HERE / "cache" / "understat"
@@ -46,10 +47,8 @@ def fetch(code, year, refresh=False):
     path = CACHE / f"{code}_{year}.json"
     if path.exists() and not refresh:
         return json.loads(path.read_text())
-    req = urllib.request.Request(URL.format(code=code, year=year), headers={
-        "X-Requested-With": "XMLHttpRequest", "Accept-Encoding": "gzip", "User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        raw = r.read()
+    raw = net.get(URL.format(code=code, year=year), {"X-Requested-With": "XMLHttpRequest", "Accept-Encoding": "gzip",
+                                                      "User-Agent": "Mozilla/5.0"}, label="Understat")[0]
     if raw[:2] == b"\x1f\x8b":
         raw = gzip.decompress(raw)
     data = json.loads(raw)
@@ -66,8 +65,10 @@ def finished(data):
         if not m.get("isResult") or m.get("xG", {}).get("h") in (None, ""):
             continue
         d = date.fromisoformat(m["datetime"][:10])
+        et = datetime.strptime(m["datetime"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc).astimezone(db.EASTERN).date()
         out.append({"h": m["h"]["title"], "a": m["a"]["title"], "gh": int(m["goals"]["h"]), "ga": int(m["goals"]["a"]),
-                    "xh": float(m["xG"]["h"]), "xa": float(m["xG"]["a"]), "dates": {d.isoformat(), (d - timedelta(days=1)).isoformat()}})
+                    "xh": float(m["xG"]["h"]), "xa": float(m["xG"]["a"]), "et": et.isoformat(),
+                    "dates": {(d + timedelta(days=k)).isoformat() for k in (-1, 0, 1)}})   # within a day either way
     return out
 
 
@@ -109,7 +110,7 @@ def store(conn, league, season, data, names):
     latest = max((k[0] for k in ours), default="")
     rows, total = [], 0
     for m in finished(data):
-        if min(m["dates"]) > latest:
+        if m["et"] > latest:
             continue          # our history hasn't loaded this result yet (next run will match it)
         total += 1
         h, a = names.get(league, {}).get(m["h"]), names.get(league, {}).get(m["a"])

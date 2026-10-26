@@ -4,6 +4,17 @@ Versions follow MAJOR.MINOR.PATCH (see `version.py`): MAJOR changes the probabil
 (new model version or sport), MINOR adds features, PATCH fixes and polishes.
 Each version is tagged in git (`git tag -l`).
 
+## 5.0.1 (2026-10-26): retries for temporary server errors
+- Downloads now retry when a source has a temporary problem (server errors 500/502/503/504, a timeout,
+  or a dropped connection): up to 4 tries, waiting 5, 15 and 45 seconds. Real errors (wrong key, not
+  found, too many requests) still stop right away. Covers nflverse, the college football and basketball
+  data services, ESPN's injury list, The Odds API, football-data.co.uk and Understat (`net.py`). On
+  Oct 25 a one-off college football server error made the morning routine fail twice and run 20
+  minutes late; now it would have retried. You're only notified if every try fails.
+- Understat xG refresh: games our history hasn't loaded yet no longer count against the 98% match rule
+  (they're matched the next day), and kickoff dates may differ by a day either way, as planned (e.g.
+  Toulouse v Troyes, dated a day early by Understat).
+
 ## 5.0.0 (2026-10-26): NBA player moves
 - New NBA model, `nba-v3-refit-20261026`. When a player first appears for a different team, his value
   moves with him: the new team's rating goes up and the old team's goes down. Covers summer trades and

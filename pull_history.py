@@ -17,6 +17,7 @@ from datetime import datetime, timezone
 
 import config
 import db
+import net
 
 NFLVERSE_GAMES = "https://github.com/nflverse/nfldata/raw/master/data/games.csv"
 NFLVERSE_TEAM_WEEK = ("https://github.com/nflverse/nflverse-data/releases/download/"
@@ -45,9 +46,8 @@ def season_label(sport, season):
 
 
 def fetch(url, headers=None):
-    req = urllib.request.Request(url, headers=headers or {})
-    with urllib.request.urlopen(req, timeout=120) as resp:
-        return resp.read()
+    """GET with retries for temporary server problems (net.py)."""
+    return net.get(url, headers, timeout=120)[0]
 
 
 def blank(value):

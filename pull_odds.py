@@ -19,6 +19,7 @@ from datetime import datetime, timedelta, timezone
 import config
 import db
 from teams import TeamNames
+import net
 
 API = "https://api.the-odds-api.com/v4"
 SPORT_KEYS = {"nfl": "americanfootball_nfl", "ncaaf": "americanfootball_ncaaf",
@@ -39,8 +40,8 @@ SAME_GAME_WINDOW = timedelta(hours=24)      # how far apart kickoffs can be and 
 
 def odds_api(path, **params):
     query = "&".join(f"{k}={v}" for k, v in {**params, "apiKey": config.ODDS_API_KEY}.items())
-    with urllib.request.urlopen(f"{API}{path}?{query}", timeout=60) as resp:
-        return json.load(resp), resp.headers
+    body, headers = net.get(f"{API}{path}?{query}", timeout=60, label=f"The Odds API {path}")
+    return json.loads(body), headers
 
 
 def credits_left():
